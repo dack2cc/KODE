@@ -1,0 +1,172 @@
+
+/******************************************************************************
+    Public
+******************************************************************************/
+
+.global _cpu_gate_ISRKernelFnct
+.global _cpu_gate_ISRMemPageFault
+.global _cpu_gate_ISRTimeTick
+
+/******************************************************************************
+    Constant
+******************************************************************************/
+
+
+/******************************************************************************
+    _cpu_gate_ISRKernelFnct
+******************************************************************************/
+/*
+ * Stack layout in 'Kernel Funtion Call':
+ *
+ *	0x00(%esp) - %ebx
+ *	0x04(%esp) - %ecx
+ *	0x08(%esp) - %edx
+ *	0x0C(%esp) - %fs
+ *	0x10(%esp) - %es
+ *	0x14(%esp) - %ds
+ *	0x18(%esp) - %eip
+ *	0x1C(%esp) - %cs
+ *	0x20(%esp) - %eflags
+ *	0x24(%esp) - %oldesp
+ *	0x28(%esp) - %oldss
+ */
+
+.align 4
+_cpu_gate_ISRKernelFnct:
+	cmpl $_cpu_gate_uiKernelFnctNum-1,%eax
+	ja L_INVALID_KERNEL_CALL_NUMBER
+	cmpl $0, _cpu_gate_apfnKernelFnct(,%eax,4)
+	je L_INVALID_KERNEL_CALL_NUMBER
+	
+	push %ds
+	push %es
+	push %fs
+	pushl %edx
+	pushl %ecx		# push %ebx,%ecx,%edx as parameters
+	pushl %ebx		# to the system call
+	
+	movl $0x10,%edx		# set up ds,es to kernel space
+	mov %dx,%ds
+	mov %dx,%es
+	movl $0x17,%edx		# fs points to local data space
+	mov %dx,%fs
+	
+	//cmpl $0, _cpu_gate_pfnISRHookEnter
+	//je 1f
+	//call *_cpu_gate_pfnISRHookEnter
+1:	
+	call *_cpu_gate_apfnKernelFnct(,%eax,4)
+	
+	//cmpl $0, _cpu_gate_pfnISRHookExit
+	//je 2f
+	//call *_cpu_gate_pfnISRHookExit
+2:	
+	popl %ebx
+	popl %ecx
+	popl %edx
+	pop %fs
+	pop %es
+	pop %ds
+	
+	iret
+	
+.align 4
+L_INVALID_KERNEL_CALL_NUMBER:
+	movl $-1,%eax
+	iret
+
+/******************************************************************************
+    _cpu_gate_ISRMemPageFault
+******************************************************************************/
+/*
+ * Stack layout in 'ISR Call':
+ *
+ *	0x00(%esp) - error code
+ *	0x04(%esp) - %eip
+ *	0x08(%esp) - %cs
+ *	0x0C(%esp) - %eflags
+ *	0x10(%esp) - %oldesp
+ *	0x14(%esp) - %oldss
+ */
+ 
+.align 4
+_cpu_gate_ISRMemPageFault:
+	xchgl %eax,(%esp)
+	pushl %ecx
+	pushl %edx
+	push %ds
+	push %es
+	push %fs
+	
+	movl $0x10,%edx   # set up ds,es,fs to kernel space
+	mov %dx,%ds
+	mov %dx,%es
+	mov %dx,%fs
+	
+	movl %cr2,%edx    
+	pushl %edx        # parameter 1 : access fault address
+	pushl %eax        # parameter 0 : error code
+	testl $1,%eax
+	
+	jne 1f
+	call _cpu_page_ISR_LackMemoryPage
+	jmp 2f
+1:	call _cpu_page_ISR_WriteProtectedPage
+2:	addl $8,%esp     # ignore the parameter of function call
+
+	pop %fs
+	pop %es
+	pop %ds
+	popl %edx
+	popl %ecx
+	popl %eax
+
+	iret
+
+/******************************************************************************
+    _cpu_gate_ISRTimeTick
+******************************************************************************/
+
+.align 4
+_cpu_gate_ISRTimeTick:
+	cmpl $0, _cpu_gate_pfnTimeTick
+	je 3f
+
+	push %ds        # save ds,es and put kernel data space
+	push %es        # into them. %fs is used by call
+	push %fs
+	pushl %edx
+	pushl %ecx		# push %eac, %ecx, %edx as gcc doesn't 
+	pushl %ebx		# 
+	pushl %eax
+	
+	movl $0x10,%eax		# set up ds,es to kernel space
+	mov %ax, %ds
+	mov %ax, %es
+	movl $0x17,%eax		# fs points to local data space
+	mov %ax,%fs
+	
+	cmpl $0, _cpu_gate_pfnISRHookEnter
+	je 1f
+	call *_cpu_gate_pfnISRHookEnter
+1:	
+	call *_cpu_gate_pfnTimeTick
+
+	cmpl $0, _cpu_gate_pfnISRHookExit
+	je 2f
+	call *_cpu_gate_pfnISRHookExit
+2:	
+
+	movb $0x20, %al     # EOI to interrupt controller #1
+	outb %al, $0x20
+
+	popl %eax
+	popl %ebx
+	popl %ecx
+	popl %edx
+	pop %fs
+	pop %es
+	pop %ds
+3:
+	iret
+
