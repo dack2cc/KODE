@@ -71,7 +71,7 @@ void __set_base(CPU_INT08U* addr, CPU_ADDR base) {
 	 "m" (*((addr)+4)), \
 	 "m" (*((addr)+7)), \
 	 "d" (base) \
-	:);
+	);
 }
 
 
@@ -93,7 +93,7 @@ __asm__("movw %%dx,%0\n\t" \
 	:"m" (*(addr)), \
 	 "m" (*((addr)+6)), \
 	 "d" (limit) \
-	:);
+	);
 }
 
 /* ====================================

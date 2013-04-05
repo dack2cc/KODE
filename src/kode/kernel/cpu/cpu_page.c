@@ -42,7 +42,7 @@ CPU_PRIVATE  CPU_MEMO_BUFFER  m_astMemoBuffer[] = {
 
 #define _invalidate()                      __asm__("movl %%eax,%%cr3"::"a" (0))
 
-#define _copy_page(from, to)               __asm__("cld ; rep ; movsl"::"S" (from),"D" (to),"c" (1024):)
+#define _copy_page(from, to)               __asm__("cld ; rep ; movsl"::"S" (from),"D" (to),"c" (1024))
 
 
 /******************************************************************************
@@ -465,7 +465,7 @@ __asm__("std ; repne ; scasb\n\t"
 	:"=a" (__res)
 	:"0" (0),"i" (_MEMO_LOW_ADDR),"c" (_MEMO_PAGING_NUM),
 	"D" (m_aiPageMap+_MEMO_PAGING_NUM-1)
-	:);
+	);
 return __res;
 }
 
