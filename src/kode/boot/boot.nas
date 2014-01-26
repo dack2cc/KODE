@@ -44,10 +44,13 @@ ORG 0
 
 	; variable
     V_STR_ERROR  db 'It is dead in Boot q(<_<!)p', $0
+    V_BOOT_DEV dw 0x0000
+    V_DISK_TRACKS dw 0x0000
+    V_DISK_HEADS dw 0x0000
     V_DISK_SECTORS dw 0x0000
-    V_SYSTEM_SECTORS dw 1 + C_SETUP_LEN
-    V_HEAD dw 0
-    V_TRACK dw 0
+    V_READ_TRACKS dw 0x0000
+    V_READ_HEADS dw 0x0000
+    V_READ_SECTORS dw 1 + C_SETUP_LEN
 
 L_START:
 	; ds:si = 0x07C0:0x0000
@@ -79,28 +82,84 @@ L_GO:
 	mov ss, ax
 	mov sp, 0xFF00
 
-	; 'es' is already set to 0x9000	
-	; load the setup sectors after the boot block.
-	
+
+;   'es' is already set to 0x9000	
+;   load the setup sectors after the boot block.
+
+;   The Boot  Section is on the Track:0, Head:0, Sector:1
+;   The Setup Section is on the Track:0, Head:0, Sector:2
 L_LOAD_SETUP:
+
+    ; try to load setup from floopy
+
 	mov dx, 0x0000
 	mov cx, 0x0002
-	mov bx, 0x0200
+	mov bx, 0x0200 ; dest is es:bx (0x90200)
 	mov ax, 0x0200 + C_SETUP_LEN
 	int 0x13
 	jnc L_LOAD_SETUP_OK
+
+	; reset the floopy
+	
 	mov dx, 0x0000
 	mov ax, 0x0000
 	int 0x13
-	jmp L_LOAD_SETUP
+	
+	; try to load setup from usb
+
+	;mov dx, 0x0081
+	;mov cx, 0x0002
+	;mov bx, 0x0200 ; dest is es:bx (0x90200)
+	;mov ax, 0x0200 + C_SETUP_LEN
+	;int 0x13
+	;jnc L_LOAD_SETUP_OK
+
+	; reset the usb
+	
+	;mov dx, 0x0081
+	;mov ax, 0x0000
+	;int 0x13
+
+	; try to load setup from hd0
+
+	mov dx, 0x0080
+	mov cx, 0x0002
+	mov bx, 0x0200 ; dest is es:bx (0x90200)
+	mov ax, 0x0200 + C_SETUP_LEN
+	int 0x13
+	jnc L_LOAD_SETUP_OK
+
+	; reset the hd0
+	
+	mov dx, 0x0080
+	mov ax, 0x0000
+	int 0x13
+	
+	jmp L_ERROR
 	
 L_LOAD_SETUP_OK:
+    
+    ; save the boot device
+    mov [V_BOOT_DEV], dl
+    
 	; get disk drive parameters, specifially sectors/track
-	mov dl, 0x00
+	mov dh, 0x00
 	mov ax, 0x0800
 	int 0x13
-	mov ch, 0x00
-	mov [V_DISK_SECTORS], cx
+	
+	; save the parameters of disk
+	mov [V_DISK_HEADS], dh
+	sub ax, ax
+	mov al, cl
+	and ax, 0x3f
+	mov [V_DISK_SECTORS], ax
+	sub ax, ax
+	mov al, cl
+	and ax, 0xC0
+	shl ax, 9
+	add al, ch
+	mov [V_DISK_TRACKS], ax
+	
 	mov ax, C_SEG_INIT
 	mov es, ax
 
@@ -115,6 +174,7 @@ L_LOAD_SETUP_OK:
 	mov ax, 0x1301
 	int 0x10
 	
+	; es = 0x1000
 	mov ax, C_SEG_SYSTEM
 	mov es, ax
 	call FN_READ_IT	
@@ -137,13 +197,13 @@ L_UNKNOWN_ROOT:
 
 L_ROOT_DEFINED:
 	; save the root device
-	mov word [C_ROOT_DEV_ADDR], ax
+	;mov word [C_ROOT_DEV_ADDR], ax
 	
 	; jump to the setup routine
 	jmp C_SEG_SETUP:0x0000
 
 L_ERROR:
-	; print the welcome message
+	; print the error message
 	mov ax, cs
 	mov ds, ax
 	mov si, V_STR_ERROR
@@ -163,15 +223,16 @@ FN_READ_IT:
 	test ax, 0x0FFF
 L_DIE:
 	jne L_DIE
-	xor bx, bx
+	
+	xor bx, bx ; es:bx = 0x10000
 L_REPEAT_READ:
 	mov ax, es
-	cmp ax, C_SEG_END
+	cmp ax, C_SEG_END ; 0x4000
 	jb L_OK1_READ
 	ret
 L_OK1_READ:
 	mov ax, [V_DISK_SECTORS]
-	sub ax, [V_SYSTEM_SECTORS]
+	sub ax, [V_READ_SECTORS]
 	mov cx, ax
 	shl cx, 9
 	add cx, bx
@@ -184,27 +245,45 @@ L_OK1_READ:
 L_OK2_READ:
 	call FN_READ_TRACK
 	mov cx, ax
-	add ax, [V_SYSTEM_SECTORS]
+	add ax, [V_READ_SECTORS]
 	cmp ax, [V_DISK_SECTORS]
-	jne L_OK3_READ
-	mov ax, 1
-	sub ax, [V_HEAD]
+	
+	; it has sectors which is not read.
+	jne L_OK3_READ 
+	
+	; all the sector has been read.
+	mov ax, [V_DISK_HEADS]
+	sub ax, [V_READ_HEADS]
+	
+	; it has head which is not read
 	jne L_OK4_READ
-	;inc [V_TRACK]
+	
+	; all the head has been read.
 	push ax
-	mov ax, [V_TRACK]
+	mov ax, [V_READ_TRACKS]
 	inc ax
-	mov [V_TRACK], ax
+	mov [V_READ_TRACKS], ax
 	pop ax
+	
 L_OK4_READ:
-	mov [V_HEAD], ax
+    mov ax, [V_READ_HEADS]
+    inc ax
+    cmp ax, [V_DISK_HEADS]
+    jbe L_HEAD_IN_RANGE
+    xor ax, ax
+L_HEAD_IN_RANGE:
+	mov [V_READ_HEADS], ax
 	xor ax, ax
+	
 L_OK3_READ:
-	mov [V_SYSTEM_SECTORS], ax
+	mov [V_READ_SECTORS], ax
 	shl cx, 9
 	add bx, cx
+	
+	; it is in the range of 64KB memory section
 	jnc L_REPEAT_READ
 	
+	; move the dest to the next memory section
 	mov ax, es
 	add ax, 0x1000
 	mov es, ax
@@ -216,14 +295,14 @@ FN_READ_TRACK:
 	push bx
 	push cx
 	push dx
-	mov dx, [V_TRACK]
-	mov cx, [V_SYSTEM_SECTORS]
+	mov dx, [V_READ_TRACKS]
+	mov cx, [V_READ_SECTORS]
 	inc cx
 	mov ch, dl
-	mov dx, [V_HEAD]
+	mov dx, [V_READ_HEADS]
 	mov dh, dl
-	mov dl, 0
-	and dx, 0x0100
+	mov dl, [V_BOOT_DEV]
+	;and dh, 0x01
 	mov ah, 2
 	int 0x13
 	; 0x90158

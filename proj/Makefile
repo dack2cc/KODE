@@ -7,8 +7,12 @@
 # Build Target
 # **************************************
 
-TARGET := boot.img
-TOOL   := tool
+TOOL       := tool
+
+TARGET_ROOT := ./bin
+TARGET_DIR  := $(TARGET_ROOT)
+TARGET_BIN  := boot.img
+TARGET_HD   := disk.img
 
 BUILD_ROOT := ./build
 BUILD_DIR  := $(BUILD_ROOT)
@@ -16,7 +20,8 @@ BUILD_DIR  := $(BUILD_ROOT)
 DEBUG_ROOT := ./debug
 DEBUG_DIR  :=
 
-BOOT_DEV := FLOPPY
+DEV_FLOPPY := FLOPPY
+DEV_HDISK  := HDISK
 
 # **************************************
 # Networking Assembly Build
@@ -64,13 +69,16 @@ CXX   := $(GXX)
 all : _PREPARE _IMAGE
 
 _PREPARE :
-	@for DIR in $(BUILD_DIR) $(DEBUG_DIR) ; do \
+	@for DIR in $(BUILD_DIR) $(DEBUG_DIR) $(TARGET_DIR) ; do \
 	if [ ! -d $$DIR ] ; then mkdir $$DIR ; fi \
 	done
 
 _IMAGE : $(TOOL) $(BOOT_BIN)
-	@echo "[Build][$(TARGET)]"
-	@$(BUILD_ROOT)/$(TOOL) $(BOOT_DEV) $(BOOT_BIN) > ./$(TARGET)
+	@echo "[Build][$(TARGET_BIN)]"
+	@$(BUILD_ROOT)/$(TOOL) $(DEV_FLOPPY) $(BOOT_BIN) > $(TARGET_ROOT)/$(TARGET_BIN)
+	@echo "[Build][$(TARGET_HD)]"
+	@$(BUILD_ROOT)/$(TOOL) $(DEV_HDISK) $(BOOT_BIN) > $(TARGET_ROOT)/$(TARGET_HD)
+
 
 $(TOOL) :
 	@echo "[Compile ][../src/tools/build.c]"
@@ -101,7 +109,7 @@ clean :
 	@echo "[clean...]"
 	@rm -fr $(BUILD_ROOT)
 	@rm -fr $(DEBUG_ROOT)
-	@rm -fr ./$(TARGET)
+	@rm -fr $(TARGET_ROOT)
 	
 debug :
 	@echo "[BOOT_BIN][$(BOOT_BIN)]"

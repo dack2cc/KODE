@@ -3,23 +3,26 @@
 ###############################################################
 
 # how much memory the emulated machine will have
-megs: 4
+megs: 16
 
 # filename of ROM images
 romimage: file=./BIOS-bochs-latest
 vgaromimage: file=./VGABIOS-lgpl-latest
 
 # what disk images will be used 
-floppya: 1_44=../proj/boot.img, status=inserted
+#floppya: 1_44=../proj/bin/boot.img, status=inserted
 #floppyb: 1_44=floppyb.img, status=inserted
 
 # hard disk
-#ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
-#ata0-master: type=disk, path="../proj/hd10meg.img", cylinders=306, heads=4, spt=17
+ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0-master: type=disk, path="../proj/bin/disk.img", cylinders=153, heads=4, spt=17
+
+# usb disk
+#usb_uhci: enabled=1, port1=../proj/bin/disk.img
 
 # choose the boot disk.
-boot:a
-#boot: c
+#boot:a
+boot:c
 
 # default config interface is textconfig.
 #config_interface: textconfig
@@ -32,7 +35,7 @@ boot:a
 log: bochsout.txt
 
 # disable the mouse, since DLX is text only
-mouse: enabled=0
+#mouse: enabled=0
 
 # enable key mapping, using US layout as default.
 #

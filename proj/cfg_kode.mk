@@ -106,8 +106,10 @@ INC_DIR += -I$(SRC_ROOT)/$(KODE_ROOT) \
 kode : _PREPARE _IMAGE_KODE
 
 _IMAGE_KODE : $(TOOL) $(BOOT_BIN) $(KODE_BIN)
-	@echo "[Build][$(TARGET)]"
-	@$(BUILD_ROOT)/$(TOOL) $(BOOT_DEV) $(BOOT_BIN) $(BUILD_ROOT)/$(KODE_BIN) > ./$(TARGET)
+	@echo "[Build][$(TARGET_BIN)]"
+	@$(BUILD_ROOT)/$(TOOL) $(DEV_FLOPPY) $(BOOT_BIN) $(BUILD_ROOT)/$(KODE_BIN) > $(TARGET_ROOT)/$(TARGET_BIN)
+	@echo "[Build][$(TARGET_HD)]"
+	@$(BUILD_ROOT)/$(TOOL) $(DEV_HDISK) $(BOOT_BIN) $(BUILD_ROOT)/$(KODE_BIN) > $(TARGET_ROOT)/$(TARGET_HD)
 
 $(KODE_BIN) : $(KODE_OBJ) $(KODE_DBG)
 	@echo "[Build][$(BUILD_ROOT)/$@]"

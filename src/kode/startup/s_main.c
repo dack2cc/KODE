@@ -89,6 +89,8 @@ void* s_thread_jerry(void* param_in)
 	if (0xFEDCBA == (KDint32)param_in) 
 	kdLogMessage("[jerry] This is Jerry going down (=_=) \n");
 	
+	//for (;;);
+	
 	return ((void *)0);
 }
 
