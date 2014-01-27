@@ -59,10 +59,15 @@ CPU_DATA  CPU_CntLeadZeros(CPU_DATA  val_in)
 
 void CPUExt_CorePanic(const CPU_CHAR* pszMsg_in)
 {
-	CPUExt_DispPrint(pszMsg_in);
+	cpu_disp_Print(pszMsg_in);
 	
 	for (;;);
 	
 	return;
+}
+
+CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
+{
+	return (cpu_disp_Print(pszStr_in));
 }
 

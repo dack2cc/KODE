@@ -1,5 +1,5 @@
-#ifndef __CPU_DISP_H__
-#define __CPU_DISP_H__
+#ifndef __DRV_DISP_H__
+#define __DRV_DISP_H__
 
 /******************************************************************************
     Include
@@ -11,9 +11,9 @@
     Public Interface
 ******************************************************************************/
 
-void cpu_disp_Init(void);
+extern void drv_disp_Init(void);
 
-CPU_INT32U  cpu_disp_Print(const CPU_CHAR* pszStr_in);
+extern CPU_INT32U  drv_disp_Print(const CPU_CHAR* pszStr_in);
 
-#endif // __CPU_DISP_H__
+#endif // __DRV_DISP_H__
 

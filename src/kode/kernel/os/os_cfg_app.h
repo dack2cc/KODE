@@ -40,7 +40,7 @@
 */
 
 
-#define  OS_CFG_KERNEL_TASK_STK_SIZE       1u
+#define  OS_CFG_KERNEL_TASK_STK_SIZE      1024u
 
                                                             /* --------------------- MISCELLANEOUS ------------------ */
 #define  OS_CFG_MSG_POOL_SIZE            100u               /* Maximum number of messages                             */

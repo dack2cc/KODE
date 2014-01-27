@@ -97,7 +97,7 @@ enum {
 
 
                                              /* --------------------------- MESSAGE QUEUES -------------------------- */
-#define OS_CFG_Q_EN                     0u   /* Enable (1) or Disable (0) code generation for QUEUES                  */
+#define OS_CFG_Q_EN                     1u   /* Enable (1) or Disable (0) code generation for QUEUES                  */
 #define OS_CFG_Q_DEL_EN                 0u   /*     Include code for OSQDel()                                         */
 #define OS_CFG_Q_FLUSH_EN               0u   /*     Include code for OSQFlush()                                       */
 #define OS_CFG_Q_PEND_ABORT_EN          0u   /*     Include code for OSQPendAbort()                                   */
@@ -116,7 +116,7 @@ enum {
 
 #define OS_CFG_TASK_CHANGE_PRIO_EN      0u   /* Include code for OSTaskChangePrio()                                   */
 #define OS_CFG_TASK_DEL_EN              1u   /* Include code for OSTaskDel()                                          */
-#define OS_CFG_TASK_Q_EN                0u   /* Include code for OSTaskQXXXX()                                        */
+#define OS_CFG_TASK_Q_EN                1u   /* Include code for OSTaskQXXXX()                                        */
 #define OS_CFG_TASK_Q_PEND_ABORT_EN     0u   /* Include code for OSTaskQPendAbort()                                   */
 #define OS_CFG_TASK_PROFILE_EN          0u   /* Include variables in OS_TCB for profiling                             */
 #define OS_CFG_TASK_REG_TBL_SIZE        (OS_TCB_REG_MAX)

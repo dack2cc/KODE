@@ -6,6 +6,7 @@
 #include <kd_thread.h>
 #include <kd_core.h>
 #include <os.h>
+#include <os_cfg_app.h>
 #include <cpu_ext.h>
 #include <cpu_boot.h>
 #include <lib_pool.h>
@@ -280,7 +281,7 @@ KDThread * kd_thread_Create(
 		/* p_arg       */   arg_in,
 		/* prio        */   50,
 		/* p_stk_base  */   (CPU_STK *)((CPU_INT32U)addrPhyPage + (X86_MEM_PAGE_SIZE - _KD_THREAD_KERNEL_STACK_SIZE)), 
-		/* stk_limit   */   ((_KD_THREAD_KERNEL_STACK_SIZE * 10) / 100),
+		/* stk_limit   */   ((_KD_THREAD_KERNEL_STACK_SIZE * OS_CFG_TASK_STK_LIMIT_PCT_EMPTY) / 100),
 		/* stk_size    */   _KD_THREAD_KERNEL_STACK_SIZE,
 		/* q_size      */   0,
 		/* time_quanta */   0,

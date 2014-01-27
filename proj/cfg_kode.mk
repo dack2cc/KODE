@@ -57,6 +57,13 @@ KODE_KERNEL_OS_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL
                       $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_OS_DIR)/%.o, $(KODE_KERNEL_OS_SRC_C))
 
 
+KODE_KERNEL_DRV_DIR := drv
+KODE_KERNEL_DRV_SRC_S := 
+KODE_KERNEL_DRV_SRC_C := drv_disp.c
+KODE_KERNEL_DRV_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)/%.o, $(KODE_KERNEL_DRV_SRC_S)) \
+                       $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)/%.o, $(KODE_KERNEL_DRV_SRC_C))
+
+
 KODE_KERNEL_LIB_DIR := lib
 KODE_KERNEL_LIB_SRC_S := 
 KODE_KERNEL_LIB_SRC_C := lib_pool.c
@@ -77,7 +84,8 @@ KODE_OBJ := $(KODE_STARTUP_OBJ) \
             $(KODE_KERNEL_CPU_OBJ) \
             $(KODE_KERNEL_OS_OBJ) \
             $(KODE_KERNEL_LIB_OBJ) \
-            $(KODE_KERNEL_KD_OBJ)
+            $(KODE_KERNEL_KD_OBJ) \
+            $(KODE_KERNEL_DRV_OBJ)
             
 
 KODE_DBG := $(patsubst %.o, %.s, $(KODE_OBJ))
@@ -89,15 +97,16 @@ BUILD_DIR += $(BUILD_ROOT)/$(KODE_ROOT) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_CPU_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_OS_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_LIB_DIR) \
-             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)
-
+             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR) \
+             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)
                           
 INC_DIR += -I$(SRC_ROOT)/$(KODE_ROOT) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/include \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_CPU_DIR) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_OS_DIR) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_LIB_DIR) \
-           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)
+           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR) \
+           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)
 
 # **************************************
 # Make Rule
