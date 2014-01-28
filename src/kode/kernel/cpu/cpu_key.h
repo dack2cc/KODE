@@ -1,5 +1,5 @@
-#ifndef __CPU_GATE_H__
-#define __CPU_GATE_H__
+#ifndef __CPU_KEY_H__
+#define __CPU_KEY_H__
 
 /******************************************************************************
     Include
@@ -11,17 +11,15 @@
     Define
 ******************************************************************************/
 
-
 /******************************************************************************
     Public Interface
 ******************************************************************************/
 
-extern void cpu_gate_Init(void);
+extern void  cpu_key_Init(void);
 
-extern CPU_DATA  cpu_gate_ISRKernelFnct(void);
-extern CPU_DATA  cpu_gate_ISRMemPageFault(void);
-extern CPU_DATA  cpu_gate_ISRTimeTick(void);
-extern CPU_DATA  cpu_gate_ISRKeyboard(void);
+extern void  cpu_key_RegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in);
 
-#endif // __CPU_GATE_H__
+extern void  cpu_key_ISR_Input(CPU_DATA uiScanCode_in);
+
+#endif // __CPU_KEY_H__
 

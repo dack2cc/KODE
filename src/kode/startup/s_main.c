@@ -41,7 +41,7 @@ void s_main(void)
 	
 	kdextInit();
 	
-	//s_logo();
+	s_logo();
 	
 	pstAttr = kdThreadAttrCreate();
 	kdThreadCreate(pstAttr, s_thread_alice, (void *)0xABCDEF);
@@ -65,17 +65,17 @@ void s_logo(void)
 
 void* s_thread_alice(void* param_in)
 {
-	KDThreadAttr*  pstAttr = KD_NULL;
-	KDThread*      pstTony = KD_NULL;
+	KDThreadAttr*  pstAttr  = KD_NULL;
+	KDThread*      pstJerry = KD_NULL;
 
 	if (0xABCDEF == (KDint32)param_in) 
 	kdLogMessage("[alice] Hello (^-^)/ \n");
 	
-	pstAttr = kdThreadAttrCreate();
-	pstTony = kdThreadCreate(pstAttr, s_thread_jerry, (void *)0xFEDCBA);
+	pstAttr  = kdThreadAttrCreate();
+	pstJerry = kdThreadCreate(pstAttr, s_thread_jerry, (void *)0xFEDCBA);
 	kdThreadAttrFree(pstAttr);
 	
-	kdThreadJoin(pstTony, 0);
+	kdThreadJoin(pstJerry, 0);
 	
 	kdLogMessage("[alice] Goodbye Jerry (-_-)/ \n");
 	

@@ -71,11 +71,33 @@ type name(atype a,btype b,ctype c) \
     Public Interface
 ******************************************************************************/
 
+/*
+    Debug
+*/
 extern void CPUExt_CorePanic(const CPU_CHAR* pszMsg_in);
 
+/*
+    Output
+*/
 extern CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in);
-//extern void CPUExt_DispOutput(const CPU_CHAR* pszCode_in);
+extern void        CPUExt_DispChar(const CPU_CHAR chAscii_in);
 
+/*
+    Input
+*/
+#define CPU_EXT_KEY_STATE_MAKE   (0)
+#define CPU_EXT_KEY_STATE_BREAK  (1)
+
+typedef struct _CPU_EXT_KEY_EVENT {
+	CPU_INT08U  uiState;
+	CPU_INT08U  uiAscii;
+} CPU_EXT_KEY_EVENT;
+
+extern void CPUExt_KeyRegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in);
+
+/*
+    Task
+*/
 enum {
 	CPU_TASK_ARG_EFLAG = 0,     /* CPU_SR                     */
 	CPU_TASK_ARG_ROUTINE,       /* CPU_FNCT_PTR               */
@@ -91,17 +113,20 @@ extern void     CPUExt_TaskDelete(const CPU_INT32U  uiTaskID_in);
 extern void     CPUExt_TaskSwitch(const CPU_INT32U  uiTaskID_in);
 extern void     CPUExt_TaskSwitchToRing3(void);
 
-
+/*
+    Interrupt
+*/
 //extern void     CPUExt_GateRegisterISR(const CPU_INT32U  uiIntNum_in, CPU_FNCT_VOID pfnISR_in);
 extern void     CPUExt_GateRegisterISRHookEnter(CPU_FNCT_VOID pfnISRHookEnter_in);
 extern void     CPUExt_GateRegisterISRHookExit(CPU_FNCT_VOID pfnISRHookExit_in);
 extern void     CPUExt_GateRegisterTimeTick(CPU_FNCT_VOID pfnTimeTick_in);
 extern CPU_ERR  CPUExt_GateRegisterKernelFnct(const CPU_INT32U  uiFnctNum_in, CPU_FNCT_VOID pfnKernelFnct_in);
 
-
+/*
+    Physical Memory
+*/
 extern void  CPUExt_PageGetFree(CPU_ADDR*  paddrPhysical_out);
 extern void  CPUExt_PageRelease(const CPU_ADDR  addrPhysical_in);
-
 
 #endif /* __CPU_EXT_H__ */
 

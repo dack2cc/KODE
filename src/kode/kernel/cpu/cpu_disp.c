@@ -81,6 +81,7 @@ CPU_PRIVATE  CPU_INT08U       m_uiAttribute;
     Private Interface
 ******************************************************************************/
 
+CPU_PRIVATE void cpu_disp_SetCode(const CPU_CHAR chCode_in);
 CPU_PRIVATE void cpu_disp_SetCursor(void);
 CPU_PRIVATE void cpu_disp_SetPosition(const CPU_INT32U uiCol_in, const CPU_INT32U uiRow_in);
 CPU_PRIVATE void cpu_disp_SetScreenMemoryStart(void);
@@ -152,8 +153,6 @@ void cpu_disp_Init(void)
 
 CPU_INT32U  cpu_disp_Print(const CPU_CHAR* pszStr_in)
 {
-	static CPU_INT08U  s_uiAsciiState = 0;
-	
 	CPU_CHAR*  pbyChar  = 0;
 	CPU_INT32U iCharCnt = 0;
 	
@@ -163,60 +162,87 @@ CPU_INT32U  cpu_disp_Print(const CPU_CHAR* pszStr_in)
 	
 	pbyChar = (CPU_CHAR *)pszStr_in;
 	while ('\0' != (*pbyChar)) {
-		switch (s_uiAsciiState) {
-		case 0: 
-		{
-		    if (((*pbyChar) > 31) && ((*pbyChar) < 127)) {
-		    	if (m_stCtl.uiPosCol >= m_stCtl.uiColNum) {
-		    		m_stCtl.uiPosCol -= m_stCtl.uiColNum;
-		    		m_stCtl.uiPosMem -= m_stCtl.uiRowPitch;
-		    		cpu_disp_LineFeed();
-		    	}
-		    	
-			    //(*(CPU_CHAR *)(m_stCtl.uiPosMem)) = (*pbyChar);
-		    	m_uiAttribute = m_stCtl.uiAttribute;
-		    	__asm__(
-		    		"movb _m_uiAttribute,%%ah\n\t"
-					"movw %%ax,%1\n\t"
-					::
-		    		"a" (*pbyChar),
-		    		"m" (*((CPU_INT16S *)(m_stCtl.uiPosMem)))
-					:
-		    		/* "ax" */
-		    	);
-			
-		        m_stCtl.uiPosMem += 2;
-		        m_stCtl.uiPosCol += 1;
-		    }
-		    else if ('\n' == (*pbyChar)) {
-			    m_stCtl.uiPosRow += 1;
-			    m_stCtl.uiPosCol = 0;
-			    m_stCtl.uiPosMem = m_stCtl.pstDev->uiMemStart + m_stCtl.uiPosRow * m_stCtl.uiRowPitch;
-		    }
-		    else {
-			    // EMPTY
-		    }
-		
-		    ++pbyChar;
-		    ++iCharCnt;
-			
-			break;
-		}
-		default:
-		   break;
-		} // end switch (s_uiAsciiState)
-	} // end while ('\0' != (*pbyChar))
-	
-	//cpu_disp_ScrollUp();
-	//cpu_disp_ScrollDown();
-	//cpu_disp_LineFeed();
-	//cpu_disp_ReverseLineFeed();
-	//cpu_disp_CarriageReturn();
-	//cpu_disp_Delete();
+		cpu_disp_SetCode((*pbyChar));
+		++pbyChar;
+		++iCharCnt;
+	}
 	
 	cpu_disp_SetCursor();
 	
 	return (iCharCnt);
+}
+
+void  cpu_disp_Char(const  CPU_CHAR  chAscii_in)
+{
+	cpu_disp_SetCode(chAscii_in);
+	cpu_disp_SetCursor();	
+}
+
+CPU_PRIVATE void cpu_disp_SetCode(const CPU_CHAR chCode_in)
+{
+	static CPU_INT08U  s_uiAsciiState = 0;
+	
+	switch (s_uiAsciiState) {
+	case 0: 
+	{
+	    if ((chCode_in > 31) && (chCode_in < 127)) {
+	    	if (m_stCtl.uiPosCol >= m_stCtl.uiColNum) {
+	    		m_stCtl.uiPosCol -= m_stCtl.uiColNum;
+	    		m_stCtl.uiPosMem -= m_stCtl.uiRowPitch;
+	    		cpu_disp_LineFeed();
+	    	}
+	    	
+		    //(*(CPU_CHAR *)(m_stCtl.uiPosMem)) = (*pbyChar);
+	    	m_uiAttribute = m_stCtl.uiAttribute;
+	    	__asm__(
+	    		"movb _m_uiAttribute,%%ah\n\t"
+				"movw %%ax,%1\n\t"
+				::
+	    		"a" (chCode_in),
+	    		"m" (*((CPU_INT16S *)(m_stCtl.uiPosMem)))
+				:
+	    		/* "ax" */
+	    	);
+		
+	        m_stCtl.uiPosMem += 2;
+	        m_stCtl.uiPosCol += 1;
+	    }
+		else if (7 == chCode_in) {
+			// beep
+		}
+		else if (8 == chCode_in) {
+			if (m_stCtl.uiPosCol > 0) {
+				m_stCtl.uiPosCol -= 1;
+				m_stCtl.uiPosMem -= 2;
+			}
+		}
+		else if (9 == chCode_in) {
+			m_stCtl.uiPosCol += 8 - (m_stCtl.uiPosCol&7);
+			m_stCtl.uiPosMem += (8 - (m_stCtl.uiPosCol&7)) << 1;
+			if (m_stCtl.uiPosCol > m_stCtl.uiColNum) {
+				m_stCtl.uiPosCol -= m_stCtl.uiColNum;
+				m_stCtl.uiPosMem -= m_stCtl.uiRowPitch;
+				cpu_disp_LineFeed();
+			}
+		}
+		else if ((10 == chCode_in) || (11 == chCode_in) || (12 == chCode_in)) {
+			cpu_disp_LineFeed();
+			cpu_disp_CarriageReturn();
+		}
+		else if (13 == chCode_in) {
+			cpu_disp_CarriageReturn();
+		}
+		else if (27 == chCode_in) {
+			//s_uiAsciiState = 1;
+		}
+	    else {
+		    // EMPTY
+	    }
+		break;
+	}
+	default:
+	   break;
+	} // end switch (s_uiAsciiState)		
 }
 
 CPU_PRIVATE void cpu_disp_SetPosition(const CPU_INT32U uiCol_in, const CPU_INT32U uiRow_in)

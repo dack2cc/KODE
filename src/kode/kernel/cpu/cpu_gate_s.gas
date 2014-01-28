@@ -6,6 +6,7 @@
 .global _cpu_gate_ISRKernelFnct
 .global _cpu_gate_ISRMemPageFault
 .global _cpu_gate_ISRTimeTick
+.global _cpu_gate_ISRKeyboard
 
 /******************************************************************************
     Constant
@@ -169,4 +170,51 @@ _cpu_gate_ISRTimeTick:
 	pop %ds
 3:
 	iret
+
+/******************************************************************************
+    _cpu_gate_ISRKeyboard
+******************************************************************************/
+
+.align 4
+_cpu_gate_ISRKeyboard:
+	pushl %eax
+	pushl %ebx
+	pushl %ecx
+	pushl %edx
+	push %ds
+	push %es
+	
+	movl $0x10,%eax  # set up ds,es to kernel space
+	mov %ax,%ds
+	mov %ax,%es
+	
+	sub %eax,%eax	 # read the scan code to al
+	inb $0x60,%al
+
+	pushl %eax       # parameter 0 : KeyCode
+    call _cpu_key_ISR_Input
+    addl $4,%esp     # ignore the parameter of function call
+
+    inb $0x61,%al    # restart the keyboard
+	jmp 1f
+1:	jmp 1f
+1:	orb $0x80,%al
+	jmp 1f
+1:	jmp 1f
+1:	outb %al,$0x61
+	jmp 1f
+1:	jmp 1f
+1:	andb $0x7F,%al
+	outb %al,$0x61
+	movb $0x20,%al
+	outb %al,$0x20
+
+	pop %es
+	pop %ds
+	popl %edx
+	popl %ecx
+	popl %ebx
+	popl %eax
+	iret
+
 

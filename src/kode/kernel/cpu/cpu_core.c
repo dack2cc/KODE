@@ -9,6 +9,7 @@
 #include <cpu_page.h>
 #include <cpu_gate.h>
 #include <cpu_task.h>
+#include <cpu_key.h>
 #include <cpu_ext.h>
 
 /******************************************************************************
@@ -66,8 +67,18 @@ void CPUExt_CorePanic(const CPU_CHAR* pszMsg_in)
 	return;
 }
 
+void CPUExt_KeyRegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in)
+{
+	return (cpu_key_RegisterHandler(pfnKeyHandler_in));
+}
+
 CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
 {
 	return (cpu_disp_Print(pszStr_in));
+}
+
+void CPUExt_DispChar(const CPU_CHAR chAscii_in)
+{
+	return (cpu_disp_Char(chAscii_in));
 }
 
