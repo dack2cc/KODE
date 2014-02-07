@@ -231,7 +231,7 @@ CPU_PRIVATE void cpu_disp_SetCode(const CPU_CHAR chCode_in)
 		}
 		else if ((10 == chCode_in) || (11 == chCode_in) || (12 == chCode_in)) {
 			cpu_disp_LineFeed();
-			cpu_disp_CarriageReturn();
+			//cpu_disp_CarriageReturn();
 		}
 		else if (13 == chCode_in) {
 			cpu_disp_CarriageReturn();

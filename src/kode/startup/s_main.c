@@ -58,9 +58,9 @@ void s_main(void)
 
 void s_logo(void)
 {
-	kdLogMessage("  ====  ====  ||    \n");
-	kdLogMessage("  ||    ||    ||=== \n");
-	kdLogMessage("  ====  ====  ||    \n");
+	kdLogMessage("  ====  ====  ||    \r\n");
+	kdLogMessage("  ||    ||    ||=== \r\n");
+	kdLogMessage("  ====  ====  ||    \r\n");
 }
 
 void* s_thread_alice(void* param_in)
@@ -69,7 +69,7 @@ void* s_thread_alice(void* param_in)
 	KDThread*      pstJerry = KD_NULL;
 
 	if (0xABCDEF == (KDint32)param_in) 
-	kdLogMessage("[alice] Hello (^-^)/ \n");
+	kdLogMessage("[alice] Hello (^-^)/ \r\n");
 	
 	pstAttr  = kdThreadAttrCreate();
 	pstJerry = kdThreadCreate(pstAttr, s_thread_jerry, (void *)0xFEDCBA);
@@ -77,7 +77,7 @@ void* s_thread_alice(void* param_in)
 	
 	kdThreadJoin(pstJerry, 0);
 	
-	kdLogMessage("[alice] Goodbye Jerry (-_-)/ \n");
+	kdLogMessage("[alice] Goodbye Jerry (-_-)/ \r\n");
 	
 	for (;;);
 	
@@ -87,7 +87,7 @@ void* s_thread_alice(void* param_in)
 void* s_thread_jerry(void* param_in)
 {
 	if (0xFEDCBA == (KDint32)param_in) 
-	kdLogMessage("[jerry] This is Jerry going down (=_=) \n");
+	kdLogMessage("[jerry] This is Jerry going down (=_=) \r\n");
 	
 	//for (;;);
 	

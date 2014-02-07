@@ -89,7 +89,7 @@ extern void        CPUExt_DispChar(const CPU_CHAR chAscii_in);
 #define CPU_EXT_KEY_STATE_BREAK  (1)
 
 typedef struct _CPU_EXT_KEY_EVENT {
-	CPU_INT08U  uiState;
+	//CPU_INT08U  uiState;
 	CPU_INT08U  uiScanCode;
 } CPU_EXT_KEY_EVENT;
 
