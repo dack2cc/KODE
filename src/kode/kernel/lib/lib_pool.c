@@ -13,6 +13,7 @@
 ******************************************************************************/
 
 #define LIB_PRIVATE  static
+//#define LIB_PRIVATE 
 
 typedef struct _LIB_POOL_DESC {
 	struct  _LIB_POOL_DESC*  pstNext;
@@ -24,7 +25,7 @@ typedef struct _LIB_POOL_DIR {
 	struct _LIB_POOL_DESC*  pstChain;
 } _LIB_POOL_DIR;
 
-LIB_PRIVATE _LIB_POOL_DIR  m_astPoolDir[] = 
+LIB_PRIVATE _LIB_POOL_DIR  lib_pool_astDir[] = 
 {
 	{16,   (struct _LIB_POOL_DESC *)0},
 	{32,   (struct _LIB_POOL_DESC *)0},
@@ -38,7 +39,7 @@ LIB_PRIVATE _LIB_POOL_DIR  m_astPoolDir[] =
 	{0,    (struct _LIB_POOL_DESC *)0}
 };
 
-LIB_PRIVATE _LIB_POOL_DESC* m_pstPoolDescFree = (_LIB_POOL_DESC*)0;
+LIB_PRIVATE _LIB_POOL_DESC* lib_pool_pstDescFree = (_LIB_POOL_DESC*)0;
 
 /******************************************************************************
     Private Interface
@@ -58,7 +59,7 @@ void* lib_pool_Malloc(CPU_SIZE_T  size_in)
 	void *  pAddr  = 0;
 	CPU_SR_ALLOC();
 	
-	for (pstPoolDir = m_astPoolDir; pstPoolDir->uiSize > 0; ++pstPoolDir) {
+	for (pstPoolDir = lib_pool_astDir; pstPoolDir->uiSize > 0; ++pstPoolDir) {
 		if (pstPoolDir->uiSize >= size_in) {
 			break;
 		}
@@ -78,12 +79,12 @@ void* lib_pool_Malloc(CPU_SIZE_T  size_in)
 	if (0 == pstPoolDesc) {
 		CPU_ADDR  addrPhyPage = 0;
 		
-		if (0 == m_pstPoolDescFree) {
+		if (0 == lib_pool_pstDescFree) {
 			lib_pool_GetFreeDesc();
 		}
 		
-		pstPoolDesc = m_pstPoolDescFree;
-		m_pstPoolDescFree = m_pstPoolDescFree->pstNext;
+		pstPoolDesc = lib_pool_pstDescFree;
+		lib_pool_pstDescFree = lib_pool_pstDescFree->pstNext;
 		
 		CPUExt_PageGetFree(&addrPhyPage);
 		if (0 == addrPhyPage) {
@@ -127,7 +128,7 @@ void  lib_pool_Free(void* pAddr_in, CPU_SIZE_T  size_in)
 	CPU_SR_ALLOC();
 	
 	addrPhyPage = ((CPU_ADDR)pAddr_in & 0xFFFFF000);
-	for (pstPoolDir = m_astPoolDir; pstPoolDir->uiSize > 0; ++pstPoolDir) {
+	for (pstPoolDir = lib_pool_astDir; pstPoolDir->uiSize > 0; ++pstPoolDir) {
 		pstPoolDescPrev = 0;
 		
 		if (pstPoolDir->uiSize < size_in) {
@@ -178,8 +179,8 @@ _LABEL_FOUND:
 		}
 		
 		CPUExt_PageRelease((CPU_ADDR)(pstPoolDesc->stPool.AddrPtr));
-		pstPoolDesc->pstNext = m_pstPoolDescFree;
-		m_pstPoolDescFree = pstPoolDesc;
+		pstPoolDesc->pstNext = lib_pool_pstDescFree;
+		lib_pool_pstDescFree = pstPoolDesc;
 	}
 	
 	CPU_INT_EN();
@@ -193,16 +194,16 @@ LIB_PRIVATE  void  lib_pool_GetFreeDesc(void)
 	_LIB_POOL_DESC* pstDesc = 0;
 	CPU_INT32S  i = 0;
 	
-	if (0 != m_pstPoolDescFree) {
+	if (0 != lib_pool_pstDescFree) {
 		return;
 	}
 	
-	CPUExt_PageGetFree((CPU_ADDR *)(&m_pstPoolDescFree));
-	if (0 == m_pstPoolDescFree) {
+	CPUExt_PageGetFree((CPU_ADDR *)(&lib_pool_pstDescFree));
+	if (0 == lib_pool_pstDescFree) {
 		CPUExt_CorePanic("[PANIC][lib_pool_GetFreeDesc]No Memory");
 	}
 	
-	pstDesc = m_pstPoolDescFree;
+	pstDesc = lib_pool_pstDescFree;
 	for (i = 1; i < (X86_MEM_PAGE_SIZE / sizeof(_LIB_POOL_DESC)); ++i) {
 		pstDesc->pstNext = pstDesc + 1;
 		pstDesc++;

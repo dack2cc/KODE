@@ -183,10 +183,12 @@ _cpu_gate_ISRKeyboard:
 	pushl %edx
 	push %ds
 	push %es
+	#push %fs
 	
-	movl $0x10,%eax  # set up ds,es to kernel space
+	movl $0x10,%eax  # set up ds,es,fs to kernel space
 	mov %ax,%ds
 	mov %ax,%es
+	#mov %ax,%fs
 	
 	sub %eax,%eax	 # read the scan code to al
 	inb $0x60,%al
@@ -209,6 +211,7 @@ _cpu_gate_ISRKeyboard:
 	movb $0x20,%al
 	outb %al,$0x20
 
+    #pop %fs
 	pop %es
 	pop %ds
 	popl %edx

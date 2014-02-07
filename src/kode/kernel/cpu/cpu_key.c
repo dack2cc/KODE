@@ -10,6 +10,7 @@
     Private Definition
 ******************************************************************************/
 
+
 #define _CPU_KEY_BREAK_BIT_MASK  (0x80)
 #define _CPU_KEY_SCAN_CODE_MASK  (0xFF)
 
@@ -24,9 +25,9 @@ typedef struct _KEYBOARD_CONTROL {
 	const CPU_CHAR*  pchShfMap;
 } KEYBOARD_CONTROL;
 
-CPU_PRIVATE  KEYBOARD_CONTROL  m_stCtl;
+CPU_PRIVATE  KEYBOARD_CONTROL  cpu_key_stCtl;
 
-CPU_PRIVATE const CPU_CHAR m_achUSKeyMap[] = {
+CPU_PRIVATE const CPU_CHAR cpu_key_achUSMap[] = {
 /* 00-0F */   0,  27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 127, 9,
 /* 10-1F */ 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 13,  0,   'a', 's',
 /* 20-2F */ 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',  0,  '`',  0,  0,   0,   0,   0,   0,
@@ -41,7 +42,7 @@ CPU_PRIVATE  void cpu_key_ReceiverNone(CPU_INT08U  uiScanCode_in);
 CPU_PRIVATE  void cpu_key_ReceiverNormal(CPU_INT08U  uiScanCode_in);
 CPU_PRIVATE  void cpu_key_ReceiverFunction(CPU_INT08U  uiScanCode_in);
 
-CPU_PRIVATE const _CPU_KEY_FNCT_PTR   m_apfnReceiver[_CPU_KEY_SCAN_CODE_MASK + 1] = {
+CPU_PRIVATE const _CPU_KEY_FNCT_PTR   cpu_key_apfnReceiver[_CPU_KEY_SCAN_CODE_MASK + 1] = {
 /* 00-03 s0 esc 1 2 */ cpu_key_ReceiverNone, cpu_key_ReceiverNormal, cpu_key_ReceiverNormal, cpu_key_ReceiverNormal,
 /* 04-07 3 4 5 6 */ cpu_key_ReceiverNormal, cpu_key_ReceiverNormal, cpu_key_ReceiverNormal, cpu_key_ReceiverNormal,
 /* 08-0B 7 8 9 0 */ cpu_key_ReceiverNormal, cpu_key_ReceiverNormal, cpu_key_ReceiverNormal, cpu_key_ReceiverNormal,
@@ -114,39 +115,48 @@ CPU_PRIVATE const _CPU_KEY_FNCT_PTR   m_apfnReceiver[_CPU_KEY_SCAN_CODE_MASK + 1
 
 void cpu_key_Init(void)
 {
-    m_stCtl.pfnHandler = 0;
-	m_stCtl.uiMode = 0;
-	m_stCtl.uiFollowKeyNum = 0;
-	m_stCtl.pchKeyMap = &m_achUSKeyMap[0];
-	m_stCtl.pchAltMap = &m_achUSKeyMap[0];
-	m_stCtl.pchShfMap = &m_achUSKeyMap[0];
+    cpu_key_stCtl.pfnHandler = 0;
+	cpu_key_stCtl.uiMode = 0;
+	cpu_key_stCtl.uiFollowKeyNum = 0;
+	cpu_key_stCtl.pchKeyMap = &cpu_key_achUSMap[0];
+	cpu_key_stCtl.pchAltMap = &cpu_key_achUSMap[0];
+	cpu_key_stCtl.pchShfMap = &cpu_key_achUSMap[0];
+	
+	//CPUExt_DispPrint("Key Initialized. \n");
 	
 	return;
 }
 
 void  cpu_key_RegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in)
 {
-	m_stCtl.pfnHandler = pfnKeyHandler_in;
+	cpu_key_stCtl.pfnHandler = pfnKeyHandler_in;
+	
+	//CPUExt_DispPrint("Key Handler register \n");
 	
 	return;
 }
 
 void cpu_key_ISR_Input(CPU_DATA uiScanCode_in)
 {
-	CPU_INT08U uiScanCode = uiScanCode_in & _CPU_KEY_SCAN_CODE_MASK;
+	CPU_EXT_KEY_EVENT  s_stEvent;
+	s_stEvent.uiScanCode = uiScanCode_in & _CPU_KEY_SCAN_CODE_MASK;
 	
-    m_apfnReceiver[uiScanCode](uiScanCode);
+	if (0 != (cpu_key_stCtl.pfnHandler)) {
+		CPUExt_DispPrint("Key Handler call \n");
+		(cpu_key_stCtl.pfnHandler)((void*)(&s_stEvent));
+	}
+    cpu_key_apfnReceiver[s_stEvent.uiScanCode](s_stEvent.uiScanCode);
 }
 
 CPU_PRIVATE  void cpu_key_CallHandler(CPU_INT08U uiState_in, CPU_INT08U  uiAsciiCode_in)
 {
 	CPU_EXT_KEY_EVENT  stEvent;
 	
-	stEvent.uiState = uiState_in;
-	stEvent.uiAscii = uiAsciiCode_in;
+//	stEvent.uiState = uiState_in;
+//	stEvent.uiAscii = uiAsciiCode_in;
 
-	if (0 != m_stCtl.pfnHandler) {
-		m_stCtl.pfnHandler((void*)(&stEvent));
+	if (0 != cpu_key_stCtl.pfnHandler) {
+		cpu_key_stCtl.pfnHandler((void*)(&stEvent));
 	}
 }
 
@@ -157,11 +167,11 @@ CPU_PRIVATE  void cpu_key_ReceiverNone(CPU_INT08U  uiScanCode_in)
 
 CPU_PRIVATE  void cpu_key_ReceiverNormal(CPU_INT08U  uiScanCode_in)
 {
-	CPU_CHAR chAsciiCode = m_stCtl.pchKeyMap[uiScanCode_in];
+	CPU_CHAR chAsciiCode = cpu_key_stCtl.pchKeyMap[uiScanCode_in];
 	
 	//CPUExt_DispPrint("Key Normal \n");
 	//CPUExt_DispChar('T');
-	chAsciiCode = m_achUSKeyMap[uiScanCode_in];
+	chAsciiCode = cpu_key_achUSMap[uiScanCode_in];
 	CPUExt_DispChar(chAsciiCode);
 	
 	return;

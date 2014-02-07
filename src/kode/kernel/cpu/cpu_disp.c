@@ -36,7 +36,7 @@ enum {
 	_DEVICE_MAX
 };
 
-CPU_PRIVATE  const DISPLAY_DEVICE  m_astDev[_DEVICE_MAX] = {
+CPU_PRIVATE  const DISPLAY_DEVICE  cpu_disp_astDev[_DEVICE_MAX] = {
 	{"EGAm", _VIDEO_TYPE_EGAM, 0xB0000, 0xB8000, 0x03B4, 0x03B5},
 	{"*MDA", _VIDEO_TYPE_MDA,  0xB0000, 0xB2000, 0x03B4, 0x03B5},
 	{"EGAc", _VIDEO_TYPE_EGAC, 0xB8000, 0xBC000, 0x03D4, 0x03D5},
@@ -64,18 +64,18 @@ typedef struct _DISPLAY_CONTROL {
 	CPU_INT08U  uiAttribute;
 } DISPLAY_CONTROL;
 
-CPU_PRIVATE  DISPLAY_CONTROL  m_stCtl;
+CPU_PRIVATE  DISPLAY_CONTROL  cpu_disp_stCtl;
 
 /* for the asm call */
-CPU_PRIVATE  CPU_INT32U       m_uiColNum;
-CPU_PRIVATE  CPU_INT08U       m_uiAttribute;
+CPU_PRIVATE  CPU_INT32U       cpu_disp_uiColNum;
+CPU_PRIVATE  CPU_INT08U       cpu_disp_uiAttribute;
 
 
 //static CPU_INT08U  m_byFontAttr = 0x07;  // BG:Black; Color:White
 #define _FONT_ATTR    (0x07)
 #define _ERASE_CHAR   ((_FONT_ATTR << 8) + 0x20)
 
-#define _CHECK_DEVICE()  if (0 == m_stCtl.pstDev) return;
+#define _CHECK_DEVICE()  if (0 == cpu_disp_stCtl.pstDev) return;
 
 /******************************************************************************
     Private Interface
@@ -102,36 +102,36 @@ void cpu_disp_Init(void)
 	CPU_CHAR* pbyDisplayCursor = 0;
 	CPU_INT08S  i = 0;
 
-	m_stCtl.uiAttribute = 0x07;
+	cpu_disp_stCtl.uiAttribute = 0x07;
 	
 	/* get parameter from bios */
-	m_stCtl.uiColNum = X86_DISPLAY_COL_NUM;
-	m_stCtl.uiRowNum = X86_DISPLAY_ROW_NUM;
-	m_stCtl.uiRowPitch = (m_stCtl.uiColNum * 2);
+	cpu_disp_stCtl.uiColNum = X86_DISPLAY_COL_NUM;
+	cpu_disp_stCtl.uiRowNum = X86_DISPLAY_ROW_NUM;
+	cpu_disp_stCtl.uiRowPitch = (cpu_disp_stCtl.uiColNum * 2);
 	
 	/* monochrome display */
 	if (7 == X86_DISPLAY_MODE) {		
 		if (0x10 != (X86_DISPLAY_EGA_BX & 0xFF)) {
-			m_stCtl.pstDev = (DISPLAY_DEVICE *)(m_astDev + _DEVICE_EGAM);
+			cpu_disp_stCtl.pstDev = (DISPLAY_DEVICE *)(cpu_disp_astDev + _DEVICE_EGAM);
 		}
 		else {
-			m_stCtl.pstDev = (DISPLAY_DEVICE *)&(m_astDev[_DEVICE_MDA]);
+			cpu_disp_stCtl.pstDev = (DISPLAY_DEVICE *)&(cpu_disp_astDev[_DEVICE_MDA]);
 		}
 	}
 	
 	/* color display */
 	else {
 		if (0x10 != (X86_DISPLAY_EGA_BX & 0xFF)) {
-			m_stCtl.pstDev = (DISPLAY_DEVICE *)&(m_astDev[_DEVICE_EGAC]);
+			cpu_disp_stCtl.pstDev = (DISPLAY_DEVICE *)&(cpu_disp_astDev[_DEVICE_EGAC]);
 		}
 		else {
-			m_stCtl.pstDev = (DISPLAY_DEVICE *)&(m_astDev[_DEVICE_CGA]);
+			cpu_disp_stCtl.pstDev = (DISPLAY_DEVICE *)&(cpu_disp_astDev[_DEVICE_CGA]);
 		}
 	}
 	
 	/* display the device information */
-	pbyDisplayName = m_stCtl.pstDev->pszName;
-	pbyDisplayCursor = ((CPU_CHAR *)(m_stCtl.pstDev->uiMemStart)) + m_stCtl.uiRowPitch - 8;
+	pbyDisplayName = cpu_disp_stCtl.pstDev->pszName;
+	pbyDisplayCursor = ((CPU_CHAR *)(cpu_disp_stCtl.pstDev->uiMemStart)) + cpu_disp_stCtl.uiRowPitch - 8;
 	for (i = 0; i < 4; ++i) {
 		(*pbyDisplayCursor) = (*pbyDisplayName);
 		pbyDisplayName += 1;
@@ -139,14 +139,18 @@ void cpu_disp_Init(void)
 	}
 	
 	/* the screen information */
-	m_stCtl.uiScrMemStart  = m_stCtl.pstDev->uiMemStart;
-	m_stCtl.uiScrMemEnd    = m_stCtl.pstDev->uiMemStart + m_stCtl.uiRowNum * m_stCtl.uiRowPitch;
-	m_stCtl.uiScrRowTop    = 0;
-	m_stCtl.uiScrRowBottom = m_stCtl.uiRowNum;
+	cpu_disp_stCtl.uiScrMemStart  = cpu_disp_stCtl.pstDev->uiMemStart;
+	cpu_disp_stCtl.uiScrMemEnd    = cpu_disp_stCtl.pstDev->uiMemStart + cpu_disp_stCtl.uiRowNum * cpu_disp_stCtl.uiRowPitch;
+	cpu_disp_stCtl.uiScrRowTop    = 0;
+	cpu_disp_stCtl.uiScrRowBottom = cpu_disp_stCtl.uiRowNum;
 	
 	/* the cursor position */
-	cpu_disp_SetPosition(X86_DISPLAY_POS_COL, X86_DISPLAY_POS_ROW);
-	
+	//cpu_disp_SetPosition(X86_DISPLAY_POS_COL, X86_DISPLAY_POS_ROW);
+
+	cpu_disp_stCtl.uiPosCol = X86_DISPLAY_POS_COL;
+	cpu_disp_stCtl.uiPosRow = X86_DISPLAY_POS_ROW;
+	cpu_disp_stCtl.uiPosMem = cpu_disp_stCtl.uiScrMemStart + X86_DISPLAY_POS_ROW*cpu_disp_stCtl.uiRowPitch + (X86_DISPLAY_POS_COL << 1);
+
 	return;
 }
 
@@ -186,42 +190,42 @@ CPU_PRIVATE void cpu_disp_SetCode(const CPU_CHAR chCode_in)
 	case 0: 
 	{
 	    if ((chCode_in > 31) && (chCode_in < 127)) {
-	    	if (m_stCtl.uiPosCol >= m_stCtl.uiColNum) {
-	    		m_stCtl.uiPosCol -= m_stCtl.uiColNum;
-	    		m_stCtl.uiPosMem -= m_stCtl.uiRowPitch;
+	    	if (cpu_disp_stCtl.uiPosCol >= cpu_disp_stCtl.uiColNum) {
+	    		cpu_disp_stCtl.uiPosCol -= cpu_disp_stCtl.uiColNum;
+	    		cpu_disp_stCtl.uiPosMem -= cpu_disp_stCtl.uiRowPitch;
 	    		cpu_disp_LineFeed();
 	    	}
 	    	
-		    //(*(CPU_CHAR *)(m_stCtl.uiPosMem)) = (*pbyChar);
-	    	m_uiAttribute = m_stCtl.uiAttribute;
+		    //(*(CPU_CHAR *)(cpu_disp_stCtl.uiPosMem)) = (*pbyChar);
+	    	cpu_disp_uiAttribute = cpu_disp_stCtl.uiAttribute;
 	    	__asm__(
-	    		"movb _m_uiAttribute,%%ah\n\t"
+	    		"movb _cpu_disp_uiAttribute,%%ah\n\t"
 				"movw %%ax,%1\n\t"
 				::
 	    		"a" (chCode_in),
-	    		"m" (*((CPU_INT16S *)(m_stCtl.uiPosMem)))
+	    		"m" (*((CPU_INT16S *)(cpu_disp_stCtl.uiPosMem)))
 				:
 	    		/* "ax" */
 	    	);
 		
-	        m_stCtl.uiPosMem += 2;
-	        m_stCtl.uiPosCol += 1;
+	        cpu_disp_stCtl.uiPosMem += 2;
+	        cpu_disp_stCtl.uiPosCol += 1;
 	    }
 		else if (7 == chCode_in) {
 			// beep
 		}
 		else if (8 == chCode_in) {
-			if (m_stCtl.uiPosCol > 0) {
-				m_stCtl.uiPosCol -= 1;
-				m_stCtl.uiPosMem -= 2;
+			if (cpu_disp_stCtl.uiPosCol > 0) {
+				cpu_disp_stCtl.uiPosCol -= 1;
+				cpu_disp_stCtl.uiPosMem -= 2;
 			}
 		}
 		else if (9 == chCode_in) {
-			m_stCtl.uiPosCol += 8 - (m_stCtl.uiPosCol&7);
-			m_stCtl.uiPosMem += (8 - (m_stCtl.uiPosCol&7)) << 1;
-			if (m_stCtl.uiPosCol > m_stCtl.uiColNum) {
-				m_stCtl.uiPosCol -= m_stCtl.uiColNum;
-				m_stCtl.uiPosMem -= m_stCtl.uiRowPitch;
+			cpu_disp_stCtl.uiPosCol += 8 - (cpu_disp_stCtl.uiPosCol&7);
+			cpu_disp_stCtl.uiPosMem += (8 - (cpu_disp_stCtl.uiPosCol&7)) << 1;
+			if (cpu_disp_stCtl.uiPosCol > cpu_disp_stCtl.uiColNum) {
+				cpu_disp_stCtl.uiPosCol -= cpu_disp_stCtl.uiColNum;
+				cpu_disp_stCtl.uiPosMem -= cpu_disp_stCtl.uiRowPitch;
 				cpu_disp_LineFeed();
 			}
 		}
@@ -247,14 +251,14 @@ CPU_PRIVATE void cpu_disp_SetCode(const CPU_CHAR chCode_in)
 
 CPU_PRIVATE void cpu_disp_SetPosition(const CPU_INT32U uiCol_in, const CPU_INT32U uiRow_in)
 {
-	if ((uiCol_in > m_stCtl.uiColNum) 
-	||  (uiRow_in > m_stCtl.uiRowNum)) {
+	if ((uiCol_in > cpu_disp_stCtl.uiColNum) 
+	||  (uiRow_in > cpu_disp_stCtl.uiRowNum)) {
 		return;
 	}
 	
-	m_stCtl.uiPosCol = uiCol_in;
-	m_stCtl.uiPosRow = uiRow_in;
-	m_stCtl.uiPosMem = m_stCtl.uiScrMemStart + uiRow_in*m_stCtl.uiRowPitch + (uiCol_in << 1);
+	cpu_disp_stCtl.uiPosCol = uiCol_in;
+	cpu_disp_stCtl.uiPosRow = uiRow_in;
+	cpu_disp_stCtl.uiPosMem = cpu_disp_stCtl.uiScrMemStart + uiRow_in*cpu_disp_stCtl.uiRowPitch + (uiCol_in << 1);
 }
 
 CPU_PRIVATE void cpu_disp_SetCursor(void)
@@ -264,10 +268,10 @@ CPU_PRIVATE void cpu_disp_SetCursor(void)
 	CPU_SR_ALLOC();
 	
 	CPU_CRITICAL_ENTER();
-	_asm_outb_p(14, m_stCtl.pstDev->uiPortReg);
-	_asm_outb_p(0xff&((m_stCtl.uiPosMem-m_stCtl.pstDev->uiMemStart)>>9), m_stCtl.pstDev->uiPortVal);
-	_asm_outb_p(15, m_stCtl.pstDev->uiPortReg);
-	_asm_outb_p(0xff&((m_stCtl.uiPosMem-m_stCtl.pstDev->uiMemStart)>>1), m_stCtl.pstDev->uiPortVal);
+	_asm_outb_p(14, cpu_disp_stCtl.pstDev->uiPortReg);
+	_asm_outb_p(0xff&((cpu_disp_stCtl.uiPosMem-cpu_disp_stCtl.pstDev->uiMemStart)>>9), cpu_disp_stCtl.pstDev->uiPortVal);
+	_asm_outb_p(15, cpu_disp_stCtl.pstDev->uiPortReg);
+	_asm_outb_p(0xff&((cpu_disp_stCtl.uiPosMem-cpu_disp_stCtl.pstDev->uiMemStart)>>1), cpu_disp_stCtl.pstDev->uiPortVal);
 	CPU_CRITICAL_EXIT();
 }
 
@@ -279,10 +283,10 @@ CPU_PRIVATE void cpu_disp_SetScreenMemoryStart(void)
 	CPU_SR_ALLOC();
 	
 	CPU_CRITICAL_ENTER();
-	_asm_outb_p(12, m_stCtl.pstDev->uiPortReg);
-	_asm_outb_p(0xFF&((m_stCtl.uiScrMemStart - m_stCtl.pstDev->uiMemStart)>>9), m_stCtl.pstDev->uiPortVal);
-	_asm_outb_p(13, m_stCtl.pstDev->uiPortReg);
-	_asm_outb_p(0xFF&((m_stCtl.uiScrMemStart - m_stCtl.pstDev->uiMemStart)>>1), m_stCtl.pstDev->uiPortVal);
+	_asm_outb_p(12, cpu_disp_stCtl.pstDev->uiPortReg);
+	_asm_outb_p(0xFF&((cpu_disp_stCtl.uiScrMemStart - cpu_disp_stCtl.pstDev->uiMemStart)>>9), cpu_disp_stCtl.pstDev->uiPortVal);
+	_asm_outb_p(13, cpu_disp_stCtl.pstDev->uiPortReg);
+	_asm_outb_p(0xFF&((cpu_disp_stCtl.uiScrMemStart - cpu_disp_stCtl.pstDev->uiMemStart)>>1), cpu_disp_stCtl.pstDev->uiPortVal);
 	CPU_CRITICAL_EXIT();
 }
 
@@ -290,37 +294,37 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 {
 	_CHECK_DEVICE();
 	
-	if ((_VIDEO_TYPE_EGAC == m_stCtl.pstDev->uiType)
-	||  (_VIDEO_TYPE_EGAM == m_stCtl.pstDev->uiType)) {
+	if ((_VIDEO_TYPE_EGAC == cpu_disp_stCtl.pstDev->uiType)
+	||  (_VIDEO_TYPE_EGAM == cpu_disp_stCtl.pstDev->uiType)) {
 		/* the screen is full, so all the text should go up */
-		if ((m_stCtl.uiScrRowTop == 0) 
-		&&  (m_stCtl.uiScrRowBottom == m_stCtl.uiRowNum)) {
-			m_stCtl.uiScrMemStart += m_stCtl.uiRowPitch;
-			m_stCtl.uiScrMemEnd   += m_stCtl.uiRowPitch;
-			m_stCtl.uiPosMem      += m_stCtl.uiRowPitch;
+		if ((cpu_disp_stCtl.uiScrRowTop == 0) 
+		&&  (cpu_disp_stCtl.uiScrRowBottom == cpu_disp_stCtl.uiRowNum)) {
+			cpu_disp_stCtl.uiScrMemStart += cpu_disp_stCtl.uiRowPitch;
+			cpu_disp_stCtl.uiScrMemEnd   += cpu_disp_stCtl.uiRowPitch;
+			cpu_disp_stCtl.uiPosMem      += cpu_disp_stCtl.uiRowPitch;
 			
 			/* move the memory */
-			if (m_stCtl.uiScrMemEnd > m_stCtl.pstDev->uiMemEnd) {
-				m_uiColNum = m_stCtl.uiColNum;
+			if (cpu_disp_stCtl.uiScrMemEnd > cpu_disp_stCtl.pstDev->uiMemEnd) {
+				cpu_disp_uiColNum = cpu_disp_stCtl.uiColNum;
 				__asm__(
 					"cld\n\t"
 					"rep\n\t"
 					"movsl\n\t"
-					"movl _m_uiColNum, %1\n\t"
+					"movl _cpu_disp_uiColNum, %1\n\t"
 					"rep\n\t"
 					"stosw"
 					::
 					"a"(_ERASE_CHAR),
-					"c"((m_stCtl.uiRowNum - 1)*(m_stCtl.uiColNum>>1)),
-					"D"(m_stCtl.pstDev->uiMemStart),
-					"S"(m_stCtl.uiScrMemStart)
+					"c"((cpu_disp_stCtl.uiRowNum - 1)*(cpu_disp_stCtl.uiColNum>>1)),
+					"D"(cpu_disp_stCtl.pstDev->uiMemStart),
+					"S"(cpu_disp_stCtl.uiScrMemStart)
 					:
 					/* "cx", "di", "si" */
 				);
 				
-			    m_stCtl.uiScrMemStart -= m_stCtl.uiRowPitch;
-			    m_stCtl.uiScrMemEnd   -= m_stCtl.uiRowPitch;
-			    m_stCtl.uiPosMem      -= m_stCtl.uiRowPitch;				
+			    cpu_disp_stCtl.uiScrMemStart -= cpu_disp_stCtl.uiRowPitch;
+			    cpu_disp_stCtl.uiScrMemEnd   -= cpu_disp_stCtl.uiRowPitch;
+			    cpu_disp_stCtl.uiPosMem      -= cpu_disp_stCtl.uiRowPitch;				
 			}
 			
 			/* fill the last memory */
@@ -331,8 +335,8 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 					"stosw"
 					::
 					"a"(_ERASE_CHAR),
-					"c"(m_stCtl.uiColNum),
-					"D"(m_stCtl.uiScrMemEnd - m_stCtl.uiRowPitch)
+					"c"(cpu_disp_stCtl.uiColNum),
+					"D"(cpu_disp_stCtl.uiScrMemEnd - cpu_disp_stCtl.uiRowPitch)
 					: 
 					/* "cx", "di" */
 				);
@@ -342,19 +346,19 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 		
 		/* the screen is not full, so just fill the next line with erase */
 		else {
-			m_uiColNum = m_stCtl.uiColNum;
+			cpu_disp_uiColNum = cpu_disp_stCtl.uiColNum;
 			__asm__(
 				"cld\n\t"
 				"rep\n\t"
 				"movsl\n\t"
-				"movl _m_uiColNum,%%ecx\n\t"
+				"movl _cpu_disp_uiColNum,%%ecx\n\t"
 				"rep\n\t"
 				"stosw"
 				::
 				"a" (_ERASE_CHAR),
-				"c" ((m_stCtl.uiScrRowBottom-m_stCtl.uiScrRowTop-1)*m_stCtl.uiColNum>>1),
-				"D" (m_stCtl.uiScrMemStart+m_stCtl.uiRowPitch*m_stCtl.uiScrRowTop),
-				"S" (m_stCtl.uiScrMemStart+m_stCtl.uiRowPitch*(m_stCtl.uiScrRowTop+1))
+				"c" ((cpu_disp_stCtl.uiScrRowBottom-cpu_disp_stCtl.uiScrRowTop-1)*cpu_disp_stCtl.uiColNum>>1),
+				"D" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*cpu_disp_stCtl.uiScrRowTop),
+				"S" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*(cpu_disp_stCtl.uiScrRowTop+1))
 				:
 				/* "cx","di","si" */
 			);
@@ -363,19 +367,19 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 	
 	/* Not EGA/VGA */
 	else {
-		m_uiColNum = m_stCtl.uiColNum;
+		cpu_disp_uiColNum = cpu_disp_stCtl.uiColNum;
 		__asm__(
 			"cld\n\t"
 			"rep\n\t"
 			"movsl\n\t"
-			"movl _m_uiColNum, %%ecx\n\t"
+			"movl _cpu_disp_uiColNum, %%ecx\n\t"
 			"rep\n\t"
 			"stosw"
 			::
 			"a" (_ERASE_CHAR),
-			"c" ((m_stCtl.uiScrRowBottom-m_stCtl.uiScrRowTop-1)*m_stCtl.uiColNum>>1),
-			"D" (m_stCtl.uiScrMemStart+m_stCtl.uiRowPitch*m_stCtl.uiScrRowTop),
-			"S" (m_stCtl.uiScrMemStart+m_stCtl.uiRowPitch*(m_stCtl.uiScrRowTop+1))
+			"c" ((cpu_disp_stCtl.uiScrRowBottom-cpu_disp_stCtl.uiScrRowTop-1)*cpu_disp_stCtl.uiColNum>>1),
+			"D" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*cpu_disp_stCtl.uiScrRowTop),
+			"S" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*(cpu_disp_stCtl.uiScrRowTop+1))
 			:
 			/* "cx","di","si" */
 		);
@@ -386,41 +390,41 @@ CPU_PRIVATE void cpu_disp_ScrollDown(void)
 {
 	_CHECK_DEVICE();
 	
-	if ((_VIDEO_TYPE_EGAC == m_stCtl.pstDev->uiType)
-	||  (_VIDEO_TYPE_EGAM == m_stCtl.pstDev->uiType)) {
-		m_uiColNum = m_stCtl.uiColNum;
+	if ((_VIDEO_TYPE_EGAC == cpu_disp_stCtl.pstDev->uiType)
+	||  (_VIDEO_TYPE_EGAM == cpu_disp_stCtl.pstDev->uiType)) {
+		cpu_disp_uiColNum = cpu_disp_stCtl.uiColNum;
 		__asm__(
 			"std\n\t"
 			"rep\n\t"
 			"movsl\n\t"
 			"addl $2,%%edi\n\t"	/* %edi has been decremented by 4 */
-			"movl _m_uiColNum,%%ecx\n\t"
+			"movl _cpu_disp_uiColNum,%%ecx\n\t"
 			"rep\n\t"
 			"stosw"
 			::
 			"a" (_ERASE_CHAR),
-			"c" ((m_stCtl.uiScrRowBottom-m_stCtl.uiScrRowTop-1)*m_stCtl.uiColNum>>1),
-			"D" (m_stCtl.uiScrMemStart+m_stCtl.uiRowPitch*m_stCtl.uiScrRowBottom-4),
-			"S" (m_stCtl.uiScrMemStart+m_stCtl.uiRowPitch*(m_stCtl.uiScrRowBottom-1)-4)
+			"c" ((cpu_disp_stCtl.uiScrRowBottom-cpu_disp_stCtl.uiScrRowTop-1)*cpu_disp_stCtl.uiColNum>>1),
+			"D" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*cpu_disp_stCtl.uiScrRowBottom-4),
+			"S" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*(cpu_disp_stCtl.uiScrRowBottom-1)-4)
 			:
 			/* "ax","cx","di","si" */
 		);
 	}
 	else {
-		m_uiColNum = m_stCtl.uiColNum;
+		cpu_disp_uiColNum = cpu_disp_stCtl.uiColNum;
 		__asm__(
 			"std\n\t"
 			"rep\n\t"
 			"movsl\n\t"
 			"addl $2,%%edi\n\t"	/* %edi has been decremented by 4 */
-			"movl _m_uiColNum,%%ecx\n\t"
+			"movl _cpu_disp_uiColNum,%%ecx\n\t"
 			"rep\n\t"
 			"stosw"
 			::
 			"a" (_ERASE_CHAR),
-			"c" ((m_stCtl.uiScrRowBottom-m_stCtl.uiScrRowTop-1)*m_stCtl.uiColNum>>1),
-			"D" (m_stCtl.uiScrMemStart+m_stCtl.uiRowPitch*m_stCtl.uiScrRowBottom-4),
-			"S" (m_stCtl.uiScrMemStart+m_stCtl.uiRowPitch*(m_stCtl.uiScrRowBottom-1)-4)
+			"c" ((cpu_disp_stCtl.uiScrRowBottom-cpu_disp_stCtl.uiScrRowTop-1)*cpu_disp_stCtl.uiColNum>>1),
+			"D" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*cpu_disp_stCtl.uiScrRowBottom-4),
+			"S" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*(cpu_disp_stCtl.uiScrRowBottom-1)-4)
 			:
 			/* "ax","cx","di","si" */
 		);
@@ -429,9 +433,9 @@ CPU_PRIVATE void cpu_disp_ScrollDown(void)
 
 CPU_PRIVATE void cpu_disp_LineFeed(void)
 {
-	if (m_stCtl.uiPosRow+1<m_stCtl.uiScrRowBottom) {
-		m_stCtl.uiPosRow++;
-		m_stCtl.uiPosMem += m_stCtl.uiRowPitch;
+	if (cpu_disp_stCtl.uiPosRow+1<cpu_disp_stCtl.uiScrRowBottom) {
+		cpu_disp_stCtl.uiPosRow++;
+		cpu_disp_stCtl.uiPosMem += cpu_disp_stCtl.uiRowPitch;
 		return;
 	}
 	cpu_disp_ScrollUp();
@@ -440,9 +444,9 @@ CPU_PRIVATE void cpu_disp_LineFeed(void)
 
 CPU_PRIVATE void cpu_disp_ReverseLineFeed(void)
 {
-	if (m_stCtl.uiPosRow>m_stCtl.uiScrRowTop) {
-		m_stCtl.uiPosRow--;
-		m_stCtl.uiPosMem -= m_stCtl.uiRowPitch;
+	if (cpu_disp_stCtl.uiPosRow>cpu_disp_stCtl.uiScrRowTop) {
+		cpu_disp_stCtl.uiPosRow--;
+		cpu_disp_stCtl.uiPosMem -= cpu_disp_stCtl.uiRowPitch;
 		return;
 	}
 	cpu_disp_ScrollDown();
@@ -450,16 +454,16 @@ CPU_PRIVATE void cpu_disp_ReverseLineFeed(void)
 
 CPU_PRIVATE void cpu_disp_CarriageReturn(void)
 {
-	m_stCtl.uiPosMem -= m_stCtl.uiPosCol<<1;
-	m_stCtl.uiPosCol = 0;
+	cpu_disp_stCtl.uiPosMem -= cpu_disp_stCtl.uiPosCol<<1;
+	cpu_disp_stCtl.uiPosCol = 0;
 }
 
 CPU_PRIVATE void cpu_disp_Delete(void)
 {
-	if (m_stCtl.uiPosCol) {
-		m_stCtl.uiPosMem -= 2;
-		m_stCtl.uiPosCol--;
-		(*((CPU_INT16U *)(m_stCtl.uiPosMem))) = _ERASE_CHAR;
+	if (cpu_disp_stCtl.uiPosCol) {
+		cpu_disp_stCtl.uiPosMem -= 2;
+		cpu_disp_stCtl.uiPosCol--;
+		(*((CPU_INT16U *)(cpu_disp_stCtl.uiPosMem))) = _ERASE_CHAR;
 	}
 }
 

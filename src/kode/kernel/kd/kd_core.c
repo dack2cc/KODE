@@ -9,21 +9,23 @@
 #include <os.h>
 #include <cpu_ext.h>
 #include <lib_def.h>
+#include <drv_key.h>
 
 /******************************************************************************
     Private Define
 ******************************************************************************/
 
-#define _KD_PRIVATE  static
+#define KD_PRIVATE  static
+//#define KD_PRIVATE 
 
-_KD_PRIVATE const KDuint32  kd_core_VenderVal   = CPU_TYPE_CREATE('K','K','D','X');
-_KD_PRIVATE const KDchar*   kd_core_VenderStr   = "kokoDo";
-_KD_PRIVATE const KDuint32  kd_core_VersionVal  = CPU_TYPE_CREATE('0', '0', '0', '1');
-_KD_PRIVATE const KDchar*   kd_core_VersionStr  = "00.01";
-_KD_PRIVATE const KDuint32  kd_core_PlatformVal = CPU_TYPE_CREATE('X', '8', '6', ' ');
-_KD_PRIVATE const KDchar*   kd_core_PlatformStr = "x86_32";
+KD_PRIVATE const KDuint32  kd_core_VenderVal   = CPU_TYPE_CREATE('K','K','D','X');
+KD_PRIVATE const KDchar*   kd_core_VenderStr   = "kokoDo";
+KD_PRIVATE const KDuint32  kd_core_VersionVal  = CPU_TYPE_CREATE('0', '0', '0', '1');
+KD_PRIVATE const KDchar*   kd_core_VersionStr  = "00.01";
+KD_PRIVATE const KDuint32  kd_core_PlatformVal = CPU_TYPE_CREATE('X', '8', '6', ' ');
+KD_PRIVATE const KDchar*   kd_core_PlatformStr = "x86_32";
 
-_KD_PRIVATE KDint     kd_core_ErrorCode = 0;
+KD_PRIVATE KDint     kd_core_ErrorCode = 0;
 
 enum {
 	KD_KERNEL_FNCT_INVALID = -1,
@@ -107,11 +109,11 @@ CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadSemPost, KDThreadSem *, sem);
     Private Interface
 ******************************************************************************/
 
-_KD_PRIVATE KDint kd_core_GetError(void);
-_KD_PRIVATE void  kd_core_Run(void);
-_KD_PRIVATE KDint kd_core_QueryAttribi(KDint attribute, KDint *value);
-_KD_PRIVATE const KDchar * kd_core_QueryAttribcv(KDint attribute);
-_KD_PRIVATE const KDchar * kd_core_QueryIndexedAttribcv(KDint attribute, KDint index);
+KD_PRIVATE KDint kd_core_GetError(void);
+KD_PRIVATE void  kd_core_Run(void);
+KD_PRIVATE KDint kd_core_QueryAttribi(KDint attribute, KDint *value);
+KD_PRIVATE const KDchar * kd_core_QueryAttribcv(KDint attribute);
+KD_PRIVATE const KDchar * kd_core_QueryIndexedAttribcv(KDint attribute, KDint index);
 
 /******************************************************************************
     Function Definition
@@ -158,7 +160,6 @@ kdextInit(void)
 	CPUExt_GateRegisterKernelFnct(__KF_kdThreadSemFree,            (CPU_FNCT_VOID)(kd_thread_SemFree));
 	CPUExt_GateRegisterKernelFnct(__KF_kdThreadSemWait,            (CPU_FNCT_VOID)(kd_thread_SemWait));
 	CPUExt_GateRegisterKernelFnct(__KF_kdThreadSemPost,            (CPU_FNCT_VOID)(kd_thread_SemPost));
-
 	
 	/* => we are in initialize process of Ring 0 */
 	OSInit(&err);
@@ -167,7 +168,7 @@ kdextInit(void)
 	return;
 }
 
-_KD_PRIVATE void kd_core_Run(void)
+KD_PRIVATE void kd_core_Run(void)
 {
 	OS_ERR err = OS_ERR_NONE;
 	
@@ -204,7 +205,7 @@ void kd_core_Assert(const KDchar *condition, const KDchar *filename, KDint linen
 	CPUExt_CorePanic(condition);
 }
 
-_KD_PRIVATE KDint kd_core_GetError(void)
+KD_PRIVATE KDint kd_core_GetError(void)
 {
 	return (kd_core_ErrorCode);
 }
@@ -214,7 +215,7 @@ void  kd_core_SetError(KDint error)
 	kd_core_ErrorCode = error;
 }
 
-_KD_PRIVATE KDint kd_core_QueryAttribi(KDint attribute, KDint *value)
+KD_PRIVATE KDint kd_core_QueryAttribi(KDint attribute, KDint *value)
 {
 	if (KD_NULL == value) {
 		kd_core_ErrorCode = KD_EACCES;
@@ -240,7 +241,7 @@ _KD_PRIVATE KDint kd_core_QueryAttribi(KDint attribute, KDint *value)
 	return (0);
 }
 
-_KD_PRIVATE const KDchar * kd_core_QueryAttribcv(KDint attribute)
+KD_PRIVATE const KDchar * kd_core_QueryAttribcv(KDint attribute)
 {
 	switch (attribute) {
 	case KD_ATTRIB_VENDOR:
@@ -261,7 +262,7 @@ _KD_PRIVATE const KDchar * kd_core_QueryAttribcv(KDint attribute)
 	return (KD_NULL);
 }
 
-_KD_PRIVATE const KDchar * kd_core_QueryIndexedAttribcv(KDint attribute, KDint index)
+KD_PRIVATE const KDchar * kd_core_QueryIndexedAttribcv(KDint attribute, KDint index)
 {
 	kd_core_ErrorCode = KD_EINVAL;
 	return (KD_NULL);

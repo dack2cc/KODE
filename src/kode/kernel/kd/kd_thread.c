@@ -15,7 +15,8 @@
     Private Define
 ******************************************************************************/
 
-#define _KD_PRIVATE   static
+#define KD_PRIVATE   static
+//#define KD_PRIVATE 
 
 struct KDThreadAttr {
 	KDint  iDetachState;

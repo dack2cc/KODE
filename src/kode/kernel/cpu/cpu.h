@@ -139,6 +139,7 @@ typedef            void      (*CPU_FNCT_PTR )(void *p_obj);     /* See Note #2b.
 *********************************************************************************************************
 */
 
+//#define  CPU_PRIVATE  static
 #define  CPU_PRIVATE  
 
 /*$PAGE*/

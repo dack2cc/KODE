@@ -11,8 +11,8 @@
     Private Define
 ******************************************************************************/
 
-CPU_PRIVATE  CPU_ADDR    m_addrMemoHigh = 0;
 
+CPU_PRIVATE  CPU_ADDR    cpu_page_addrMemoHigh = 0;
 
 #define _MEMO_SIZE_MAX      (16*1024*1024)  /* 16MB */
 #define _MEMO_LOW_ADDR      (0x100000)      /* 1MB  */
@@ -21,7 +21,7 @@ CPU_PRIVATE  CPU_ADDR    m_addrMemoHigh = 0;
 #define _MEMO_PAGE_FREE     (0)
 #define _MEMO_PAGE_USED     (100)
 
-CPU_PRIVATE  CPU_INT08U  m_aiPageMap[_MEMO_PAGING_NUM];
+CPU_PRIVATE  CPU_INT08U  cpu_page_aiMap[_MEMO_PAGING_NUM];
 #define _calc_page_index(addr)  (((addr) - _MEMO_LOW_ADDR) >> 12)
 
 
@@ -30,12 +30,12 @@ typedef struct {
 	CPU_INT32U  uiBufSize;
 } CPU_MEMO_BUFFER;
 
-CPU_PRIVATE  CPU_MEMO_BUFFER  m_astMemoBuffer[] = {
+CPU_PRIVATE  CPU_MEMO_BUFFER  cpu_page_astMemoBuffer[] = {
 	{12 * 1024 * 1024, 4 * _MEMO_LOW_ADDR},
 	{ 6 * 1024 * 1024, 2 * _MEMO_LOW_ADDR},
 	{ 0 * 1024 * 1024, 1 * _MEMO_LOW_ADDR}
 };
-#define CPU_MEMO_BUFFER_MAX  (sizeof(m_astMemoBuffer) / sizeof(CPU_MEMO_BUFFER))
+#define CPU_MEMO_BUFFER_MAX  (sizeof(cpu_page_astMemoBuffer) / sizeof(CPU_MEMO_BUFFER))
 
 
 #define _is_valid_page_table_item(item)    (0x01 == (0x01 & (item)))
@@ -66,17 +66,17 @@ void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in, CPU_ADDR*  paddrBufMemEnd
 	CPU_ADDR    addrMemoStart = 0;
 	
 	/* get the end of memory */
-	m_addrMemoHigh = _MEMO_LOW_ADDR + (X86_MEM_EXT_SIZE_IN_KB * 1024);
+	cpu_page_addrMemoHigh = _MEMO_LOW_ADDR + (X86_MEM_EXT_SIZE_IN_KB * 1024);
 	
 	/* restrict the max memroy size */
-	if (m_addrMemoHigh > _MEMO_SIZE_MAX) {
-		m_addrMemoHigh = _MEMO_SIZE_MAX;
+	if (cpu_page_addrMemoHigh > _MEMO_SIZE_MAX) {
+		cpu_page_addrMemoHigh = _MEMO_SIZE_MAX;
 	}
 	
 	/* calculate the buffer memory end address */
 	for (i = 0; i < CPU_MEMO_BUFFER_MAX; ++i) {
-		if (m_addrMemoHigh > m_astMemoBuffer[i].uiMemSize) {
-			addrBufMemEnd = m_astMemoBuffer[i].uiBufSize;
+		if (cpu_page_addrMemoHigh > cpu_page_astMemoBuffer[i].uiMemSize) {
+			addrBufMemEnd = cpu_page_astMemoBuffer[i].uiBufSize;
 			break;
 		}
 	}
@@ -86,15 +86,15 @@ void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in, CPU_ADDR*  paddrBufMemEnd
 	
 	/* init all the pages to used */
 	for (i = 0; i < _MEMO_PAGING_NUM; ++i) {
-		m_aiPageMap[i] = _MEMO_PAGE_USED;
+		cpu_page_aiMap[i] = _MEMO_PAGE_USED;
 	}
 	
 	/* mark the free pages */
 	addrMemoStart = addrBufMemEnd + uiRamdiskSize_in;
 	i = _calc_page_index(addrMemoStart);
-	iValidPageCnt = ((m_addrMemoHigh - addrMemoStart) >> 12);	
+	iValidPageCnt = ((cpu_page_addrMemoHigh - addrMemoStart) >> 12);	
 	while (iValidPageCnt > 0) {
-		m_aiPageMap[i] = _MEMO_PAGE_FREE;
+		cpu_page_aiMap[i] = _MEMO_PAGE_FREE;
 		++i;
 		--iValidPageCnt;
 	}
@@ -116,8 +116,8 @@ void CPUExt_PageGetFree(CPU_ADDR*  paddrPhysical_out)
 	CPU_ADDR    addrPysicalPage = 0;
 
 	for (uiPageIndex = 0; uiPageIndex < _MEMO_PAGING_NUM; ++uiPageIndex) {
-		if (_MEMO_PAGE_FREE == m_aiPageMap[uiPageIndex]) {
-			m_aiPageMap[uiPageIndex] = 1;
+		if (_MEMO_PAGE_FREE == cpu_page_aiMap[uiPageIndex]) {
+			cpu_page_aiMap[uiPageIndex] = 1;
 			addrPysicalPage = (uiPageIndex << 12) + _MEMO_LOW_ADDR;
 			break;
 		}
@@ -142,16 +142,16 @@ void CPUExt_PageRelease(const CPU_ADDR  addrPhysical_in)
 	if (addrPhysical_in <  _MEMO_LOW_ADDR) {
 		return;
 	}
-	if (addrPhysical_in >= m_addrMemoHigh) {
+	if (addrPhysical_in >= cpu_page_addrMemoHigh) {
 		CPUExt_CorePanic("[PANIC][CPUExt_PageRelease]trying to release a nonexistent page");
 	}
 	
 	iPageIdx = _calc_page_index(addrPhysical_in);
-	if (m_aiPageMap[iPageIdx] > 0) {
-		--m_aiPageMap[iPageIdx];
+	if (cpu_page_aiMap[iPageIdx] > 0) {
+		--cpu_page_aiMap[iPageIdx];
 	}
 	else {
-		m_aiPageMap[iPageIdx] = 0;
+		cpu_page_aiMap[iPageIdx] = 0;
 		CPUExt_CorePanic("[PANIC][CPUExt_PageRelease]trying to release a free page");
 	}
 	
@@ -233,7 +233,7 @@ CPU_ERR  cpu_page_CopyPageTable(
 			if ((*puiPgTbItmSrc) > _MEMO_LOW_ADDR) {
 				(*puiPgTbItmSrc) = ((*puiPgTbItmSrc) & (~2));      /* set the source page to read only */
 				uiPageIdxSrc = _calc_page_index((*puiPgTbItmSrc)); /* add the reference count of the page. */
-				m_aiPageMap[uiPageIdxSrc]++;
+				cpu_page_aiMap[uiPageIdxSrc]++;
 			}
 		}
 	}
@@ -309,11 +309,11 @@ CPU_ERR  cpu_page_PutPageToLinerarAddr(
 		CPUExt_CorePanic("[PANIC][cpu_page_PutPageToLinerarAddr]Exception page address");
 	}
 	if ((addrPhysicalPage_in <  _MEMO_LOW_ADDR)
-	||  (addrPhysicalPage_in >= m_addrMemoHigh)) {
+	||  (addrPhysicalPage_in >= cpu_page_addrMemoHigh)) {
 		CPUExt_CorePanic("[PANIC][cpu_page_PutPageToLinerarAddr]Page address out of range");
 	}
 	uiPageIndex = _calc_page_index(addrPhysicalPage_in);
-	if (_MEMO_PAGE_FREE == m_aiPageMap[uiPageIndex]) {
+	if (_MEMO_PAGE_FREE == cpu_page_aiMap[uiPageIndex]) {
 		CPUExt_CorePanic("[PANIC][cpu_page_PutPageToLinerarAddr]Try to put a free page");
 	}
 	
@@ -384,6 +384,8 @@ void cpu_page_WriteProtectedVerify(
 
 CPU_PRIVATE void cpu_page_OutOfMemory(void)
 {
+	CPUExt_CorePanic("[PANIC][cpu_page_OutOfMemory]out of memory");
+	
 	return;
 }
 
@@ -403,7 +405,7 @@ CPU_PRIVATE void cpu_page_UnlockWriteProtected(CPU_INT32U*  puiPgTbItm_inout)
 	
 	/* the memory page is not shared */
 	if ((addrPhyPageOld >= _MEMO_LOW_ADDR) 
-	&&  (1 == m_aiPageMap[uiPageIdxOld])) {
+	&&  (1 == cpu_page_aiMap[uiPageIdxOld])) {
 		(*puiPgTbItm_inout) |= 2;
 		_invalidate();
 		return;
@@ -417,7 +419,7 @@ CPU_PRIVATE void cpu_page_UnlockWriteProtected(CPU_INT32U*  puiPgTbItm_inout)
 	
 	/* reference count */
 	if (addrPhyPageOld >= _MEMO_LOW_ADDR) {
-		m_aiPageMap[uiPageIdxOld]--;
+		cpu_page_aiMap[uiPageIdxOld]--;
 	}
 	
 	/* point the page table item to the new memory page */
@@ -464,7 +466,7 @@ __asm__("std ; repne ; scasb\n\t"
 	"1:"
 	:"=a" (__res)
 	:"0" (0),"i" (_MEMO_LOW_ADDR),"c" (_MEMO_PAGING_NUM),
-	"D" (m_aiPageMap+_MEMO_PAGING_NUM-1)
+	"D" (cpu_page_aiMap+_MEMO_PAGING_NUM-1)
 	);
 return __res;
 }

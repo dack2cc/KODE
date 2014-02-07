@@ -7,6 +7,7 @@
 #include <cpu_core.h>
 #include <cpu_boot.h>
 #include <cpu_ext.h>
+#include <drv_key.h>
 
 /******************************************************************************
     Private Definition
@@ -56,6 +57,8 @@ void  OSInitHook(void)
 
 void  OSInitEndHook(void)
 {
+	drv_key_Init();
+	
 	CPU_IntEn();
 	
 	CPUExt_TaskSwitchToRing3();
@@ -93,6 +96,7 @@ void OSTaskCreateHook(OS_TCB *p_tcb)
 	aiArgList[CPU_TASK_ARG_ROUTINE]   = (CPU_DATA)(p_tcb->TaskEntryAddr);
 	aiArgList[CPU_TASK_ARG_PARAMETER] = (CPU_DATA)(p_tcb->TaskEntryArg);
 	
+	/* kernel space task */
 	if ( ((OS_OPT)0 != (p_tcb->Opt & OS_OPT_TASK_STK_CHK)) 
 	&&   ((OS_OPT)0 != (p_tcb->Opt & OS_OPT_TASK_STK_CLR))
 	&&   ((void *)0 == (p_tcb->ExtPtr)) ) {
@@ -108,6 +112,8 @@ void OSTaskCreateHook(OS_TCB *p_tcb)
 		aiArgList[CPU_TASK_ARG_KERNEL_STACK] = (CPU_INT32U)(p_tcb->ExtPtr) + X86_MEM_PAGE_SIZE - 4;
 		aiArgList[CPU_TASK_ARG_EXT_DATA]     = (CPU_DATA)(p_tcb->ExtPtr);		
 	}
+	
+	/* user space task */
 	else {
 		pExtData = (CPU_DATA *)(p_tcb->ExtPtr);
 		aiArgList[CPU_TASK_ARG_EFLAG]        = (CPU_DATA)(pExtData[OS_TCB_EXT_EFLAG]);
@@ -141,11 +147,17 @@ void  OSTimeTickHook(void)
 }
 
 #if (OS_CFG_TASK_DEL_EN > 0u)
-
 void  OSTaskDelHook(OS_TCB *p_tcb)
 {
 	CPUExt_PageRelease((CPU_ADDR)p_tcb);
 }
-
 #endif /* OS_CFG_TASK_DEL_EN */
+
+
+#if (OS_CFG_STAT_TASK_EN > 0u)
+void  OSStatTaskHook(void)
+{
+	return;
+}
+#endif /* OS_CFG_STAT_TASK_EN */
 

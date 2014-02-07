@@ -30,10 +30,10 @@
 
 void CPU_Init(void)
 {
+	cpu_key_Init();
 	cpu_disp_Init();
 	cpu_page_Init(0, 0);
 	cpu_gate_Init();
-	
 	cpu_task_Init();
 	
 	return;

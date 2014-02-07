@@ -90,7 +90,7 @@ extern void        CPUExt_DispChar(const CPU_CHAR chAscii_in);
 
 typedef struct _CPU_EXT_KEY_EVENT {
 	CPU_INT08U  uiState;
-	CPU_INT08U  uiAscii;
+	CPU_INT08U  uiScanCode;
 } CPU_EXT_KEY_EVENT;
 
 extern void CPUExt_KeyRegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in);
