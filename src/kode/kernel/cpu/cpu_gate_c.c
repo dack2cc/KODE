@@ -43,7 +43,6 @@ void cpu_gate_Init(void)
 	
 	/* memory page access fault */
 	_asm_set_isr_trap(14, &cpu_gate_ISRMemPageFault);
-
 	_asm_outb_p(_asm_inb_p(0x21)&0xfb,0x21);
 	_asm_outb(_asm_inb_p(0xA1)&0xdf,0xA1);
 	
@@ -64,6 +63,11 @@ void cpu_gate_Init(void)
 	_asm_outb_p(uiKeyboardState|0x80,0x61); /* disable the keyboard */
 	_asm_outb(uiKeyboardState,0x61);        /* enable the keyboard  */
 	
+	/* start the harddisk function */
+	_asm_set_isr_intr(0x2E, &cpu_gate_ISRHardDisk);
+	_asm_outb_p(_asm_inb_p(0x21)&0xFB, 0x21); /* reset the 8259A int2 to enable the interrupt */
+	_asm_outb(_asm_inb_p(0xA1)&0xBF, 0xA1);   /* reset harddisk control to enable the interrupt */
+	
 	return;
 }
 
@@ -76,10 +80,6 @@ void CPUExt_GateRegisterISRHookExit(CPU_FNCT_VOID pfnISRHookExit_in)
 {
 	cpu_gate_pfnISRHookExit = pfnISRHookExit_in;
 }
-
-//void CPUExt_GateRegisterISR(const CPU_INT32U  uiIntNum_in, CPU_FNCT_VOID pfnISR_in)
-//{
-//}
 
 void CPUExt_GateRegisterTimeTick(CPU_FNCT_VOID pfnTimeTick_in)
 {

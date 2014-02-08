@@ -7,6 +7,7 @@
 .global _cpu_gate_ISRMemPageFault
 .global _cpu_gate_ISRTimeTick
 .global _cpu_gate_ISRKeyboard
+.global _cpu_gate_ISRHardDisk
 
 /******************************************************************************
     Constant
@@ -219,5 +220,43 @@ _cpu_gate_ISRKeyboard:
 	popl %ebx
 	popl %eax
 	iret
+
+/******************************************************************************
+    _cpu_gate_ISRHardDisk
+******************************************************************************/
+
+.align 4
+_cpu_gate_ISRHardDisk:
+    pushl %eax
+    pushl %ecx
+    pushl %edx
+    push %ds
+    push %es
+    push %fs
+    
+	movl $0x10,%eax  # set up ds,es,fs to kernel space
+	mov %ax,%ds
+	mov %ax,%es
+
+	movl $0x17,%eax  # fs points to local data space
+	mov %ax,%fs
+    
+    movb $0x20,%al   # The auto EOI is not set by init,
+    outb %al, $0xA0  # so it needs to send EOI manually.
+    
+    jmp 1f          # give port chance to breathe
+1:  jmp 1f
+1:
+    outb %al,$0x20   # End the interrupt
+    
+    call _cpu_hd_ISR_HardDisk
+    
+    pop %fs
+    pop %es
+    pop %ds
+    popl %edx
+    popl %ecx
+    popl %eax
+    iret
 
 

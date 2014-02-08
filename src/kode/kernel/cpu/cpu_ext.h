@@ -85,11 +85,7 @@ extern void        CPUExt_DispChar(const CPU_CHAR chAscii_in);
 /*
     Input
 */
-#define CPU_EXT_KEY_STATE_MAKE   (0)
-#define CPU_EXT_KEY_STATE_BREAK  (1)
-
 typedef struct _CPU_EXT_KEY_EVENT {
-	//CPU_INT08U  uiState;
 	CPU_INT08U  uiScanCode;
 } CPU_EXT_KEY_EVENT;
 
@@ -116,7 +112,6 @@ extern void     CPUExt_TaskSwitchToRing3(void);
 /*
     Interrupt
 */
-//extern void     CPUExt_GateRegisterISR(const CPU_INT32U  uiIntNum_in, CPU_FNCT_VOID pfnISR_in);
 extern void     CPUExt_GateRegisterISRHookEnter(CPU_FNCT_VOID pfnISRHookEnter_in);
 extern void     CPUExt_GateRegisterISRHookExit(CPU_FNCT_VOID pfnISRHookExit_in);
 extern void     CPUExt_GateRegisterTimeTick(CPU_FNCT_VOID pfnTimeTick_in);
@@ -127,6 +122,13 @@ extern CPU_ERR  CPUExt_GateRegisterKernelFnct(const CPU_INT32U  uiFnctNum_in, CP
 */
 extern void  CPUExt_PageGetFree(CPU_ADDR*  paddrPhysical_out);
 extern void  CPUExt_PageRelease(const CPU_ADDR  addrPhysical_in);
+
+/*
+   Hard Disk
+*/
+typedef struct _CPU_EXT_HD_DATA {
+
+} CPU_EXT_HD_DATA;
 
 #endif /* __CPU_EXT_H__ */
 

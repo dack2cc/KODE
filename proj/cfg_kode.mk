@@ -24,6 +24,7 @@ KODE_KERNEL_DIR := kernel
 KODE_KERNEL_CPU_DIR := cpu
 KODE_KERNEL_CPU_SRC_S := cpu_gate_s.gas
 KODE_KERNEL_CPU_SRC_C := cpu_gate_c.c \
+                         cpu_hd.c \
                          cpu_key.c \
                          cpu_disp.c \
                          cpu_page.c \
