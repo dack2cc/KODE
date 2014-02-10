@@ -62,5 +62,16 @@ enum {
 	X86_LDT_MAX
 };
 
+/******************************************************************************
+    Hard Disk Information
+******************************************************************************/
+
+/* parameter from the bios */
+typedef struct {
+	CPU_INT08U  abyDummy[32];
+} X86_HD_INFO;
+
+#define  X86_HD_PARAM   (*(X86_HD_INFO *)(0x90080))
+
 #endif // __CPU_BOOT_H__
 
