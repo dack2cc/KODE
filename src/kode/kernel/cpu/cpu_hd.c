@@ -6,10 +6,19 @@
 #include <cpu_hd.h>
 #include <cpu_ext.h>
 #include <cpu_boot.h>
+#include <cpu_asm.h>
 
 /******************************************************************************
     Private Definition
 ******************************************************************************/
+
+
+#define _CPU_HD_DEV_MAJOR(a)  (((unsigned)(a))>>8)
+#define _CPU_HD_DEV_MINOR(a)  ((a)&0xff)
+#define _CPU_HD_DEV_MAJOR_NR  (3)
+
+#define CPU_HD_ERROR_MAX      (7)
+
 
 typedef struct _CPU_HD_PARTITION_TABLE {
 	CPU_INT08U  boot_ind;
@@ -46,6 +55,7 @@ typedef struct _CPU_HD_PARTITION {
 typedef struct _CPU_HD_REQUEST {
 	CPU_EXT_HD_REQUEST_IN     stReq;
 	CPU_EXT_HD_REQUEST *      pstOrg;
+	CPU_INT32S                iErrCnt;
 	struct _CPU_HD_REQUEST *  pstNext;
 } CPU_HD_REQUEST;
 #define CPU_HD_REQUEST_MAX        (32)
@@ -64,11 +74,15 @@ typedef struct _CPU_HD_REQUEST {
 
 typedef struct _CPU_HD_CONTROL {
 	X86_HD_INFO       stInfo;
-	CPU_HD_DISK       astDisk[CPU_HD_DISK_MAX];
 	CPU_INT08S        iDiskCnt;
+	CPU_HD_DISK       astDisk[CPU_HD_DISK_MAX];
 	CPU_HD_PARTITION  astPart[CPU_HD_DISK_MAX * CPU_HD_PARTITION_MAX];
-	CPU_FNCT_PTR      pfnNotify;
+	CPU_FNCT_PTR      pfnNotifyRW;
+	CPU_FNCT_VOID     pfnNotifyFree;
 	CPU_HD_REQUEST *  pstCurrentReq;
+	CPU_FNCT_VOID     pfnISR;
+	CPU_INT08S        iNeedReset;
+	CPU_INT08S        iNeedRecalibrate;
 } CPU_HD_CONTROL;
 
 CPU_PRIVATE  CPU_HD_CONTROL  cpu_hd_stCtl;
@@ -78,8 +92,27 @@ CPU_PRIVATE  CPU_HD_REQUEST  cpu_hd_astReqBuf[CPU_HD_REQUEST_MAX];
     Private Interface
 ******************************************************************************/
 
+#define _CPU_HD_PORT_READ(port,buf,nr) \
+__asm__("cld;rep;insw"::"d" (port),"D" (buf),"c" (nr):/*"cx","di"*/)
+
+
 CPU_PRIVATE void cpu_hd_AddRequest(CPU_HD_REQUEST* pstRequest_in);
 CPU_PRIVATE void cpu_hd_DoRequest(void);
+CPU_PRIVATE void cpu_hd_EndRequest(const CPU_INT32S iResult_in);
+CPU_PRIVATE void cpu_hd_Reset(const CPU_INT08U uiDiskIndex_in);
+CPU_PRIVATE void cpu_hd_Out(
+	CPU_INT32U uiDrv_in, CPU_INT32U uiSecCnt_in, CPU_INT32U uiSec_in, CPU_INT32U uiHead_in, 
+	CPU_INT32U uiCyl_in, CPU_INT32U uiCmd_in, CPU_FNCT_VOID pfnISR_in);
+
+CPU_PRIVATE CPU_INT32S  cpu_hd_IsControllerReady(void);
+CPU_PRIVATE CPU_INT32S  cpu_hd_IsWinResultNG(void);
+CPU_PRIVATE CPU_INT32S  cpu_hd_IsDriverBusy(void);
+
+CPU_PRIVATE void cpu_hd_BadRWInterrupt(void);
+CPU_PRIVATE void cpu_hd_ISRUnexpected(void);
+CPU_PRIVATE void cpu_hd_ISRRecall(void);
+CPU_PRIVATE void cpu_hd_ISRRead(void);
+
 
 /******************************************************************************
     Function Definition
@@ -94,12 +127,17 @@ void cpu_hd_Init(void)
 	for (i = 0; i < CPU_HD_REQUEST_MAX; ++i) {
 		cpu_hd_astReqBuf[i].stReq.iDev = -1;
 		cpu_hd_astReqBuf[i].pstOrg  = 0;
+		cpu_hd_astReqBuf[i].iErrCnt = 0;
 		cpu_hd_astReqBuf[i].pstNext = 0;
 	}
 	
 	/* initialize the request information */
 	cpu_hd_stCtl.pstCurrentReq = 0;
-	cpu_hd_stCtl.pfnNotify = 0;
+	cpu_hd_stCtl.pfnNotifyFree = 0;
+	cpu_hd_stCtl.pfnNotifyRW   = 0;
+	cpu_hd_stCtl.pfnISR = 0;
+	cpu_hd_stCtl.iNeedReset = 0;
+	cpu_hd_stCtl.iNeedRecalibrate = 0;
 	
 	/* get the information from bios */
 	cpu_hd_stCtl.stInfo = X86_HD_PARAM;
@@ -166,9 +204,14 @@ void  cpu_hd_SetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT08U * pby
 	}
 }
 
-void  cpu_hd_RegisterNotify(CPU_FNCT_PTR pfnNotify_in)
+void  cpu_hd_RegisterNotifyRW(CPU_FNCT_PTR pfnNotify_in)
 {
-	cpu_hd_stCtl.pfnNotify = pfnNotify_in;
+	cpu_hd_stCtl.pfnNotifyRW = pfnNotify_in;
+}
+
+void  cpu_hd_RegisterNotifyFree(CPU_FNCT_VOID pfnNotify_in)
+{
+	cpu_hd_stCtl.pfnNotifyFree = pfnNotify_in;
 }
 
 void  cpu_hd_Request(CPU_EXT_HD_REQUEST* pstRequest_inout)
@@ -204,12 +247,22 @@ void  cpu_hd_Request(CPU_EXT_HD_REQUEST* pstRequest_inout)
 	pstReq->stReq.uiSectorCount = pstRequest_inout->in.uiSectorCount;
 	pstReq->stReq.pbyBuffer = pstRequest_inout->in.pbyBuffer;
 	pstReq->pstOrg  = pstRequest_inout;
+	pstReq->iErrCnt = 0;
 	pstReq->pstNext = 0;
 	cpu_hd_AddRequest(pstReq);
 }
 
 void cpu_hd_ISR_HardDisk(void)
 {
+	CPU_FNCT_VOID  pfnISR = cpu_hd_stCtl.pfnISR;
+	
+	if (0 != pfnISR) {
+		pfnISR();
+	}
+	else {
+		cpu_hd_ISRUnexpected();
+	}
+	
 	return;
 }
 
@@ -248,6 +301,251 @@ CPU_PRIVATE void cpu_hd_AddRequest(CPU_HD_REQUEST* pstRequest_in)
 
 CPU_PRIVATE void cpu_hd_DoRequest(void)
 {
+	CPU_INT32U  uiDev  = 0;
+	CPU_INT32U  uiBlk  = 0;
+	CPU_INT32U  uiSec  = 0;
+	CPU_INT32U  uiCyl  = 0;
+	CPU_INT32U  uiHead = 0;
+	
+_L_REPEAT:
+	if (0 == cpu_hd_stCtl.pstCurrentReq) {
+		return;
+	}
+	if (_CPU_HD_DEV_MAJOR_NR != _CPU_HD_DEV_MAJOR(cpu_hd_stCtl.pstCurrentReq->stReq.iDev)) {
+		CPUExt_CorePanic("[cpu_hd_DoRequest][request list destroyed]");
+	}
+	
+	uiDev = _CPU_HD_DEV_MINOR(cpu_hd_stCtl.pstCurrentReq->stReq.iDev);
+	uiBlk = cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorStart;
+	if ((uiDev >= CPU_HD_DISK_MAX * CPU_HD_PARTITION_MAX)
+	||  (uiBlk + 2 > cpu_hd_stCtl.astPart[uiDev].iCount)) {
+		cpu_hd_EndRequest(CPU_EXT_HD_RESULT_IO);
+		goto _L_REPEAT;
+	}
+	
+	uiBlk += cpu_hd_stCtl.astPart[uiDev].iStart;
+	uiDev /= CPU_HD_PARTITION_MAX;
+	
+	__asm__(
+		"divl %4":"=a"(uiBlk),"=d"(uiSec) :"0"(uiBlk),"1"(0),"r"(cpu_hd_stCtl.astDisk[uiDev].iSector)
+	);
+	__asm__(
+		"divl %4":"=a"(uiCyl),"=d"(uiHead):"0"(uiBlk),"1"(0),"r"(cpu_hd_stCtl.astDisk[uiDev].iHead)
+	);
+	uiSec++;
+	
+	if (cpu_hd_stCtl.iNeedReset) {
+		cpu_hd_stCtl.iNeedReset = 0;
+		cpu_hd_stCtl.iNeedRecalibrate = 1;
+		cpu_hd_Reset(uiDev);
+		return;
+	}
+	if (cpu_hd_stCtl.iNeedRecalibrate) {
+		cpu_hd_stCtl.iNeedRecalibrate = 0;
+		cpu_hd_Out(
+			uiDev, cpu_hd_stCtl.astDisk[uiDev].iSector, 0, 0, 0, X86_HD_WIN_RESTORE, &cpu_hd_ISRRecall
+		);
+		return;
+	}
+	
+	if (CPU_EXT_HD_CMD_READ == cpu_hd_stCtl.pstCurrentReq->stReq.iCmd) {
+		cpu_hd_Out( 
+			uiDev, cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorCount, uiSec, uiHead,
+			uiCyl, X86_HD_WIN_READ, &cpu_hd_ISRRead
+		);
+	}
+	else if (CPU_EXT_HD_CMD_WRITE == cpu_hd_stCtl.pstCurrentReq->stReq.iCmd) {
+	}
+	else {
+		CPUExt_CorePanic("[cpu_hd_DoRequest][Unknown HD Command]");
+	}
+	
 	return;
 }
+
+CPU_PRIVATE void cpu_hd_EndRequest(const CPU_INT32S iResult_in)
+{
+	CPU_FNCT_PTR   pfnNotifyRW   = cpu_hd_stCtl.pfnNotifyRW;
+	CPU_FNCT_VOID  pfnNotifyFree = cpu_hd_stCtl.pfnNotifyFree;
+	CPU_EXT_HD_REQUEST *  pstOrg = cpu_hd_stCtl.pstCurrentReq->pstOrg;
+	CPU_INT08U  i = 0;
+	
+	for (i = 0; i < CPU_HD_REQUEST_MAX; ++i) {
+		if (cpu_hd_astReqBuf[i].stReq.iDev < 0) {
+			break;
+		}
+	}
+	if (i < CPU_HD_REQUEST_MAX) {
+		pfnNotifyFree = 0;
+	}
+	
+	cpu_hd_stCtl.pstCurrentReq->stReq.iDev = -1;
+	cpu_hd_stCtl.pstCurrentReq = cpu_hd_stCtl.pstCurrentReq->pstNext;
+	
+	if (0 != pfnNotifyRW) {
+		pstOrg->out.iResult = iResult_in;
+		pfnNotifyRW((void *)pstOrg);
+	}
+	if (0 != pfnNotifyFree) {
+		pfnNotifyFree();
+	}
+}
+
+CPU_PRIVATE void cpu_hd_Reset(const CPU_INT08U uiDiskIndex_in)
+{
+	CPU_INT08U  i = 0;
+	
+	if (uiDiskIndex_in >= CPU_HD_DISK_MAX) {
+		CPUExt_CorePanic("[cpu_hd_Reset][Unknown Disk]");
+	}
+	
+	_asm_outb(4, X86_HD_CMD);
+	for (i = 0; i < 100; ++i) {
+		_asm_nop();
+	}
+	_asm_outb(cpu_hd_stCtl.astDisk[0].iCtl & 0x0F, X86_HD_CMD);
+	
+	if (cpu_hd_IsDriverBusy()) {
+		CPUExt_DispPrint("[cpu_hd_Reset][HD Controller still busy] \r\n");
+	}
+	if (1 != (i = _asm_inb(X86_HD_ERROR))) {
+		CPUExt_DispPrint("[cpu_hd_Reset][HD Controller reset failed]\r\n");
+	}
+	
+	cpu_hd_Out(
+		uiDiskIndex_in,
+		cpu_hd_stCtl.astDisk[uiDiskIndex_in].iSector,
+		cpu_hd_stCtl.astDisk[uiDiskIndex_in].iSector,
+		cpu_hd_stCtl.astDisk[uiDiskIndex_in].iHead - 1,
+		cpu_hd_stCtl.astDisk[uiDiskIndex_in].iCylinder,
+		X86_HD_WIN_SPECIFY,
+		&cpu_hd_ISRRecall
+	);
+}
+
+CPU_PRIVATE void cpu_hd_Out(
+	CPU_INT32U uiDrv_in, CPU_INT32U uiSecCnt_in, CPU_INT32U uiSec_in, CPU_INT32U uiHead_in, 
+	CPU_INT32U uiCyl_in, CPU_INT32U uiCmd_in, CPU_FNCT_VOID pfnISR_in)
+	
+{
+	register int regPort asm("dx");
+	
+	if ((uiDrv_in > CPU_HD_DISK_MAX - 1) || (uiHead_in > 15)) {
+		CPUExt_CorePanic("[cpu_hd_Out][Trying to write bad sector]");
+	}
+	if (!cpu_hd_IsControllerReady()) {
+		CPUExt_CorePanic("[cpu_hd_Out][HD Controller not ready]");
+	}
+	
+	cpu_hd_stCtl.pfnISR = pfnISR_in;
+	_asm_outb_p(cpu_hd_stCtl.astDisk[uiDrv_in].iCtl, X86_HD_CMD);
+	regPort = X86_HD_DATA;
+	_asm_outb_p(cpu_hd_stCtl.astDisk[uiDrv_in].iWpcom >> 2, ++regPort);
+	_asm_outb_p(uiSecCnt_in, ++regPort);
+	_asm_outb_p(uiSec_in, ++regPort);
+	_asm_outb_p(uiCyl_in, ++regPort);
+	_asm_outb_p(uiCyl_in >> 8, ++regPort);
+	_asm_outb_p(0xA0|(uiDrv_in << 4)|uiHead_in, ++regPort);
+	_asm_outb(uiCmd_in, ++regPort);
+}
+
+CPU_PRIVATE CPU_INT32S  cpu_hd_IsControllerReady(void)
+{
+	CPU_INT32S  iRetries = 0;
+	
+	for (iRetries = 10000; iRetries > 0; --iRetries) {
+		if (0x40 == (_asm_inb_p(X86_HD_STATUS)&0xC0)) {
+			break;
+		}
+	}
+	
+	return (iRetries);
+}
+
+CPU_PRIVATE CPU_INT32S  cpu_hd_IsWinResultNG(void)
+{
+	CPU_INT32S iStatus = _asm_inb_p(X86_HD_STATUS);
+	
+	if ((iStatus & (X86_HD_STATUS_BUSY | X86_HD_STATUS_READY | X86_HD_STATUS_WRERR | X86_HD_STATUS_SEEK | X86_HD_STATUS_ERR))
+	== (X86_HD_STATUS_READY | X86_HD_STATUS_SEEK)) {
+		return(0); /* ok */
+	}
+	
+	if (iStatus & X86_HD_STATUS_ERR) {
+		iStatus = _asm_inb(X86_HD_ERROR);
+	}
+	
+	return (1);
+}
+
+CPU_PRIVATE CPU_INT32S  cpu_hd_IsDriverBusy(void)
+{
+	CPU_INT32U  i = 0;
+	
+	for (i = 0; i < 10000; ++i) {
+		if (X86_HD_STATUS_READY 
+		== (_asm_inb_p(X86_HD_STATUS) & (X86_HD_STATUS_BUSY|X86_HD_STATUS_READY))) {
+			break;
+		}
+	}
+	i = _asm_inb(X86_HD_STATUS);
+	i &= (X86_HD_STATUS_BUSY|X86_HD_STATUS_READY|X86_HD_STATUS_SEEK);
+	if (i == (X86_HD_STATUS_READY|X86_HD_STATUS_SEEK)) {
+		return (0);
+	}
+	
+	CPUExt_DispPrint("[cpu_hd_IsDriverBusy][HD Controller times out] \r\n");
+	return (1);
+}
+
+
+CPU_PRIVATE void cpu_hd_BadRWInterrupt(void)
+{
+	++(cpu_hd_stCtl.pstCurrentReq->iErrCnt);
+	
+	if (cpu_hd_stCtl.pstCurrentReq->iErrCnt >= CPU_HD_ERROR_MAX) {
+		cpu_hd_EndRequest(CPU_EXT_HD_RESULT_IO);
+	}
+	
+	if (cpu_hd_stCtl.pstCurrentReq->iErrCnt > (CPU_HD_ERROR_MAX/2)) {
+		cpu_hd_stCtl.iNeedReset = 1;
+	}
+}
+
+CPU_PRIVATE void cpu_hd_ISRUnexpected(void)
+{
+	CPUExt_DispPrint("[cpu_hd_ISRUnexpected][Unexpected HD Interrupt] \r\n");
+}
+
+CPU_PRIVATE void cpu_hd_ISRRecall(void)
+{
+	if (cpu_hd_IsWinResultNG()) {
+		cpu_hd_BadRWInterrupt();
+	}
+	cpu_hd_DoRequest();
+}
+
+CPU_PRIVATE void cpu_hd_ISRRead(void)
+{
+	if (cpu_hd_IsWinResultNG()) {
+		cpu_hd_BadRWInterrupt();
+		cpu_hd_DoRequest();
+		return;
+	}
+	
+	_CPU_HD_PORT_READ(X86_HD_DATA, cpu_hd_stCtl.pstCurrentReq->stReq.pbyBuffer, 256);
+	cpu_hd_stCtl.pstCurrentReq->iErrCnt = 0;
+	cpu_hd_stCtl.pstCurrentReq->stReq.pbyBuffer += 512;
+	cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorStart++;
+	cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorCount--;
+	
+	if (cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorCount > 0) {
+		cpu_hd_stCtl.pfnISR = &cpu_hd_ISRRead;
+		return;
+	}
+	
+	cpu_hd_EndRequest(CPU_EXT_HD_RESULT_OK);
+	cpu_hd_DoRequest();
+}
+
 

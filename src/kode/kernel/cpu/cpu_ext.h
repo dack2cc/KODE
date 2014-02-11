@@ -143,10 +143,10 @@ typedef struct _CPU_EXT_HD_REQUEST_IN {
 
 #define  CPU_EXT_HD_RESULT_OK   (0)
 #define  CPU_EXT_HD_RESULT_FULL (1)
+#define  CPU_EXT_HD_RESULT_IO   (2)
 
 typedef struct _CPU_EXT_HD_REQUEST_OUT {
 	CPU_INT32S   iResult;
-	CPU_INT32S   iError;
 } CPU_EXT_HD_REQUEST_OUT;
 
 typedef struct _CPU_EXT_HD_REQUEST {
@@ -154,7 +154,8 @@ typedef struct _CPU_EXT_HD_REQUEST {
 	CPU_EXT_HD_REQUEST_OUT  out;
 } CPU_EXT_HD_REQUEST;
 
-extern void CPUExt_HDRegisterNotify(CPU_FNCT_PTR pfnNotify_in);
+extern void CPUExt_HDRegisterNotifyRW(CPU_FNCT_PTR pfnNotify_in);
+extern void CPUExt_HDRegisterNotifyFree(CPU_FNCT_VOID pfnNotify_in);
 extern void CPUExt_HDRequest(CPU_EXT_HD_REQUEST* pstRequest_inout);
 
 #endif /* __CPU_EXT_H__ */

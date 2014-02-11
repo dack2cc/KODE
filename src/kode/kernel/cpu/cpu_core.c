@@ -82,3 +82,28 @@ void CPUExt_DispChar(const CPU_CHAR chAscii_in)
 	return (cpu_disp_Char(chAscii_in));
 }
 
+void CPUExt_HDGetDiskCount(CPU_INT32S * piCount_out)
+{
+	return (cpu_hd_GetDiskCount(piCount_out));
+}
+
+void CPUExt_HDSetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT08U * pbyTable_in)
+{
+	return (cpu_hd_SetPartition(iDiskIndex_in, pbyTable_in));
+}
+
+void CPUExt_HDRegisterNotifyRW(CPU_FNCT_PTR pfnNotify_in)
+{
+	return (cpu_hd_RegisterNotifyRW(pfnNotify_in));
+}
+
+void CPUExt_HDRegisterNotifyFree(CPU_FNCT_VOID pfnNotify_in)
+{
+	return (cpu_hd_RegisterNotifyFree(pfnNotify_in));
+}
+
+void CPUExt_HDRequest(CPU_EXT_HD_REQUEST* pstRequest_inout)
+{
+	return (cpu_hd_Request(pstRequest_inout));
+}
+
