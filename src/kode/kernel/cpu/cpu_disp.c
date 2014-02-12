@@ -145,17 +145,13 @@ void cpu_disp_Init(void)
 	cpu_disp_stCtl.uiScrRowBottom = cpu_disp_stCtl.uiRowNum;
 	
 	/* the cursor position */
-	//cpu_disp_SetPosition(X86_DISPLAY_POS_COL, X86_DISPLAY_POS_ROW);
-
-	cpu_disp_stCtl.uiPosCol = X86_DISPLAY_POS_COL;
-	cpu_disp_stCtl.uiPosRow = X86_DISPLAY_POS_ROW;
-	cpu_disp_stCtl.uiPosMem = cpu_disp_stCtl.uiScrMemStart + X86_DISPLAY_POS_ROW*cpu_disp_stCtl.uiRowPitch + (X86_DISPLAY_POS_COL << 1);
+	cpu_disp_SetPosition(X86_DISPLAY_POS_COL, X86_DISPLAY_POS_ROW);
 
 	return;
 }
 
 
-CPU_INT32U  cpu_disp_Print(const CPU_CHAR* pszStr_in)
+CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
 {
 	CPU_CHAR*  pbyChar  = 0;
 	CPU_INT32U iCharCnt = 0;
@@ -176,7 +172,7 @@ CPU_INT32U  cpu_disp_Print(const CPU_CHAR* pszStr_in)
 	return (iCharCnt);
 }
 
-void  cpu_disp_Char(const  CPU_CHAR  chAscii_in)
+void  CPUExt_DispChar(const  CPU_CHAR  chAscii_in)
 {
 	cpu_disp_SetCode(chAscii_in);
 	cpu_disp_SetCursor();	

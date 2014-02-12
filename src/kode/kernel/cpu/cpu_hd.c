@@ -54,8 +54,10 @@ typedef struct _CPU_HD_PARTITION {
 
 typedef struct _CPU_HD_REQUEST {
 	CPU_EXT_HD_REQUEST_IN     stReq;
-	CPU_EXT_HD_REQUEST *      pstOrg;
+	CPU_INT32U                uiSectorStart;
+	CPU_INT32U                uiSectorCount;
 	CPU_INT32S                iErrCnt;
+	CPU_EXT_HD_REQUEST *      pstOrg;
 	struct _CPU_HD_REQUEST *  pstNext;
 } CPU_HD_REQUEST;
 #define CPU_HD_REQUEST_MAX        (32)
@@ -69,7 +71,7 @@ typedef struct _CPU_HD_REQUEST {
 #define _CPU_HD_IN_ORDER(s1,s2) \
 (((s1)->stReq.iCmd<(s2)->stReq.iCmd || ((s1)->stReq.iCmd==(s2)->stReq.iCmd && \
 ((s1)->stReq.iDev < (s2)->stReq.iDev || (((s1)->stReq.iDev == (s2)->stReq.iDev && \
-(s1)->stReq.uiSectorStart < (s2)->stReq.uiSectorStart))))))
+(s1)->uiSectorStart < (s2)->uiSectorStart))))))
 
 
 typedef struct _CPU_HD_CONTROL {
@@ -175,14 +177,14 @@ void cpu_hd_Init(void)
 	return;
 }
 
-void  cpu_hd_GetDiskCount(CPU_INT32S *  piCount_out)
+void  CPUExt_HDGetDiskCount(CPU_INT32S *  piCount_out)
 {
 	if (0 != piCount_out) {
 		(*piCount_out) = cpu_hd_stCtl.iDiskCnt;
 	}
 }
 
-void  cpu_hd_SetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT08U * pbyTable_in)
+void  CPUExt_HDSetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT08U * pbyTable_in)
 {
 	CPU_INT08S  i = 0;
 	CPU_HD_PARTITION_TABLE*  pstTable = 0;
@@ -204,17 +206,17 @@ void  cpu_hd_SetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT08U * pby
 	}
 }
 
-void  cpu_hd_RegisterNotifyRW(CPU_FNCT_PTR pfnNotify_in)
+void  CPUExt_HDRegisterNotifyRW(CPU_FNCT_PTR pfnNotify_in)
 {
 	cpu_hd_stCtl.pfnNotifyRW = pfnNotify_in;
 }
 
-void  cpu_hd_RegisterNotifyFree(CPU_FNCT_VOID pfnNotify_in)
+void  CPUExt_HDRegisterNotifyFree(CPU_FNCT_VOID pfnNotify_in)
 {
 	cpu_hd_stCtl.pfnNotifyFree = pfnNotify_in;
 }
 
-void  cpu_hd_Request(CPU_EXT_HD_REQUEST* pstRequest_inout)
+void  CPUExt_HDRequest(CPU_EXT_HD_REQUEST* pstRequest_inout)
 {
 	CPU_HD_REQUEST* pstReq = 0;
 	
@@ -240,12 +242,12 @@ void  cpu_hd_Request(CPU_EXT_HD_REQUEST* pstRequest_inout)
 		pstRequest_inout->out.iResult = CPU_EXT_HD_RESULT_FULL;
 		return;
 	}
-	
-	pstReq->stReq.iDev = pstRequest_inout->in.iDev;
-	pstReq->stReq.iCmd = pstRequest_inout->in.iCmd;
-	pstReq->stReq.uiSectorStart = pstRequest_inout->in.uiSectorStart;
-	pstReq->stReq.uiSectorCount = pstRequest_inout->in.uiSectorCount;
-	pstReq->stReq.pbyBuffer = pstRequest_inout->in.pbyBuffer;
+
+	pstReq->stReq.pbyData = pstRequest_inout->in.pbyData;
+	pstReq->stReq.iDev    = pstRequest_inout->in.iDev;
+	pstReq->stReq.iCmd    = pstRequest_inout->in.iCmd;
+	pstReq->uiSectorStart = pstRequest_inout->in.uiBlkIdx << 1;
+	pstReq->uiSectorCount = 2;
 	pstReq->pstOrg  = pstRequest_inout;
 	pstReq->iErrCnt = 0;
 	pstReq->pstNext = 0;
@@ -316,7 +318,7 @@ _L_REPEAT:
 	}
 	
 	uiDev = _CPU_HD_DEV_MINOR(cpu_hd_stCtl.pstCurrentReq->stReq.iDev);
-	uiBlk = cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorStart;
+	uiBlk = cpu_hd_stCtl.pstCurrentReq->uiSectorStart;
 	if ((uiDev >= CPU_HD_DISK_MAX * CPU_HD_PARTITION_MAX)
 	||  (uiBlk + 2 > cpu_hd_stCtl.astPart[uiDev].iCount)) {
 		cpu_hd_EndRequest(CPU_EXT_HD_RESULT_IO);
@@ -350,7 +352,7 @@ _L_REPEAT:
 	
 	if (CPU_EXT_HD_CMD_READ == cpu_hd_stCtl.pstCurrentReq->stReq.iCmd) {
 		cpu_hd_Out( 
-			uiDev, cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorCount, uiSec, uiHead,
+			uiDev, cpu_hd_stCtl.pstCurrentReq->uiSectorCount, uiSec, uiHead,
 			uiCyl, X86_HD_WIN_READ, &cpu_hd_ISRRead
 		);
 	}
@@ -533,13 +535,13 @@ CPU_PRIVATE void cpu_hd_ISRRead(void)
 		return;
 	}
 	
-	_CPU_HD_PORT_READ(X86_HD_DATA, cpu_hd_stCtl.pstCurrentReq->stReq.pbyBuffer, 256);
+	_CPU_HD_PORT_READ(X86_HD_DATA, cpu_hd_stCtl.pstCurrentReq->stReq.pbyData, 256);
 	cpu_hd_stCtl.pstCurrentReq->iErrCnt = 0;
-	cpu_hd_stCtl.pstCurrentReq->stReq.pbyBuffer += 512;
-	cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorStart++;
-	cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorCount--;
+	cpu_hd_stCtl.pstCurrentReq->stReq.pbyData += 512;
+	cpu_hd_stCtl.pstCurrentReq->uiSectorStart++;
+	cpu_hd_stCtl.pstCurrentReq->uiSectorCount--;
 	
-	if (cpu_hd_stCtl.pstCurrentReq->stReq.uiSectorCount > 0) {
+	if (cpu_hd_stCtl.pstCurrentReq->uiSectorCount > 0) {
 		cpu_hd_stCtl.pfnISR = &cpu_hd_ISRRead;
 		return;
 	}

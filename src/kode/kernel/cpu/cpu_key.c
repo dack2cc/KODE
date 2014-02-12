@@ -32,7 +32,7 @@ void cpu_key_Init(void)
 	return;
 }
 
-void  cpu_key_RegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in)
+void  CPUExt_KeyRegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in)
 {
 	cpu_key_stCtl.pfnHandler = pfnKeyHandler_in;
 	

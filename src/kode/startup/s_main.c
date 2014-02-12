@@ -59,7 +59,7 @@ void s_main(void)
 void s_logo(void)
 {
 	kdLogMessage("  ====  ====  ||    \r\n");
-	kdLogMessage("  ||    ||    ||=== \r\n");
+	kdLogMessage("    ||    ||  ||=== \r\n");
 	kdLogMessage("  ====  ====  ||    \r\n");
 }
 
@@ -68,6 +68,8 @@ void* s_thread_alice(void* param_in)
 	KDThreadAttr*  pstAttr  = KD_NULL;
 	KDThread*      pstJerry = KD_NULL;
 
+	kdextSetup();
+	
 	if (0xABCDEF == (KDint32)param_in) 
 	kdLogMessage("[alice] Hello (^-^)/ \r\n");
 	

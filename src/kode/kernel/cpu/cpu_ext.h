@@ -12,7 +12,7 @@
     Definition
 ******************************************************************************/
 
-CPU_CORE_EXT  CPU_INT32S  CPUExt_ErrorCode;
+CPU_CORE_EXT  CPU_INT32S  cpu_core_iErrorCode;
 
 #define CPU_EXT_DEFINE_KERNEL_FNCT_0(type, name) \
 type name(void) \
@@ -23,7 +23,7 @@ type name(void) \
 		: "0" (__KF_##name)); \
 	if (__res >= 0) \
 	    return (type) __res; \
-	CPUExt_ErrorCode = -__res; \
+	cpu_core_iErrorCode = -__res; \
 	return (type) (-1); \
 }
 
@@ -36,7 +36,7 @@ type name(atype a) \
 		: "0" (__KF_##name),"b" ((CPU_DATA)(a))); \
 	if (__res >= 0) \
 	    return (type) __res; \
-	CPUExt_ErrorCode = -__res; \
+	cpu_core_iErrorCode = -__res; \
 	return (type) (-1); \
 }
 
@@ -49,7 +49,7 @@ type name(atype a,btype b) \
 	    : "0" (__KF_##name),"b" ((CPU_DATA)(a)),"c" ((CPU_DATA)(b))); \
 	if (__res >= 0) \
 	    return (type) __res; \
-    CPUExt_ErrorCode = -__res; \
+    cpu_core_iErrorCode = -__res; \
 	return (type) (-1); \
 }
 
@@ -62,7 +62,7 @@ type name(atype a,btype b,ctype c) \
     	: "0" (__KF_##name),"b" ((CPU_DATA)(a)),"c" ((CPU_DATA)(b)),"d" ((CPU_DATA)(c))); \
     if (__res>=0) \
 	    return (type) __res; \
-    CPUExt_ErrorCode = -__res; \
+    cpu_core_iErrorCode = -__res; \
 	return (type) (-1); \
 }
 
@@ -122,6 +122,7 @@ extern CPU_ERR  CPUExt_GateRegisterKernelFnct(const CPU_INT32U  uiFnctNum_in, CP
 */
 extern void  CPUExt_PageGetFree(CPU_ADDR*  paddrPhysical_out);
 extern void  CPUExt_PageRelease(const CPU_ADDR  addrPhysical_in);
+extern void  CPUExt_PageGetBufferSpace(CPU_ADDR*  paddrPhysicalStart_out, CPU_ADDR*  paddrPhysicalEnd_out);
 
 /*
    Hard Disk
@@ -134,11 +135,10 @@ extern void CPUExt_HDSetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT0
 #define  CPU_EXT_HD_CMD_WRITE   (1)
 
 typedef struct _CPU_EXT_HD_REQUEST_IN {
+	CPU_INT08U * pbyData;
+	CPU_INT32U   uiBlkIdx;
     CPU_INT32S   iDev;
 	CPU_INT32S   iCmd;
-	CPU_INT32U   uiSectorStart;
-	CPU_INT32U   uiSectorCount;
-	CPU_INT08U * pbyBuffer;	
 } CPU_EXT_HD_REQUEST_IN;
 
 #define  CPU_EXT_HD_RESULT_OK   (0)

@@ -63,6 +63,7 @@ KODE_KERNEL_DRV_DIR := drv
 KODE_KERNEL_DRV_SRC_S := 
 KODE_KERNEL_DRV_SRC_C := drv_disp.c \
                          drv_key.c \
+                         drv_blk.c \
                          drv_hd.c
 KODE_KERNEL_DRV_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)/%.o, $(KODE_KERNEL_DRV_SRC_S)) \
                        $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)/%.o, $(KODE_KERNEL_DRV_SRC_C))

@@ -10,6 +10,8 @@
 #include <cpu_ext.h>
 #include <lib_def.h>
 #include <drv_key.h>
+#include <drv_blk.h>
+#include <drv_hd.h>
 
 /******************************************************************************
     Private Define
@@ -30,6 +32,7 @@ KD_PRIVATE KDint     kd_core_ErrorCode = 0;
 enum {
 	KD_KERNEL_FNCT_INVALID = -1,
 	__KF_kdextRun,
+	__KF_kdextSetup,
 	__KF_kdGetError,
 	__KF_kdSetError,
 	/* Assertions and logging */
@@ -67,6 +70,7 @@ enum {
 
 
 CPU_EXT_DEFINE_KERNEL_FNCT_0(void,  kdextRun);
+CPU_EXT_DEFINE_KERNEL_FNCT_0(void,  kdextSetup);
 CPU_EXT_DEFINE_KERNEL_FNCT_0(KDint, kdGetError);
 CPU_EXT_DEFINE_KERNEL_FNCT_1(void,  kdSetError, KDint, error);
 
@@ -109,8 +113,9 @@ CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadSemPost, KDThreadSem *, sem);
     Private Interface
 ******************************************************************************/
 
-KD_PRIVATE KDint kd_core_GetError(void);
 KD_PRIVATE void  kd_core_Run(void);
+KD_PRIVATE void  kd_core_Setup(void);
+KD_PRIVATE KDint kd_core_GetError(void);
 KD_PRIVATE KDint kd_core_QueryAttribi(KDint attribute, KDint *value);
 KD_PRIVATE const KDchar * kd_core_QueryAttribcv(KDint attribute);
 KD_PRIVATE const KDchar * kd_core_QueryIndexedAttribcv(KDint attribute, KDint index);
@@ -124,9 +129,10 @@ kdextInit(void)
 {
 	OS_ERR err = OS_ERR_NONE;
 	
-	CPUExt_GateRegisterKernelFnct(__KF_kdextRun,           (CPU_FNCT_VOID)(kd_core_Run));
-	CPUExt_GateRegisterKernelFnct(__KF_kdGetError,         (CPU_FNCT_VOID)(kd_core_GetError));
-	CPUExt_GateRegisterKernelFnct(__KF_kdSetError,         (CPU_FNCT_VOID)(kd_core_SetError));
+	CPUExt_GateRegisterKernelFnct(__KF_kdextRun,    (CPU_FNCT_VOID)(kd_core_Run));
+	CPUExt_GateRegisterKernelFnct(__KF_kdextSetup,  (CPU_FNCT_VOID)(kd_core_Setup));
+	CPUExt_GateRegisterKernelFnct(__KF_kdGetError,  (CPU_FNCT_VOID)(kd_core_GetError));
+	CPUExt_GateRegisterKernelFnct(__KF_kdSetError,  (CPU_FNCT_VOID)(kd_core_SetError));
 
 	/* Assertions and logging */
 	CPUExt_GateRegisterKernelFnct(__KF_kdLogMessage,       (CPU_FNCT_VOID)(kd_core_LogMessage));
@@ -173,6 +179,13 @@ KD_PRIVATE void kd_core_Run(void)
 	OS_ERR err = OS_ERR_NONE;
 	
 	OSStart(&err);
+}
+
+KD_PRIVATE void  kd_core_Setup(void)
+{
+	drv_hd_Init();
+	drv_blk_Init();
+	drv_key_Init();
 }
 
 KDThread * kdThreadCreate(const KDThreadAttr *attr, void *(*start_routine)(void *), void *arg)

@@ -9,7 +9,8 @@ extern "C" {
 #include "kd.h"
 
 KD_API void  KD_APIENTRY  kdextInit(void);
-KD_API void  KD_APIENTRY  kdextRun();
+KD_API void  KD_APIENTRY  kdextRun(void);
+KD_API void  KD_APIENTRY  kdextSetup(void);
 
 #ifdef __cplusplus
 }

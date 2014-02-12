@@ -15,7 +15,7 @@
 #define DRV_PRIVATE 
 
 CPU_EXT_HD_REQUEST  drv_hd_stReq;
-CPU_INT08U  drv_hd_abyBuffer[512];
+CPU_INT08U  drv_hd_abyBuffer[1024];
 
 
 /******************************************************************************
@@ -36,9 +36,8 @@ void drv_hd_Init(void)
 	
 	drv_hd_stReq.in.iDev = 0x300;
 	drv_hd_stReq.in.iCmd = CPU_EXT_HD_CMD_READ;
-	drv_hd_stReq.in.uiSectorStart = 0;
-	drv_hd_stReq.in.uiSectorCount = 1;
-	drv_hd_stReq.in.pbyBuffer = drv_hd_abyBuffer;
+	drv_hd_stReq.in.uiBlkIdx = 0;
+	drv_hd_stReq.in.pbyData  = drv_hd_abyBuffer;
 	
 	CPUExt_HDRegisterNotifyRW(&drv_hd_NotifyRW);
 	CPUExt_HDRegisterNotifyFree(&drv_hd_NotifyFree);

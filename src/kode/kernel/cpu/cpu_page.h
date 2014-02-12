@@ -12,7 +12,12 @@
     Public Interface
 ******************************************************************************/
 
-extern void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in, CPU_ADDR*  paddrBufMemEnd_out);
+extern void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in);
+
+extern void cpu_page_GetBufferSpace(
+	CPU_ADDR * paddrPhyBufStart_out,
+	CPU_ADDR * paddrPhyBufEnd_out
+);
 
 extern CPU_ERR  cpu_page_CopyPageTable(
 	const CPU_ADDR    addrLinerarSrc_in,

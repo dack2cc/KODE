@@ -7,8 +7,6 @@
 #include <cpu_core.h>
 #include <cpu_boot.h>
 #include <cpu_ext.h>
-#include <drv_key.h>
-#include <drv_hd.h>
 
 /******************************************************************************
     Private Definition
@@ -58,9 +56,6 @@ void  OSInitHook(void)
 
 void  OSInitEndHook(void)
 {
-	drv_hd_Init();
-	drv_key_Init();
-	
 	CPU_IntEn();
 	
 	CPUExt_TaskSwitchToRing3();
