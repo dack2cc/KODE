@@ -97,6 +97,9 @@ CPU_PRIVATE  CPU_HD_REQUEST  cpu_hd_astReqBuf[CPU_HD_REQUEST_MAX];
 #define _CPU_HD_PORT_READ(port,buf,nr) \
 __asm__("cld;rep;insw"::"d" (port),"D" (buf),"c" (nr):/*"cx","di"*/)
 
+#define _CPU_HD_PORT_WRITE(port,buf,nr) \
+__asm__("cld;rep;outsw"::"d" (port),"S" (buf),"c" (nr):/*"cx","si"*/)
+
 
 CPU_PRIVATE void cpu_hd_AddRequest(CPU_HD_REQUEST* pstRequest_in);
 CPU_PRIVATE void cpu_hd_DoRequest(void);
@@ -104,7 +107,8 @@ CPU_PRIVATE void cpu_hd_EndRequest(const CPU_INT32S iResult_in);
 CPU_PRIVATE void cpu_hd_Reset(const CPU_INT08U uiDiskIndex_in);
 CPU_PRIVATE void cpu_hd_Out(
 	CPU_INT32U uiDrv_in, CPU_INT32U uiSecCnt_in, CPU_INT32U uiSec_in, CPU_INT32U uiHead_in, 
-	CPU_INT32U uiCyl_in, CPU_INT32U uiCmd_in, CPU_FNCT_VOID pfnISR_in);
+	CPU_INT32U uiCyl_in, CPU_INT32U uiCmd_in, CPU_FNCT_VOID pfnISR_in
+);
 
 CPU_PRIVATE CPU_INT32S  cpu_hd_IsControllerReady(void);
 CPU_PRIVATE CPU_INT32S  cpu_hd_IsWinResultNG(void);
@@ -114,6 +118,7 @@ CPU_PRIVATE void cpu_hd_BadRWInterrupt(void);
 CPU_PRIVATE void cpu_hd_ISRUnexpected(void);
 CPU_PRIVATE void cpu_hd_ISRRecall(void);
 CPU_PRIVATE void cpu_hd_ISRRead(void);
+CPU_PRIVATE void cpu_hd_ISRWrite(void);
 
 
 /******************************************************************************
@@ -277,7 +282,7 @@ CPU_PRIVATE void cpu_hd_AddRequest(CPU_HD_REQUEST* pstRequest_in)
 	}
 	pstRequest_in->pstNext = 0;
 	
-	CPU_INT_DIS();
+	CPU_CRITICAL_ENTER();
 
 	if (0 == cpu_hd_stCtl.pstCurrentReq) {
 		cpu_hd_stCtl.pstCurrentReq = pstRequest_in;
@@ -297,7 +302,7 @@ CPU_PRIVATE void cpu_hd_AddRequest(CPU_HD_REQUEST* pstRequest_in)
 	pstRequest_in->pstNext = pstTmp->pstNext;
 	pstTmp->pstNext = pstRequest_in;
 	
-	CPU_INT_EN();
+	CPU_CRITICAL_EXIT();
 }
 
 CPU_PRIVATE void cpu_hd_DoRequest(void)
@@ -307,6 +312,8 @@ CPU_PRIVATE void cpu_hd_DoRequest(void)
 	CPU_INT32U  uiSec  = 0;
 	CPU_INT32U  uiCyl  = 0;
 	CPU_INT32U  uiHead = 0;
+	CPU_INT32S  i      = 0;
+	CPU_INT32S  iDRQ   = 0;
 	
 _L_REPEAT:
 	if (0 == cpu_hd_stCtl.pstCurrentReq) {
@@ -356,6 +363,22 @@ _L_REPEAT:
 		);
 	}
 	else if (CPU_EXT_HD_CMD_WRITE == cpu_hd_stCtl.pstCurrentReq->stReq.iCmd) {
+		cpu_hd_Out(
+			uiDev, cpu_hd_stCtl.pstCurrentReq->uiSectorCount, uiSec, uiHead,
+			uiCyl, X86_HD_WIN_WRITE, &cpu_hd_ISRWrite
+		);
+		for (i = 0; i < 3000; ++i) {
+			iDRQ = _asm_inb_p(X86_HD_STATUS)&X86_HD_STATUS_DRQ;
+			if (iDRQ) {
+				break;
+			}
+			
+		}
+		if (!iDRQ) {
+			cpu_hd_BadRWInterrupt();
+			goto _L_REPEAT;
+		}
+		_CPU_HD_PORT_WRITE(X86_HD_DATA, cpu_hd_stCtl.pstCurrentReq->stReq.pbyData,256);
 	}
 	else {
 		CPUExt_CorePanic("[cpu_hd_DoRequest][Unknown HD Command]");
@@ -542,6 +565,24 @@ CPU_PRIVATE void cpu_hd_ISRRead(void)
 	
 	if (cpu_hd_stCtl.pstCurrentReq->uiSectorCount > 0) {
 		cpu_hd_stCtl.pfnISR = &cpu_hd_ISRRead;
+		return;
+	}
+	
+	cpu_hd_EndRequest(CPU_EXT_HD_RESULT_OK);
+	cpu_hd_DoRequest();
+}
+
+CPU_PRIVATE void cpu_hd_ISRWrite(void)
+{
+	if (cpu_hd_IsWinResultNG()) {
+		cpu_hd_BadRWInterrupt();
+		cpu_hd_DoRequest();
+		return;
+	}
+	if (--(cpu_hd_stCtl.pstCurrentReq->uiSectorCount)) {
+		++(cpu_hd_stCtl.pstCurrentReq->uiSectorStart);
+		cpu_hd_stCtl.pstCurrentReq->stReq.pbyData += 512;
+		cpu_hd_stCtl.pfnISR = &cpu_hd_ISRWrite;
 		return;
 	}
 	
