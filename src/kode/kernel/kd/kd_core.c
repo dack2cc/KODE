@@ -186,6 +186,8 @@ KD_PRIVATE void  kd_core_Setup(void)
 	drv_hd_Init();
 	drv_blk_Init();
 	drv_key_Init();
+	
+	drv_hd_Setup();
 }
 
 KDThread * kdThreadCreate(const KDThreadAttr *attr, void *(*start_routine)(void *), void *arg)

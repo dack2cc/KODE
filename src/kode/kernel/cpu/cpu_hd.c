@@ -231,11 +231,10 @@ void  CPUExt_HDRequest(CPU_EXT_HD_REQUEST* pstRequest_inout)
 		pstReq = cpu_hd_astReqBuf + CPU_HD_REQUEST_WRITE_MAX;
 	}
 	
-	while (pstReq >= cpu_hd_astReqBuf) {
+	while (--pstReq >= cpu_hd_astReqBuf) {
 		if (pstReq->stReq.iDev < 0) {
 			break;
 		}
-		--pstReq;
 	}
 	
 	if (pstReq < cpu_hd_astReqBuf) {

@@ -12,6 +12,7 @@
 ******************************************************************************/
 
 extern void drv_hd_Init(void);
+extern void drv_hd_Setup(void);
 
 #endif // __DRV_HD_H__
 

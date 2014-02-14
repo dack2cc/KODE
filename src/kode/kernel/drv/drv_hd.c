@@ -4,8 +4,8 @@
 ******************************************************************************/
 
 #include <drv_hd.h>
+#include <drv_blk.h>
 #include <cpu_ext.h>
-#include <os.h>
 
 /******************************************************************************
     Private Define
@@ -30,41 +30,37 @@ DRV_PRIVATE void drv_hd_NotifyFree(void);
 ******************************************************************************/
 
 void drv_hd_Init(void)
-{
-	CPU_INT32S  i = 0;
-	CPU_INT32S  iDiskCnt = 0;
-	
-	drv_hd_stReq.in.iDev = 0x300;
-	drv_hd_stReq.in.iCmd = CPU_EXT_HD_CMD_READ;
-	drv_hd_stReq.in.uiBlkIdx = 0;
-	drv_hd_stReq.in.pbyData  = drv_hd_abyBuffer;
-	
+{	
 	CPUExt_HDRegisterNotifyRW(&drv_hd_NotifyRW);
 	CPUExt_HDRegisterNotifyFree(&drv_hd_NotifyFree);
+}
+
+void drv_hd_Setup(void)
+{
+	CPU_INT32S  iDiskIdx = 0;
+	CPU_INT32S  iDiskCnt = 0;
 	
 	CPUExt_HDGetDiskCount(&iDiskCnt);
-	for (i = 0; i < iDiskCnt; ++i) {
+	for (iDiskIdx = 0; iDiskIdx < iDiskCnt; ++iDiskIdx) {
+		DRV_BLK_BUFFER* pstBuf = drv_blk_Read(0x300 + iDiskIdx*5, 0);
+		if (0 == pstBuf) {
+			CPUExt_CorePanic("[drv_hd_Setup][Read error]");
+		}
+		CPUExt_HDSetPartition(iDiskIdx, pstBuf->pbyData);
+		drv_blk_Release(pstBuf);
 	}
 	
-	CPUExt_HDRequest(&drv_hd_stReq);
-	
-	return;
+	CPUExt_DispPrint("[HardDisk][Setup Complete] \r\n");
 }
 
 DRV_PRIVATE void drv_hd_NotifyRW(void * pRequest_in)
 {
-	CPU_EXT_HD_REQUEST* pstReq = pRequest_in;
-	
-	if (pstReq == (&drv_hd_stReq)) {
-		CPUExt_DispPrint("[drv_hd_NotifyRW][Success] \r\n");
-	}
-	
-	return;
+	drv_blk_NotifyRWEnd((DRV_BLK_BUFFER *)pRequest_in);
 }
 
 DRV_PRIVATE void drv_hd_NotifyFree(void)
 {
-	return;
+	drv_blk_NotifyReqFree();
 }
 
 
