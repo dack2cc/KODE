@@ -583,6 +583,7 @@ CPU_PRIVATE void cpu_hd_ISRWrite(void)
 		++(cpu_hd_stCtl.pstCurrentReq->uiSectorStart);
 		cpu_hd_stCtl.pstCurrentReq->stReq.pbyData += 512;
 		cpu_hd_stCtl.pfnISR = &cpu_hd_ISRWrite;
+		_CPU_HD_PORT_WRITE(X86_HD_DATA, cpu_hd_stCtl.pstCurrentReq->stReq.pbyData, 256);
 		return;
 	}
 	
