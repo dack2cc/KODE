@@ -128,6 +128,7 @@ extern void  CPUExt_PageGetBufferSpace(CPU_ADDR*  paddrPhysicalStart_out, CPU_AD
    Hard Disk
 */
 
+extern void CPUExt_HDGetRootDevice(CPU_INT16U * puiDev_out);
 extern void CPUExt_HDGetDiskCount(CPU_INT32S * piCount_out);
 extern void CPUExt_HDSetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT08U * pbyTable_in);
 

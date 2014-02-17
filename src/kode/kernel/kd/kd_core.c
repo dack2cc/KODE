@@ -12,6 +12,7 @@
 #include <drv_key.h>
 #include <drv_blk.h>
 #include <drv_hd.h>
+#include <fs.h>
 
 /******************************************************************************
     Private Define
@@ -183,11 +184,16 @@ KD_PRIVATE void kd_core_Run(void)
 
 KD_PRIVATE void  kd_core_Setup(void)
 {
+	CPU_INT16U  uiRootDev = 0;
+	
 	drv_hd_Init();
 	drv_blk_Init();
 	drv_key_Init();
 	
 	drv_hd_Setup();
+	
+	CPUExt_HDGetRootDevice(&uiRootDev);
+	FS_super_MountRoot(uiRootDev);
 }
 
 KDThread * kdThreadCreate(const KDThreadAttr *attr, void *(*start_routine)(void *), void *arg)

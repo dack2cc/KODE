@@ -6,6 +6,7 @@
 #include <drv_blk.h>
 #include <cpu_ext.h>
 #include <os.h>
+#include <std/stdarg.h>
 
 /******************************************************************************
     Private Define
@@ -76,7 +77,6 @@ DRV_PRIVATE void drv_blk_WaitForFree(void);
 DRV_PRIVATE void drv_blk_WaitOnBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_in);
 DRV_PRIVATE void drv_blk_LockBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_in);
 DRV_PRIVATE void drv_blk_UnlockBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_in);
-DRV_PRIVATE void drv_blk_SyncDevice(const CPU_INT32S iDev_in);
 DRV_PRIVATE void drv_blk_LowLevelRW(const CPU_INT32S iCmdRW_in, DRV_BLK_BUFFER_HEAD* pstBufHead_in);
 
 DRV_PRIVATE void drv_blk_RemoveFromQueues(DRV_BLK_BUFFER_HEAD* pstBufHead_in);
@@ -175,6 +175,25 @@ void drv_blk_RegisterSync(CPU_FNCT_VOID pfnSync_in)
 	drv_blk_stCtl.pfnSync = pfnSync_in;
 }
 
+void drv_blk_InvalidateBuffer(const CPU_INT32S iDev_in)
+{
+	CPU_INT32U i = 0;
+	DRV_BLK_BUFFER_HEAD * pstBufHead = 0;
+	
+	pstBufHead = drv_blk_stCtl.pstBufHeadStart;
+	for (i = 0; i < drv_blk_stCtl.uiBufCount; ++i) {
+		if (pstBufHead->stBuf.iDev != iDev_in) {
+			continue;
+		}
+		drv_blk_WaitOnBuffer(pstBufHead);
+		if (pstBufHead->stBuf.iDev == iDev_in) {
+			pstBufHead->uiIsUpToDate = 0;
+			pstBufHead->uiIsDirty = 0;
+		}
+	}
+}
+
+
 DRV_BLK_BUFFER * drv_blk_Read(const CPU_INT32S iDev_in, const CPU_INT32U uiBlkIdx_in)
 {
 	DRV_BLK_BUFFER_HEAD* pstBufHead = 0;
@@ -197,6 +216,39 @@ DRV_BLK_BUFFER * drv_blk_Read(const CPU_INT32S iDev_in, const CPU_INT32U uiBlkId
 	
 	return 0;
 }
+
+DRV_BLK_BUFFER * drv_blk_ReadAhead(const CPU_INT32S iDev_in, const CPU_INT32S iBlkIdxFst_in, ...)
+{
+	va_list               args;
+	DRV_BLK_BUFFER_HEAD * pstBHFst = 0;
+	DRV_BLK_BUFFER_HEAD * pstBHTmp = 0;
+	CPU_INT32S            iBlkIdx  = 0;
+	
+	va_start(args, iBlkIdxFst_in);
+	pstBHFst = drv_blk_GetBlock(iDev_in, iBlkIdxFst_in);
+	if (0 == pstBHFst) {
+		CPUExt_CorePanic("[drv_blk_ReadAhead][Get Block failed]");
+	}
+	if (!(pstBHFst->uiIsUpToDate)) {
+		drv_blk_LowLevelRW(DRV_BLK_CMD_READ, pstBHFst);
+	}
+	while ((iBlkIdx = va_arg(args, CPU_INT32S) >= 0)) {
+		pstBHTmp = drv_blk_GetBlock(iDev_in, iBlkIdx);
+		if ((pstBHTmp) && !(pstBHTmp->uiIsUpToDate)) {
+			drv_blk_LowLevelRW(DRV_BLK_CMD_READ_AHEAD, pstBHTmp);
+			(pstBHTmp->uiRef)--;
+		}
+	}
+	va_end();
+	
+	drv_blk_WaitOnBuffer(pstBHFst);
+	if (pstBHFst->uiIsUpToDate) {
+		return ((DRV_BLK_BUFFER *)pstBHFst);
+	}
+	drv_blk_Release((DRV_BLK_BUFFER *)pstBHFst);
+	return 0;
+}
+
 
 void drv_blk_Release(DRV_BLK_BUFFER* pstBuf_in)
 {
@@ -343,7 +395,7 @@ DRV_PRIVATE void drv_blk_UnlockBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_inout)
 }
 
 
-DRV_PRIVATE void drv_blk_SyncDevice(const CPU_INT32S iDev_in)
+void drv_blk_SyncDevice(const CPU_INT32S iDev_in)
 {
 	CPU_INT32U i = 0;
 	CPU_FNCT_VOID pfnSync = drv_blk_stCtl.pfnSync;

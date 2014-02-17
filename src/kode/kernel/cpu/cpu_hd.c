@@ -85,6 +85,7 @@ typedef struct _CPU_HD_CONTROL {
 	CPU_FNCT_VOID     pfnISR;
 	CPU_INT08S        iNeedReset;
 	CPU_INT08S        iNeedRecalibrate;
+	CPU_INT16U        uiRootDev;
 } CPU_HD_CONTROL;
 
 CPU_PRIVATE  CPU_HD_CONTROL  cpu_hd_stCtl;
@@ -145,6 +146,7 @@ void cpu_hd_Init(void)
 	cpu_hd_stCtl.pfnISR = 0;
 	cpu_hd_stCtl.iNeedReset = 0;
 	cpu_hd_stCtl.iNeedRecalibrate = 0;
+	cpu_hd_stCtl.uiRootDev = X86_HD_ORIG_ROOT_DEV;
 	
 	/* get the information from bios */
 	cpu_hd_stCtl.stInfo = X86_HD_PARAM;
@@ -181,6 +183,14 @@ void cpu_hd_Init(void)
 	
 	return;
 }
+
+void CPUExt_HDGetRootDevice(CPU_INT16U * puiDev_out)
+{
+	if (0 != puiDev_out) {
+		(*puiDev_out) = cpu_hd_stCtl.uiRootDev;
+	}
+}
+
 
 void  CPUExt_HDGetDiskCount(CPU_INT32S *  piCount_out)
 {

@@ -66,6 +66,8 @@ enum {
     Hard Disk Information
 ******************************************************************************/
 
+#define X86_HD_ORIG_ROOT_DEV  (*(CPU_INT16U *)0x901FC)
+
 /* parameter from the bios */
 typedef struct {
 	CPU_INT08U  abyDummy[32];
