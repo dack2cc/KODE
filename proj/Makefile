@@ -7,12 +7,14 @@
 # Build Target
 # **************************************
 
-TOOL       := tool
+TOOL        := tool
+MKFS        := mkfs
 
 TARGET_ROOT := ./bin
 TARGET_DIR  := $(TARGET_ROOT)
 TARGET_BIN  := boot.img
 TARGET_HD   := disk.img
+TARGET_FS   := ramfs.img
 
 BUILD_ROOT := ./build
 BUILD_DIR  := $(BUILD_ROOT)
@@ -84,6 +86,11 @@ $(TOOL) :
 	@echo "[Compile ][../src/tools/build.c]"
 	@$(CC) $(CFLAGS) ../src/tools/build.c -o $(BUILD_ROOT)/$(TOOL)
 	@chmod o+x $(BUILD_ROOT)/$(TOOL)
+
+$(MKFS) :
+	@echo "[Compile ][../src/tools/mkfs.c]"
+	@$(CC) $(CFLAGS) ../src/tools/mkfs.c -o $(BUILD_ROOT)/$(MKFS)
+	@chmod o+x $(BUILD_ROOT)/$(MKFS)
 
 $(BUILD_ROOT)/%.bin : $(BOOT_DIR)/%.nas
 	@echo "[Assemble][$<]"

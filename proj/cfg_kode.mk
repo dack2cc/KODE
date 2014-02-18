@@ -62,9 +62,10 @@ KODE_KERNEL_OS_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL
 KODE_KERNEL_DRV_DIR := drv
 KODE_KERNEL_DRV_SRC_S := 
 KODE_KERNEL_DRV_SRC_C := drv_disp.c \
+                         drv_lock.c \
                          drv_key.c \
                          drv_blk.c \
-                         drv_hd.c
+                         drv_hd.c 
 KODE_KERNEL_DRV_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)/%.o, $(KODE_KERNEL_DRV_SRC_S)) \
                        $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)/%.o, $(KODE_KERNEL_DRV_SRC_C))
 
@@ -127,11 +128,14 @@ INC_DIR += -I$(SRC_ROOT)/$(KODE_ROOT) \
 
 kode : _PREPARE _IMAGE_KODE
 
-_IMAGE_KODE : $(TOOL) $(BOOT_BIN) $(KODE_BIN)
+_IMAGE_KODE : $(TOOL) $(MKFS) $(BOOT_BIN) $(KODE_BIN)
 	@echo "[Build][$(TARGET_BIN)]"
 	@$(BUILD_ROOT)/$(TOOL) $(DEV_FLOPPY) $(BOOT_BIN) $(BUILD_ROOT)/$(KODE_BIN) > $(TARGET_ROOT)/$(TARGET_BIN)
+	@echo "[Build][$(TARGET_FS)]"
+	@$(BUILD_ROOT)/$(MKFS) > $(TARGET_ROOT)/$(TARGET_FS)
 	@echo "[Build][$(TARGET_HD)]"
 	@$(BUILD_ROOT)/$(TOOL) $(DEV_HDISK) $(BOOT_BIN) $(BUILD_ROOT)/$(KODE_BIN) > $(TARGET_ROOT)/$(TARGET_HD)
+#	@$(BUILD_ROOT)/$(TOOL) $(DEV_HDISK) $(BOOT_BIN) $(BUILD_ROOT)/$(KODE_BIN) $(TARGET_ROOT)/$(TARGET_FS) > $(TARGET_ROOT)/$(TARGET_HD)
 
 $(KODE_BIN) : $(KODE_OBJ) $(KODE_DBG)
 	@echo "[Build][$(BUILD_ROOT)/$@]"

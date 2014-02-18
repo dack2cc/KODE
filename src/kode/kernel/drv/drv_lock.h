@@ -1,27 +1,21 @@
-#ifndef __FS_INODE_H__
-#define __FS_INODE_H__
+#ifndef __DRV_LOCK_H__
+#define __DRV_LOCK_H__
 
 /******************************************************************************
     Include
 ******************************************************************************/
 
-#include <cpu.h>
+#include <os.h>
 
 /******************************************************************************
     Public Interface
 ******************************************************************************/
 
-#define FS_INODE_SIZE  (32)
+#define  DRV_LOCK  OS_SEM
 
-typedef struct _FS_INODE {
-	CPU_INT16U  i_mode;
-	CPU_INT16U  i_uid;
-	CPU_INT32U  i_size;
-	CPU_INT32U  i_time;
-	CPU_INT08U  i_gid;
-	CPU_INT08U  i_nlinks;
-	CPU_INT16U  i_zone[9];
-} FS_INODE;
+inline void drv_lock_Init(DRV_LOCK* pLock_inout, CPU_CHAR* pszName_in);
+inline void drv_lock_SleepOn(DRV_LOCK* pLock_in);
+inline void drv_lock_WakeUp(DRV_LOCK* pSem_in);
 
-#endif // __FS_INODE_H__
+#endif // __DRV_LOCK_H__
 

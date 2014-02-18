@@ -9,13 +9,17 @@
 #define DEFAULT_MAJOR_ROOT 3
 #define DEFAULT_MINOR_ROOT 1
 
+#define FLAG_FLOPPY  "FLOPPY"
+#define FLAG_HDISK   "HDISK"
+
 /* max nr of sectors of setup: don't change unless you also change
  * bootsect etc */
 #define SETUP_SECTS 4
 
 #define STRINGIFY(x) #x
 
-#define HDISK_SECTS (153*4*17)
+#define SYSTEM_IMAGE_SECTS  (1024)
+#define HDISK_SECTS         (153*4*17)
 
 void die(char * str)
 {
@@ -36,7 +40,7 @@ int main(int argc, char ** argv)
 	//struct stat sb;
 	int sectors = 0;
 	
-	if ((argc != 4) && (argc != 5))
+	if ((argc != 5) && (argc != 6))
 	    usage();
 	
 	// judge the boot device
@@ -45,13 +49,19 @@ int main(int argc, char ** argv)
 	if (0 == strcmp(argv[1], "FLOPPY")) {
 		major_root = 0;
 		minor_root = 0;
-	} else {
+	} else if (0 == strcmp(argv[1], "HDISK")) {
 		//if (stat(argv[1], &sb)) {
 		//	perror(argv[1]);
 		//	die("Couldn't stat root device.");
 		//}
 		//major_root = major(sb.st_rdev);
 		//minor_root = minor(sb.st_rdev);
+		
+		//i=write(1,buf,512);
+		//if (i!=512)
+		//    die("Write MBR failed");
+		//sectors++;
+
 	}
 	fprintf(stderr, "Root device is (%d, %d)\n", major_root, minor_root);
 	if ((major_root != 2) && (major_root != 3) &&
@@ -135,6 +145,31 @@ int main(int argc, char ** argv)
 		}
 	} 
 	
+	// fill the system image to 512K
+	for (c=0 ; c<sizeof(buf) ; c++)
+		buf[c] = '\0';
+	while (sectors < SYSTEM_IMAGE_SECTS) {
+		if (write(1,buf,c) != c)
+			die("Write call failed");
+		sectors += 2;
+	}
+	
+	// copy the fs image
+	if (argc == 6) {
+		if ((id=open(argv[5],O_RDONLY,0))<0)
+			die("Unable to open 'file system'");
+		for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c ) {
+			if (write(1,buf,c)!=c)
+				die("Write call failed");
+			if (c > 512) 
+			    sectors+=2;
+			else 
+			    sectors++;
+		}
+		close(id);
+	}
+	
+	// fill the disk image to 5MB
 	if (0 == strcmp(argv[1], "HDISK")) {
 		while (sectors < HDISK_SECTS) {
 			if (write(1,buf,512) != 512)

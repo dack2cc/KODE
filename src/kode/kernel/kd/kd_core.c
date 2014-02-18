@@ -184,7 +184,7 @@ KD_PRIVATE void kd_core_Run(void)
 
 KD_PRIVATE void  kd_core_Setup(void)
 {
-	CPU_INT16U  uiRootDev = 0;
+	//CPU_INT16U  uiRootDev = 0;
 	
 	drv_hd_Init();
 	drv_blk_Init();
@@ -192,8 +192,8 @@ KD_PRIVATE void  kd_core_Setup(void)
 	
 	drv_hd_Setup();
 	
-	CPUExt_HDGetRootDevice(&uiRootDev);
-	FS_super_MountRoot(uiRootDev);
+	//CPUExt_HDGetRootDevice(&uiRootDev);
+	//FS_super_MountRoot(0x300);
 }
 
 KDThread * kdThreadCreate(const KDThreadAttr *attr, void *(*start_routine)(void *), void *arg)

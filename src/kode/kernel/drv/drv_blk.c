@@ -4,6 +4,7 @@
 ******************************************************************************/
 
 #include <drv_blk.h>
+#include <drv_lock.h>
 #include <cpu_ext.h>
 #include <os.h>
 #include <std/stdarg.h>
@@ -20,8 +21,9 @@
 #define DRV_BLK_CMD_READ_AHEAD   (DRV_BLK_CMD_WRITE + 1)
 #define DRV_BLK_CMD_WRITE_AHEAD  (DRV_BLK_CMD_WRITE + 2)
 
-#define DRV_BLK_NAME_WAIT_BUFFER   "DriverBlockBufferWait"
-#define DRV_BLK_NAME_LOCK          "DriverBlockLock"
+#define DRV_BLK_LCK_NAME_FREE_REQ  "[DriverBlock][LockFreeReq]"
+#define DRV_BLK_LCK_NAME_FREE_BUF  "[DriverBlock][LockFreeBuf]"
+#define DRV_BLK_LCK_NAME_BUFFER    "[DriverBlock][LockBuffer]"
 
 #define DRV_BLK_UNIT_SIZE       (1024)
 #define DRV_BLK_HASH_TABLE_MAX  (307)
@@ -33,11 +35,11 @@ typedef struct _DRV_BLK_BUFFER_HEAD {
 	CPU_INT32S      iResult;
 	/* it must the same as CPU_EXT_HD_REQUEST */
 
-	CPU_INT08U      uiRef;      /* users using this block */
+	CPU_INT08U      uiRef;        /* users using this block */
 	CPU_INT08U      uiIsUpToDate; /* 0 - out of date, 1 - up to date */
 	CPU_INT08U      uiIsDirty;    /* 0 - clean, 1 - dirty */
 	CPU_INT08U      uiIsLocked;   /* 0 - ok, 1 -locked */	
-	OS_SEM          semLock;
+	DRV_LOCK        lckWait;
 	struct _DRV_BLK_BUFFER_HEAD * pstPrev;
 	struct _DRV_BLK_BUFFER_HEAD * pstNext;
 	struct _DRV_BLK_BUFFER_HEAD * pstPrevFree;
@@ -52,8 +54,8 @@ typedef struct _DRV_BLK_CONTROL {
 	DRV_BLK_BUFFER_HEAD*  pstBufHeadFree;
 	CPU_INT32U            uiBufCount;
 	CPU_FNCT_VOID         pfnSync;
-	OS_SEM                semBufFree;
-	OS_SEM                semReqFree;
+	DRV_LOCK              lckBufFree;
+	DRV_LOCK              lckReqFree;
 } DRV_BLK_CONTROL;
 
 
@@ -68,10 +70,6 @@ DRV_PRIVATE DRV_BLK_CONTROL drv_blk_stCtl;
 #define _hash(dev, blk)     (drv_blk_stCtl.apstHashTable[_hash_fn(dev, blk)])
 
 #define _badness(bh)     (((bh)->uiIsDirty<<1)+(bh)->uiIsLocked)
-
-DRV_PRIVATE void drv_blk_SemInit(OS_SEM* pSem_in);
-DRV_PRIVATE void drv_blk_SleepOn(OS_SEM* pSem_in);
-DRV_PRIVATE void drv_blk_WakeUp(OS_SEM* pSem_in);
 
 DRV_PRIVATE void drv_blk_WaitForFree(void);
 DRV_PRIVATE void drv_blk_WaitOnBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_in);
@@ -111,8 +109,8 @@ void drv_blk_Init(void)
 	drv_blk_stCtl.uiBufCount = 0;
 	drv_blk_stCtl.pfnSync = 0;
 
-	drv_blk_SemInit(&(drv_blk_stCtl.semBufFree));
-	drv_blk_SemInit(&(drv_blk_stCtl.semReqFree));
+	drv_lock_Init(&(drv_blk_stCtl.lckBufFree), DRV_BLK_LCK_NAME_FREE_BUF);
+	drv_lock_Init(&(drv_blk_stCtl.lckReqFree), DRV_BLK_LCK_NAME_FREE_REQ);
 	
 	pstBufHead = drv_blk_stCtl.pstBufHeadStart;
 	
@@ -139,7 +137,7 @@ void drv_blk_Init(void)
 		pstBufHead->uiIsLocked = 0;
 		pstBufHead->uiRef = 0;
 		
-		drv_blk_SemInit(&(pstBufHead->semLock));
+		drv_lock_Init(&(pstBufHead->lckWait), DRV_BLK_LCK_NAME_BUFFER);
 		
 		pstBufHead->pstPrev = 0;
 		pstBufHead->pstNext = 0;
@@ -207,13 +205,12 @@ DRV_BLK_BUFFER * drv_blk_Read(const CPU_INT32S iDev_in, const CPU_INT32U uiBlkId
 	}
 	
 	drv_blk_LowLevelRW(DRV_BLK_CMD_READ, pstBufHead);
-	drv_blk_WaitOnBuffer(pstBufHead);
+	drv_blk_WaitOnBuffer(pstBufHead);	
 	if (pstBufHead->uiIsUpToDate) {
 		return ((DRV_BLK_BUFFER *)(pstBufHead));
 	}
 	
 	drv_blk_Release((DRV_BLK_BUFFER *)pstBufHead);
-	
 	return 0;
 }
 
@@ -262,7 +259,7 @@ void drv_blk_Release(DRV_BLK_BUFFER* pstBuf_in)
 	if (!(pstBufHead->uiRef--)) {
 		CPUExt_CorePanic("[drv_blk_Release][The buffer is free]");
 	}
-	drv_blk_WakeUp(&(drv_blk_stCtl.semBufFree));
+	drv_lock_WakeUp(&(drv_blk_stCtl.lckBufFree));
 }
 
 void drv_blk_NotifyRWEnd(DRV_BLK_BUFFER* pstBuf_in)
@@ -275,79 +272,19 @@ void drv_blk_NotifyRWEnd(DRV_BLK_BUFFER* pstBuf_in)
 	
 	if (CPU_EXT_HD_RESULT_OK == pstBufHead->iResult) {
 		pstBufHead->uiIsUpToDate = 1;
-		drv_blk_UnlockBuffer(pstBufHead);
 	}
+	drv_blk_UnlockBuffer(pstBufHead);
 }
 
 
 void drv_blk_NotifyReqFree(void)
 {
-	drv_blk_WakeUp(&(drv_blk_stCtl.semReqFree));
-}
-
-DRV_PRIVATE void drv_blk_SemInit(OS_SEM* pSem_in)
-{
-	OS_ERR     err = OS_ERR_NONE;
-
-	OSSemCreate(
-		/* p_sem  */ pSem_in,
-		/* p_name */ DRV_BLK_NAME_LOCK,
-		/* cnt    */ 0,
-		/* *p_err */ &err
-	);
-	if (OS_ERR_NONE != err) {
-		CPUExt_CorePanic("[drv_blk_SemInit][lock init failed]");
-	}
-}
-
-DRV_PRIVATE void drv_blk_SleepOn(OS_SEM* pSem_in)
-{
-	OS_ERR     err = OS_ERR_NONE;
-	OS_SEM_CTR ctr = 0;
-	
-	ctr = OSSemPend(
-		/* p_sem   */ pSem_in,
-		/* timeout */ 0,
-		/* opt     */ OS_OPT_PEND_BLOCKING,
-		/* p_ts    */ 0,
-		/* p_err   */ &err
-	);
-	if (OS_ERR_NONE != err) {
-		CPUExt_CorePanic("[drv_blk_SleepOn][Lock error]");
-	}
-	if (0 != ctr) {
-		CPUExt_CorePanic("[drv_blk_SleepOn][Lock exception]");
-	}
-}
-
-DRV_PRIVATE void drv_blk_WakeUp(OS_SEM* pSem_in)
-{
-	OS_ERR     err = OS_ERR_NONE;
-	OS_SEM_CTR ctr = 0;
-	
-	if (0 == pSem_in) {
-		CPUExt_CorePanic("[drv_blk_WakeUp][Lock is invalid]");
-	}
-	if (0 == pSem_in->PendList.NbrEntries) {
-		return;
-	}
-	
-	ctr = OSSemPost(
-		/* p_sem   */ pSem_in,
-		/* opt     */ OS_OPT_POST_1,
-		/* p_err   */ &err
-	);
-	if (OS_ERR_NONE != err) {
-		CPUExt_CorePanic("[drv_blk_WakeUp][Lock error]");
-	}
-	if (0 != ctr) {
-		CPUExt_CorePanic("[drv_blk_WakeUp][Lock exception]");
-	}
+	drv_lock_WakeUp(&(drv_blk_stCtl.lckReqFree));
 }
 
 DRV_PRIVATE void drv_blk_WaitForFree(void)
 {
-	drv_blk_SleepOn(&(drv_blk_stCtl.semBufFree));
+	drv_lock_SleepOn(&(drv_blk_stCtl.lckBufFree));
 }
 
 DRV_PRIVATE void drv_blk_WaitOnBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_in)
@@ -357,7 +294,7 @@ DRV_PRIVATE void drv_blk_WaitOnBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_in)
 	OS_CRITICAL_ENTER();
 	
 	while (pstBufHead_in->uiIsLocked) {
-		drv_blk_SleepOn(&(pstBufHead_in->semLock));
+		drv_lock_SleepOn(&(pstBufHead_in->lckWait));
 	}
 	
 	OS_CRITICAL_EXIT();
@@ -374,24 +311,23 @@ DRV_PRIVATE void drv_blk_LockBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_inout)
 	OS_CRITICAL_ENTER();
 	
 	while (pstBufHead_inout->uiIsLocked) {
-		drv_blk_SleepOn(&(pstBufHead_inout->semLock));
+		drv_lock_SleepOn(&(pstBufHead_inout->lckWait));
 	}
 	pstBufHead_inout->uiIsLocked = 1;
-	
 	OS_CRITICAL_EXIT();
 }
 
 DRV_PRIVATE void drv_blk_UnlockBuffer(DRV_BLK_BUFFER_HEAD* pstBufHead_inout)
 {
 	if (0 == pstBufHead_inout) {
-		CPUExt_CorePanic("[drv_blk_LockBuffer][the buffer is invalid]");
+		CPUExt_CorePanic("[drv_blk_UnlockBuffer][the buffer is invalid]");
 	}
 	if (!(pstBufHead_inout->uiIsLocked)) {
-		CPUExt_CorePanic("[drv_blk_LockBuffer][the buffer is not locked]");
+		CPUExt_CorePanic("[drv_blk_UnlockBuffer][the buffer is not locked]");
 	}
 	
 	pstBufHead_inout->uiIsLocked = 0;
-	drv_blk_WakeUp(&(pstBufHead_inout->semLock));
+	drv_lock_WakeUp(&(pstBufHead_inout->lckWait));
 }
 
 
@@ -472,7 +408,7 @@ L_REPEAT_LL_RW:
 			drv_blk_UnlockBuffer(pstBufHead_inout);
 			return;
 		}
-		drv_blk_SleepOn(&(drv_blk_stCtl.semReqFree));
+		drv_lock_SleepOn(&(drv_blk_stCtl.lckReqFree));
 		goto L_REPEAT_LL_RW;
 	}
 }

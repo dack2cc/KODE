@@ -215,7 +215,7 @@ void  CPUExt_HDSetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT08U * p
 	}
 	
 	pstTable = 0x1BE + (void *)(pbyTable_in);
-	for (i = 0; i < CPU_HD_PARTITION_MAX; ++i, ++pstTable) {
+	for (i = 1; i < CPU_HD_PARTITION_MAX; ++i, ++pstTable) {
 		cpu_hd_stCtl.astPart[i + CPU_HD_PARTITION_MAX * iDiskIndex_in].iStart = pstTable->sector_start;
 		cpu_hd_stCtl.astPart[i + CPU_HD_PARTITION_MAX * iDiskIndex_in].iCount = pstTable->sector_count;
 	}
@@ -260,7 +260,7 @@ void  CPUExt_HDRequest(CPU_EXT_HD_REQUEST* pstRequest_inout)
 	pstReq->stReq.pbyData = pstRequest_inout->in.pbyData;
 	pstReq->stReq.iDev    = pstRequest_inout->in.iDev;
 	pstReq->stReq.iCmd    = pstRequest_inout->in.iCmd;
-	pstReq->uiSectorStart = pstRequest_inout->in.uiBlkIdx << 1;
+	pstReq->uiSectorStart = pstRequest_inout->in.uiBlkIdx * 2;
 	pstReq->uiSectorCount = 2;
 	pstReq->pstOrg  = pstRequest_inout;
 	pstReq->iErrCnt = 0;
@@ -404,6 +404,8 @@ CPU_PRIVATE void cpu_hd_EndRequest(const CPU_INT32S iResult_in)
 	CPU_EXT_HD_REQUEST *  pstOrg = cpu_hd_stCtl.pstCurrentReq->pstOrg;
 	CPU_INT08U  i = 0;
 	
+	
+	/* it has free request buffer, so no need to do the notify. */
 	for (i = 0; i < CPU_HD_REQUEST_MAX; ++i) {
 		if (cpu_hd_astReqBuf[i].stReq.iDev < 0) {
 			break;
