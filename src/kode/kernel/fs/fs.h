@@ -12,7 +12,7 @@
     Public Interface
 ******************************************************************************/
 
-extern void FS_super_MountRoot(const CPU_INT16U  uiDev_in);
+extern void FS_MountRoot(const CPU_INT16U  uiDev_in);
 
 #endif // __FS_H__
 

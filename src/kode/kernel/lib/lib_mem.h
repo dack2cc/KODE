@@ -103,10 +103,10 @@
 */
 
 #include  <cpu.h>
-#include  <cpu_core.h>
+//#include  <cpu_core.h>
 
-#include  <lib_def.h>
-#include  <app_cfg.h>
+//#include  <lib_def.h>
+//#include  <os_cfg_app.h>
 
 
 /*

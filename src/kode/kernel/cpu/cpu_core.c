@@ -32,7 +32,7 @@ void CPU_Init(void)
 	cpu_hd_Init();
 	cpu_key_Init();
 	cpu_disp_Init();
-	cpu_page_Init(0);
+	cpu_page_Init(CPU_EXT_RAM_DISK_SIZE);
 	cpu_gate_Init();
 	cpu_task_Init();
 	

@@ -1,19 +1,21 @@
-#ifndef __DRV_DISP_H__
-#define __DRV_DISP_H__
+#ifndef __DRV_RD_H__
+#define __DRV_RD_H__
 
 /******************************************************************************
     Include
 ******************************************************************************/
 
-#include <cpu.h>
+#include <cpu_ext.h>
 
 /******************************************************************************
     Public Interface
 ******************************************************************************/
 
-extern void drv_disp_Init(void);
+#define DRV_RD_DEVICE  (0x100)
 
-extern CPU_INT32S  drv_disp_Printf(const CPU_CHAR* fmt_in, ...);
+extern void drv_rd_Init(void);
+extern void drv_rd_Setup(void);
+extern void drv_rd_Request(CPU_EXT_HD_REQUEST * pstRequest_inout);
 
-#endif // __DRV_DISP_H__
+#endif // __DRV_RD_H__
 

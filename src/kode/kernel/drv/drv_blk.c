@@ -5,6 +5,7 @@
 
 #include <drv_blk.h>
 #include <drv_lock.h>
+#include <drv_rd.h>
 #include <cpu_ext.h>
 #include <os.h>
 #include <std/stdarg.h>
@@ -25,7 +26,7 @@
 #define DRV_BLK_LCK_NAME_FREE_BUF  "[DriverBlock][LockFreeBuf]"
 #define DRV_BLK_LCK_NAME_BUFFER    "[DriverBlock][LockBuffer]"
 
-#define DRV_BLK_UNIT_SIZE       (1024)
+#define DRV_BLK_UNIT_SIZE       (CPU_EXT_HD_BLOCK_SIZE)
 #define DRV_BLK_HASH_TABLE_MAX  (307)
 
 typedef struct _DRV_BLK_BUFFER_HEAD {
@@ -195,6 +196,12 @@ void drv_blk_InvalidateBuffer(const CPU_INT32S iDev_in)
 DRV_BLK_BUFFER * drv_blk_Read(const CPU_INT32S iDev_in, const CPU_INT32U uiBlkIdx_in)
 {
 	DRV_BLK_BUFFER_HEAD* pstBufHead = 0;
+	
+	if (((CPU_EXT_HD_DEVICE & iDev_in) != CPU_EXT_HD_DEVICE) 
+	&&  ((DRV_RD_DEVICE & iDev_in) != DRV_RD_DEVICE)) {
+		CPUExt_CorePanic("[drv_blk_Read][Unknown Device]\r\n");
+		return (0);
+	}
 	
 	pstBufHead = drv_blk_GetBlock(iDev_in, uiBlkIdx_in);
 	if (0 == pstBufHead) {
@@ -402,7 +409,16 @@ DRV_PRIVATE void drv_blk_LowLevelRW(const CPU_INT32S iCmdRW_in, DRV_BLK_BUFFER_H
 	}
 	
 L_REPEAT_LL_RW:
-	CPUExt_HDRequest((CPU_EXT_HD_REQUEST *)pstBufHead_inout);
+	if ((CPU_EXT_HD_DEVICE & pstBufHead_inout->stBuf.iDev) == CPU_EXT_HD_DEVICE) {
+	    CPUExt_HDRequest((CPU_EXT_HD_REQUEST *)pstBufHead_inout);
+	}
+	else if  ((DRV_RD_DEVICE & pstBufHead_inout->stBuf.iDev) == DRV_RD_DEVICE) {
+		drv_rd_Request((CPU_EXT_HD_REQUEST *)pstBufHead_inout);
+	}
+	else {
+		CPUExt_CorePanic("[drv_blk_LowLevelRW][Unknown Device]");
+	}
+
 	if (CPU_EXT_HD_RESULT_FULL == pstBufHead_inout->iResult) {
 		if (iIsRWAhead) {
 			drv_blk_UnlockBuffer(pstBufHead_inout);

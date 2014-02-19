@@ -41,6 +41,8 @@ typedef struct _CPU_PAGE_CONTROL {
 	CPU_ADDR  adrPhyMemEnd;
 	CPU_ADDR  adrPhyBufStart;
 	CPU_ADDR  adrPhyBufEnd;
+	CPU_ADDR  adrPhyRamdiskStart;
+	CPU_ADDR  adrPhyRamdiskEnd;
 } CPU_PAGE_CONTROL;
 
 CPU_PRIVATE  CPU_PAGE_CONTROL  cpu_page_stCtl;
@@ -89,6 +91,10 @@ void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in)
 		}
 	}
 	
+	/* calculate the ramdisk memory address */
+	cpu_page_stCtl.adrPhyRamdiskStart = cpu_page_stCtl.adrPhyBufEnd;
+	cpu_page_stCtl.adrPhyRamdiskEnd   = cpu_page_stCtl.adrPhyRamdiskStart + uiRamdiskSize_in;
+	
 	/* init all the pages to used */
 	for (i = 0; i < CPU_PAGE_VALID_NR; ++i) {
 		cpu_page_aiStatus[i] = CPU_PAGE_STATUS_USED;
@@ -118,6 +124,19 @@ void  CPUExt_PageGetBufferSpace(
 	
 	if (0 != paddrPhysicalEnd_out) {
 		(*paddrPhysicalEnd_out) = cpu_page_stCtl.adrPhyBufEnd;
+	}
+}
+
+void  CPUExt_PageGetRamdiskSpace(
+	CPU_ADDR*  paddrPhysicalStart_out, 
+	CPU_ADDR*  paddrPhysicalEnd_out
+)
+{
+	if (0 != paddrPhysicalStart_out) {
+		(*paddrPhysicalStart_out) = cpu_page_stCtl.adrPhyRamdiskStart;
+	}
+	if (0 != paddrPhysicalEnd_out) {
+		(*paddrPhysicalEnd_out) = cpu_page_stCtl.adrPhyRamdiskEnd;
 	}
 }
 

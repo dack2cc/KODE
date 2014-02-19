@@ -9,9 +9,11 @@
 #include <os.h>
 #include <cpu_ext.h>
 #include <lib_def.h>
+#include <drv_disp.h>
 #include <drv_key.h>
 #include <drv_blk.h>
 #include <drv_hd.h>
+#include <drv_rd.h>
 #include <fs.h>
 
 /******************************************************************************
@@ -185,15 +187,18 @@ KD_PRIVATE void kd_core_Run(void)
 KD_PRIVATE void  kd_core_Setup(void)
 {
 	//CPU_INT16U  uiRootDev = 0;
-	
-	drv_hd_Init();
-	drv_blk_Init();
+	drv_disp_Init();
 	drv_key_Init();
 	
+	drv_hd_Init();
+	drv_rd_Init();	
+	drv_blk_Init();
+	
 	drv_hd_Setup();
+	drv_rd_Setup();
 	
 	//CPUExt_HDGetRootDevice(&uiRootDev);
-	//FS_super_MountRoot(0x300);
+	FS_MountRoot(0x101);
 }
 
 KDThread * kdThreadCreate(const KDThreadAttr *attr, void *(*start_routine)(void *), void *arg)

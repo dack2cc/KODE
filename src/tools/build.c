@@ -18,7 +18,7 @@
 
 #define STRINGIFY(x) #x
 
-#define SYSTEM_IMAGE_SECTS  (1024)
+#define SYSTEM_IMAGE_SECTS  (512) //(1024)
 #define HDISK_SECTS         (153*4*17)
 
 void die(char * str)
@@ -40,7 +40,7 @@ int main(int argc, char ** argv)
 	//struct stat sb;
 	int sectors = 0;
 	
-	if ((argc != 5) && (argc != 6))
+	if ((argc != 4) && (argc != 5) && (argc != 6))
 	    usage();
 	
 	// judge the boot device
@@ -116,7 +116,7 @@ int main(int argc, char ** argv)
 	sectors+=SETUP_SECTS;
 	
 	// copy the system
-	if (argc == 5) {
+	if (argc >= 5) {
 		if ((id=open(argv[4],O_RDONLY,0))<0)
 			die("Unable to open 'system'");
 		for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c ) {
@@ -149,13 +149,12 @@ int main(int argc, char ** argv)
 	for (c=0 ; c<sizeof(buf) ; c++)
 		buf[c] = '\0';
 	while (sectors < SYSTEM_IMAGE_SECTS) {
-		if (write(1,buf,c) != c)
+		if (write(1,buf,512) != 512)
 			die("Write call failed");
-		sectors += 2;
+		sectors += 1;
 	}
 	
-	// copy the fs image
-	if (argc == 6) {
+	if (argc >= 6) {
 		if ((id=open(argv[5],O_RDONLY,0))<0)
 			die("Unable to open 'file system'");
 		for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c ) {
@@ -171,6 +170,8 @@ int main(int argc, char ** argv)
 	
 	// fill the disk image to 5MB
 	if (0 == strcmp(argv[1], "HDISK")) {
+		for (c=0 ; c<sizeof(buf) ; c++)
+			buf[c] = '\0';
 		while (sectors < HDISK_SECTS) {
 			if (write(1,buf,512) != 512)
 				die("Write call failed");

@@ -66,6 +66,11 @@ type name(atype a,btype b,ctype c) \
 	return (type) (-1); \
 }
 
+/*
+    RAM Disk
+*/
+#define CPU_EXT_RAM_DISK_START   (256)
+#define CPU_EXT_RAM_DISK_SIZE    (512 * 1024)
 
 /******************************************************************************
     Public Interface
@@ -123,10 +128,14 @@ extern CPU_ERR  CPUExt_GateRegisterKernelFnct(const CPU_INT32U  uiFnctNum_in, CP
 extern void  CPUExt_PageGetFree(CPU_ADDR*  paddrPhysical_out);
 extern void  CPUExt_PageRelease(const CPU_ADDR  addrPhysical_in);
 extern void  CPUExt_PageGetBufferSpace(CPU_ADDR*  paddrPhysicalStart_out, CPU_ADDR*  paddrPhysicalEnd_out);
+extern void  CPUExt_PageGetRamdiskSpace(CPU_ADDR*  paddrPhysicalStart_out, CPU_ADDR*  paddrPhysicalEnd_out);
 
 /*
    Hard Disk
 */
+
+#define  CPU_EXT_HD_DEVICE      (0x300)
+#define  CPU_EXT_HD_BLOCK_SIZE  (1024)
 
 extern void CPUExt_HDGetRootDevice(CPU_INT16U * puiDev_out);
 extern void CPUExt_HDGetDiskCount(CPU_INT32S * piCount_out);

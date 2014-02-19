@@ -8,6 +8,7 @@
 #include <fs.h>
 #include <drv_blk.h>
 #include <drv_lock.h>
+#include <drv_disp.h>
 #include <os.h>
 #include <cpu_ext.h>
 
@@ -17,6 +18,12 @@
 
 //#define FS_PRIVATE  static
 #define FS_PRIVATE  
+
+#define FS_SUPER_DEBUG_OFF (0)
+#define FS_SUPER_DEBUG_ON  (1)
+#define FS_SUPER_DEBUG     (FS_SUPER_DEBUG_OFF)
+//#define FS_SUPER_DEBUG     (FS_SUPER_DEBUG_ON)
+
 
 #define FS_SUPER_LCK_NAME_WAIT  "[FSSuper][wait]"
 #define FS_SUPER_MAGIC          (0x137F)
@@ -69,7 +76,7 @@ FS_PRIVATE  void fs_super_CheckDiskChange(const CPU_INT16U  uiDev_in);
     Function Definition
 ******************************************************************************/
 
-void FS_super_MountRoot(const CPU_INT16U  uiDev_in)
+void FS_MountRoot(const CPU_INT16U  uiDev_in)
 {
 	CPU_INT32U i = 0;
 	FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
@@ -204,6 +211,17 @@ FS_PRIVATE  FS_SUPER_BLOCK_EXT * fs_super_Read(const CPU_INT16U  uiDev_in)
 	}
 	*((FS_SUPER_BLOCK *)pstSuperExt) = *((FS_SUPER_BLOCK *)(pstBuffer->pbyData));
 	drv_blk_Release(pstBuffer);
+	
+#if (FS_SUPER_DEBUG == FS_SUPER_DEBUG_ON)
+	drv_disp_Printf("[s_magic][%d] \r\n", pstSuperExt->sb.s_magic);
+	drv_disp_Printf("[s_max_size][%d] \r\n", pstSuperExt->sb.s_max_size);
+	drv_disp_Printf("[s_log_zone_size][%d] \r\n", pstSuperExt->sb.s_log_zone_size);
+	drv_disp_Printf("[s_firstdatazone][%d] \r\n", pstSuperExt->sb.s_firstdatazone);
+	drv_disp_Printf("[s_zmap_blocks][%d] \r\n", pstSuperExt->sb.s_zmap_blocks);
+	drv_disp_Printf("[s_imap_blocks][%d] \r\n", pstSuperExt->sb.s_imap_blocks);
+	drv_disp_Printf("[s_nzones][%d] \r\n", pstSuperExt->sb.s_nzones);
+	drv_disp_Printf("[s_ninodes][%d] \r\n", pstSuperExt->sb.s_ninodes);
+#endif // FS_SUPER_DEBUG
 	
 	if (FS_SUPER_MAGIC != pstSuperExt->sb.s_magic) {
 		pstSuperExt->s_dev = 0;

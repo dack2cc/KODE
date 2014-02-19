@@ -83,8 +83,15 @@ int main(int argc, char** argv)
 	int blocks = 0;
 	//fprintf(stderr, "mkfs ... \r\n");
 	
+	// the MBR or boot section
 	memset(buf, 0x00, 1024);
+	i = write(1, buf, 1024);
+	if (i != 1024) {
+		die("write failed \r\n");
+	}
+	++blocks;
 	
+	// super block
 	make_super(1024, 512);
 	memcpy(buf, &Super, sizeof(Super));
 	i = write(1, buf, 1024);
