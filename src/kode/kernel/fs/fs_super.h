@@ -7,6 +7,7 @@
 ******************************************************************************/
 
 #include <cpu.h>
+#include <fs_inode.h>
 
 /******************************************************************************
     Public Interface
@@ -24,6 +25,7 @@ typedef struct _FS_SUPER_BLOCK {
 } FS_SUPER_BLOCK;
 
 FS_SUPER_BLOCK * fs_super_Get(const CPU_INT16U uiDev_in);
+FS_SUPER_BLOCK * fs_super_FindMount(FS_INODE * pstInode_in);
 
 #endif // __FS_SUPER_H__
 

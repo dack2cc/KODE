@@ -103,7 +103,7 @@
 */
 
 #include  <cpu.h>
-//#include  <cpu_core.h>
+#include  <cpu_core.h>
 
 //#include  <lib_def.h>
 //#include  <os_cfg_app.h>
@@ -146,7 +146,7 @@
 
                                                         /* Configure external argument check feature (see Note #1) :    */
 #ifndef  LIB_MEM_CFG_ARG_CHK_EXT_EN
-#define  LIB_MEM_CFG_ARG_CHK_EXT_EN     DEF_DISABLED
+#define  LIB_MEM_CFG_ARG_CHK_EXT_EN     DEF_ENABLED
                                                         /*   DEF_DISABLED     Argument check DISABLED                   */
                                                         /*   DEF_ENABLED      Argument check ENABLED                    */
 #endif

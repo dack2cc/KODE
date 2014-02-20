@@ -80,6 +80,7 @@ void FS_MountRoot(const CPU_INT16U  uiDev_in)
 {
 	CPU_INT32U i = 0;
 	FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
+	FS_INODE * pstInode = 0;
 	
 	if (FS_INODE_SIZE != sizeof(FS_INODE)) {
 		CPUExt_CorePanic("[FS_super_MountRoot][bad i-node size]");
@@ -97,6 +98,11 @@ void FS_MountRoot(const CPU_INT16U  uiDev_in)
 	if (0 == pstSuperExt) {
 		CPUExt_CorePanic("[FS_super_MountRoot][Unable to mount root]");
 	}
+	
+	pstInode = fs_inode_Get(uiDev_in, FS_INODE_ROOT_NUM);
+	if (0 == pstInode) {
+		CPUExt_CorePanic("[FS_super_MountRoot][Unable to read root i-node]");
+	}
 }
 
 FS_SUPER_BLOCK * fs_super_Get(const CPU_INT16U uiDev_in)
@@ -104,6 +110,7 @@ FS_SUPER_BLOCK * fs_super_Get(const CPU_INT16U uiDev_in)
 	FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
 	
 	if (0 == uiDev_in) {
+		CPUExt_CorePanic("[fs_super_Get][device invalid]");
 		return 0;
 	}
 	pstSuperExt = 0 + fs_super_astBlock;
@@ -121,6 +128,25 @@ FS_SUPER_BLOCK * fs_super_Get(const CPU_INT16U uiDev_in)
 	}
 	return 0;
 }
+
+FS_SUPER_BLOCK * fs_super_FindMount(FS_INODE * pstInode_in)
+{
+	FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
+	
+	if (0 == pstInode_in) {
+		CPUExt_CorePanic("[fs_super_GetMounted][inode invalid]");
+		return 0;
+	}
+	pstSuperExt = 0 + fs_super_astBlock;
+	while (pstSuperExt < (fs_super_astBlock + FS_SUPER_BLOCK_EXT_MAX)) {
+		if (pstSuperExt->s_imount == pstInode_in) {
+			return ((FS_SUPER_BLOCK *)pstSuperExt);
+		}
+		++pstSuperExt;
+	}
+	return 0;
+}
+
 
 FS_PRIVATE  void fs_super_Wait(FS_SUPER_BLOCK_EXT * pstSuperExt_in)
 {

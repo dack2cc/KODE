@@ -79,7 +79,7 @@ void drv_rd_Setup(void)
 		if (0 == pstBuf) {
 			CPUExt_CorePanic("[drv_rd_Setup][reading block failed]");
 		}
-		MEM_VAL_COPY(pbyDst, pstBuf->pbyData, CPU_EXT_HD_BLOCK_SIZE);
+		Mem_Copy(pbyDst, pstBuf->pbyData, CPU_EXT_HD_BLOCK_SIZE);
 		drv_blk_Release(pstBuf);
 		
 		uiCpSize += CPU_EXT_HD_BLOCK_SIZE;
@@ -111,10 +111,10 @@ void drv_rd_Request(CPU_EXT_HD_REQUEST * pstRequest_inout)
 	}
 	
 	if (CPU_EXT_HD_CMD_READ == pstRequest_inout->in.iCmd) {
-		MEM_VAL_COPY(pstRequest_inout->in.pbyData, pbyDisk, CPU_EXT_HD_BLOCK_SIZE);
+		Mem_Copy(pstRequest_inout->in.pbyData, pbyDisk, CPU_EXT_HD_BLOCK_SIZE);
 	}
 	else if (CPU_EXT_HD_CMD_WRITE == pstRequest_inout->in.iCmd) {
-		MEM_VAL_COPY(pbyDisk, pstRequest_inout->in.pbyData, CPU_EXT_HD_BLOCK_SIZE);
+		Mem_Copy(pbyDisk, pstRequest_inout->in.pbyData, CPU_EXT_HD_BLOCK_SIZE);
 	}
 	else {
 		CPUExt_CorePanic("[drv_rd_Request][Reading failed]");

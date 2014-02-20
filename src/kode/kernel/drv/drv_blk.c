@@ -257,8 +257,8 @@ DRV_BLK_BUFFER * drv_blk_ReadAhead(const CPU_INT32S iDev_in, const CPU_INT32S iB
 void drv_blk_Release(DRV_BLK_BUFFER* pstBuf_in)
 {
 	DRV_BLK_BUFFER_HEAD* pstBufHead = (DRV_BLK_BUFFER_HEAD *)pstBuf_in;
-	
 	if (0 == pstBufHead) {
+		CPUExt_CorePanic("[drv_blk_Release][buffer invalid]");
 		return;
 	}
 	
@@ -267,6 +267,17 @@ void drv_blk_Release(DRV_BLK_BUFFER* pstBuf_in)
 		CPUExt_CorePanic("[drv_blk_Release][The buffer is free]");
 	}
 	drv_lock_WakeUp(&(drv_blk_stCtl.lckBufFree));
+}
+
+void drv_blk_MakeDirty(DRV_BLK_BUFFER* pstBuf_in)
+{
+	DRV_BLK_BUFFER_HEAD* pstBufHead = (DRV_BLK_BUFFER_HEAD *)pstBuf_in;
+	if (0 == pstBufHead) {
+		CPUExt_CorePanic("[drv_blk_Release][buffer invalid]");
+		return;
+	}
+	
+	pstBufHead->uiIsDirty = 1;
 }
 
 void drv_blk_NotifyRWEnd(DRV_BLK_BUFFER* pstBuf_in)
