@@ -6,6 +6,7 @@
 #include <cpu_gate.h>
 #include <cpu_disp.h>
 #include <cpu_task.h>
+#include <cpu_time.h>
 #include <cpu_asm.h>
 #include <cpu_ext.h>
 
@@ -24,7 +25,7 @@ CPU_FNCT_VOID    cpu_gate_pfnISRHookExit  = 0;
 CPU_FNCT_VOID    cpu_gate_pfnTimeTick     = 0;
 
 
-#define _HZ       (100)
+#define _HZ       (CPU_TIME_TICK_HZ)
 #define _LATCH    (1193180/_HZ)
 
 

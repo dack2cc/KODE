@@ -9,6 +9,7 @@
 #include <cpu_page.h>
 #include <cpu_gate.h>
 #include <cpu_task.h>
+#include <cpu_time.h>
 #include <cpu_key.h>
 #include <cpu_hd.h>
 #include <cpu_ext.h>
@@ -35,6 +36,7 @@ void CPU_Init(void)
 	cpu_page_Init(CPU_EXT_RAM_DISK_SIZE);
 	cpu_gate_Init();
 	cpu_task_Init();
+	cpu_time_Init();
 	
 	return;
 }

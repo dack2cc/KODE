@@ -29,7 +29,8 @@ KODE_KERNEL_CPU_SRC_C := cpu_gate_c.c \
                          cpu_disp.c \
                          cpu_page.c \
                          cpu_task.c \
-                         cpu_core.c
+                         cpu_core.c \
+                         cpu_time.c 
 KODE_KERNEL_CPU_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_CPU_DIR)/%.o, $(KODE_KERNEL_CPU_SRC_S)) \
                        $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_CPU_DIR)/%.o, $(KODE_KERNEL_CPU_SRC_C))
 
@@ -82,7 +83,8 @@ KODE_KERNEL_LIB_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNE
 KODE_KERNEL_FS_DIR := fs
 KODE_KERNEL_FS_SRC_S := 
 KODE_KERNEL_FS_SRC_C := fs_super.c \
-                        fs_inode.c 
+                        fs_inode.c \
+                        fs_bitmap.c 
 KODE_KERNEL_FS_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR)/%.o, $(KODE_KERNEL_FS_SRC_S)) \
                       $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR)/%.o, $(KODE_KERNEL_FS_SRC_C))
 

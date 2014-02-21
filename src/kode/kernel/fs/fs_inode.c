@@ -5,12 +5,14 @@
 
 #include <fs_inode.h>
 #include <fs_super.h>
+#include <fs_bitmap.h>
 #include <drv_blk.h>
 #include <drv_lock.h>
 #include <drv_disp.h>
 #include <os.h>
 #include <cpu_ext.h>
 #include <lib_mem.h>
+#include <sys/stat.h>
 
 /******************************************************************************
     Private Define
@@ -71,6 +73,10 @@ FS_PRIVATE void fs_inode_Unlock(FS_INODE_EXT * pstInode_inout);
 
 FS_PRIVATE void fs_inode_Write(FS_INODE_EXT* pstInode_in);
 FS_PRIVATE void fs_inode_Read(FS_INODE_EXT* pstInode_inout);
+
+FS_PRIVATE void fs_inode_FreeIndirect(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in);
+FS_PRIVATE void fs_inode_FreeDoubleIndirect(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in);
+
 
 /******************************************************************************
     Function Definition
@@ -144,7 +150,79 @@ FS_INODE * fs_inode_Get(const CPU_INT16U uiDev_in, const CPU_INT16U uiNum_in)
 
 void fs_inode_Put(FS_INODE * pstInode_in)
 {
+	FS_INODE_EXT * pstInode = (FS_INODE_EXT *)pstInode_in;
+	
+	if (0 == pstInode) {
+		return;
+	}
+	
+	fs_inode_WaitOn(pstInode);
+	if (0 == pstInode->i_count) {
+		CPUExt_CorePanic("[fs_inode_Put][try to free free inode]");
+	}
+	if (pstInode->i_pipe) {
+		drv_lock_WakeUp(&(pstInode->i_wait));
+		if (--(pstInode->i_count)) {
+			return;
+		}
+		CPUExt_PageRelease(pstInode->ind.i_size);
+		pstInode->i_count = 0;
+		pstInode->i_dirt  = 0;
+		pstInode->i_pipe  = 0;
+		return;
+	}
+	if (!pstInode->i_dev) {
+		pstInode->i_count--;
+		return;
+	}
+	if (S_ISBLK(pstInode->ind.i_mode)) {
+		drv_blk_SyncDevice((pstInode->ind.i_zone[0]));
+		fs_inode_WaitOn(pstInode);
+	}
+L_REPEAT_PUT:
+	if (pstInode->i_count > 1) {
+		pstInode->i_count--;
+		return;
+	}
+	if (!(pstInode->ind.i_nlinks)) {
+		fs_inode_Truncate((FS_INODE *)pstInode);
+		fs_bitmap_FreeInode((FS_INODE *)pstInode);
+		return;
+	}
+	if (pstInode->i_dirt) {
+		fs_inode_Write(pstInode);
+		fs_inode_WaitOn(pstInode);
+		goto L_REPEAT_PUT;
+	}
+	pstInode->i_count--;
 	return;
+}
+
+void fs_inode_Truncate(FS_INODE * pstInode_in)
+{
+	FS_INODE_EXT * pstInode = (FS_INODE_EXT *)pstInode_in;
+	CPU_INT32U  i = 0;
+	
+	if (0 == pstInode) {
+		CPUExt_CorePanic("[fs_inode_Truncate][i-node invalid]");
+	}
+	if (!S_ISREG(pstInode->ind.i_mode) || S_ISDIR(pstInode->ind.i_mode)) {
+		return;
+	}
+	for (i = 0; i < 7; ++i) {
+		if (pstInode->ind.i_zone[i]) {
+			fs_bitmap_FreeBlock(pstInode->i_dev, pstInode->ind.i_zone[i]);
+			pstInode->ind.i_zone[i] = 0;
+		}
+	}
+	fs_inode_FreeIndirect(pstInode->i_dev, pstInode->ind.i_zone[7]);
+	fs_inode_FreeDoubleIndirect(pstInode->i_dev, pstInode->ind.i_zone[8]);
+	pstInode->ind.i_zone[7] = 0;
+	pstInode->ind.i_zone[8] = 0;
+	pstInode->ind.i_size = 0;
+	pstInode->i_dirt = 1;
+	CPUExt_TimeCurrent(&(pstInode->ind.i_time));
+	pstInode->i_ctime = pstInode->ind.i_time;
 }
 
 FS_PRIVATE FS_INODE_EXT * fs_inode_GetEmpty(void)
@@ -276,4 +354,49 @@ FS_PRIVATE void fs_inode_Read(FS_INODE_EXT* pstInode_inout)
 	fs_inode_Unlock(pstInode_inout);
 	return;
 }
+
+FS_PRIVATE void fs_inode_FreeIndirect(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in)
+{
+	DRV_BLK_BUFFER * pstBuf = 0;
+	CPU_INT16U * puiBlk = 0;
+	CPU_INT32U   i = 0;
+	
+	if (!uiBlk_in) {
+		return;
+	}
+	pstBuf = drv_blk_Read(uiDev_in, uiBlk_in);
+	if (0 != pstBuf) {
+		puiBlk = (CPU_INT16U *)pstBuf->pbyData;
+		for (i = 0; i < (CPU_EXT_HD_BLOCK_SIZE / sizeof(CPU_INT16U)); ++i, ++puiBlk) {
+			if (0 != (*puiBlk)) {
+				fs_bitmap_FreeBlock(uiDev_in, (*puiBlk));
+			}
+		}
+		drv_blk_Release(pstBuf);
+	}
+	fs_bitmap_FreeBlock(uiDev_in, uiBlk_in);
+}
+
+FS_PRIVATE void fs_inode_FreeDoubleIndirect(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in)
+{
+	DRV_BLK_BUFFER * pstBuf = 0;
+	CPU_INT16U * puiBlk = 0;
+	CPU_INT32U   i = 0;
+	
+	if (!uiBlk_in) {
+		return;
+	}
+	pstBuf = drv_blk_Read(uiDev_in, uiBlk_in);
+	if (0 != pstBuf) {
+		puiBlk = (CPU_INT16U *)pstBuf->pbyData;
+		for (i = 0; i < (CPU_EXT_HD_BLOCK_SIZE / sizeof(CPU_INT16U)); ++i, ++puiBlk) {
+			if (0 != (*puiBlk)) {
+				fs_inode_FreeIndirect(uiDev_in, (*puiBlk));
+			}
+		}
+		drv_blk_Release(pstBuf);
+	}
+	fs_bitmap_FreeBlock(uiDev_in, uiBlk_in);
+}
+
 

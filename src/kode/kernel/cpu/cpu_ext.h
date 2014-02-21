@@ -168,5 +168,23 @@ extern void CPUExt_HDRegisterNotifyRW(CPU_FNCT_PTR pfnNotify_in);
 extern void CPUExt_HDRegisterNotifyFree(CPU_FNCT_VOID pfnNotify_in);
 extern void CPUExt_HDRequest(CPU_EXT_HD_REQUEST* pstRequest_inout);
 
+/*
+   System Time
+*/
+
+typedef struct _CPU_EXT_TIME {
+	CPU_INT32S  iSec;
+	CPU_INT32S  iMin;
+	CPU_INT32S  iHour;
+	CPU_INT32S  iMday;
+	CPU_INT32S  iMon;
+	CPU_INT32S  iYear;
+	CPU_INT32S  iWday;
+	CPU_INT32S  iYday;
+	CPU_INT32S  iIsdst;
+} CPU_EXT_TIME;
+
+extern void CPUExt_TimeCurrent(CPU_INT32U * puiTime_out);
+
 #endif /* __CPU_EXT_H__ */
 

@@ -131,9 +131,6 @@ _cpu_gate_ISRMemPageFault:
 
 .align 4
 _cpu_gate_ISRTimeTick:
-	cmpl $0, _cpu_gate_pfnTimeTick
-	je 3f
-
 	push %ds        # save ds,es and put kernel data space
 	push %es        # into them. %fs is used by call
 	push %fs
@@ -148,6 +145,11 @@ _cpu_gate_ISRTimeTick:
 	movl $0x17,%eax		# fs points to local data space
 	mov %ax,%fs
 	
+	call _cpu_time_ISR_Tick
+
+	cmpl $0, _cpu_gate_pfnTimeTick
+	je 2f
+	
 	cmpl $0, _cpu_gate_pfnISRHookEnter
 	je 1f
 	call *_cpu_gate_pfnISRHookEnter
@@ -158,7 +160,6 @@ _cpu_gate_ISRTimeTick:
 	je 2f
 	call *_cpu_gate_pfnISRHookExit
 2:	
-
 	movb $0x20, %al     # EOI to interrupt controller #1
 	outb %al, $0x20
 
@@ -169,7 +170,7 @@ _cpu_gate_ISRTimeTick:
 	pop %fs
 	pop %es
 	pop %ds
-3:
+
 	iret
 
 /******************************************************************************

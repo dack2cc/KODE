@@ -28,6 +28,7 @@ extern void fs_inode_Init(void);
 #define FS_INODE_ROOT_NUM  (1)
 extern  FS_INODE * fs_inode_Get(const CPU_INT16U uiDev_in, const CPU_INT16U uiNum_in);
 extern  void fs_inode_Put(FS_INODE * pstInode_in);
+extern  void fs_inode_Truncate(FS_INODE * pstInode_in);
 
 #endif // __FS_INODE_H__
 

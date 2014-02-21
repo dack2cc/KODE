@@ -1,56 +1,31 @@
-
 /******************************************************************************
     Include
 ******************************************************************************/
 
-#include <cpu_key.h>
-#include <cpu_ext.h>
+#include <fs_bitmap.h>
 
 /******************************************************************************
-    Private Definition
+    Private Define
 ******************************************************************************/
-
-typedef struct _CPU_KEY_CONTROL {
-	CPU_FNCT_PTR     pfnHandler;
-} CPU_KEY_CONTROL;
-
-CPU_PRIVATE  CPU_KEY_CONTROL  cpu_key_stCtl;
 
 /******************************************************************************
     Private Interface
 ******************************************************************************/
 
-
 /******************************************************************************
     Function Definition
 ******************************************************************************/
 
-void cpu_key_Init(void)
+void fs_bitmap_FreeBlock(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in)
 {
-    cpu_key_stCtl.pfnHandler = 0;
-	
-	return;
 }
 
-void  CPUExt_KeyRegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in)
-{
-	cpu_key_stCtl.pfnHandler = pfnKeyHandler_in;
-	
-	return;
-}
 
-void cpu_key_ISR_Input(CPU_DATA uiScanCode_in)
+void fs_bitmap_FreeInode(FS_INODE * pstInode_in)
 {
-	CPU_FNCT_PTR pfnHandler = cpu_key_stCtl.pfnHandler;
-	
-	if (0 != pfnHandler) {
-	    CPU_EXT_KEY_EVENT  stEvent;
-	    stEvent.uiScanCode = uiScanCode_in;
-		
-		(pfnHandler)((void*)(&stEvent));
+	if (0 == pstInode_in) {
+		return;
 	}
-	
-	return;
 }
 
 
