@@ -30,5 +30,9 @@ extern  FS_INODE * fs_inode_Get(const CPU_INT16U uiDev_in, const CPU_INT16U uiNu
 extern  void fs_inode_Put(FS_INODE * pstInode_in);
 extern  void fs_inode_Truncate(FS_INODE * pstInode_in);
 
+extern  FS_INODE * fs_inode_New(const CPU_INT16U uiDev_in);
+extern  void fs_inode_Free(FS_INODE * pstInode_inout);
+
+
 #endif // __FS_INODE_H__
 

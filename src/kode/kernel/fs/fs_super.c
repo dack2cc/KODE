@@ -24,7 +24,6 @@
 #define FS_SUPER_DEBUG     (FS_SUPER_DEBUG_OFF)
 //#define FS_SUPER_DEBUG     (FS_SUPER_DEBUG_ON)
 
-
 #define FS_SUPER_LCK_NAME_WAIT  "[FSSuper][wait]"
 #define FS_SUPER_MAGIC          (0x137F)
 #define FS_SUPER_I_MAP_SLOTS    (8)
@@ -49,7 +48,6 @@ typedef struct _FS_SUPER_BLOCK_EXT {
 #define FS_SUPER_BLOCK_EXT_MAX  (8)
 FS_PRIVATE FS_SUPER_BLOCK_EXT fs_super_astBlock[FS_SUPER_BLOCK_EXT_MAX];
 
-
 typedef struct _FS_SUPER_FILE {
 	CPU_INT16U f_mode;
 	CPU_INT16U f_flags;
@@ -64,6 +62,12 @@ FS_PRIVATE FS_SUPER_FILE fs_super_astFile[FS_SUPER_FILE_MAX];
 /******************************************************************************
     Private Interface
 ******************************************************************************/
+
+#define FS_SUPER_CLEAR_BIT(nr, addr)  ({\
+register int res __asm__("ax"); \
+__asm__ __volatile__("btrl %2,%3\n\tsetnb %%al": \
+"=a" (res):"0" (0),"r" (nr),"m" (*(addr))); \
+res;})
 
 FS_PRIVATE  void fs_super_Wait(FS_SUPER_BLOCK_EXT * pstSuperExt_in);
 FS_PRIVATE  void fs_super_Lock(FS_SUPER_BLOCK_EXT * pstSuperExt_in);
@@ -145,6 +149,41 @@ FS_SUPER_BLOCK * fs_super_FindMount(FS_INODE * pstInode_in)
 		++pstSuperExt;
 	}
 	return 0;
+}
+
+CPU_INT32U fs_super_NewBlock(const CPU_INT16U uiDev_in)
+{
+	return 0;
+}
+
+void fs_super_FreeBlock(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in)
+{
+	//FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
+}
+
+void fs_super_ClearBit(const CPU_INT16U uiDev_in, const CPU_INT16U uiInodeNum_in)
+{
+	FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
+	DRV_BLK_BUFFER * pstBuf = 0;
+	
+	pstSuperExt = (FS_SUPER_BLOCK_EXT *)fs_super_Get(uiDev_in);
+	if (0 == pstSuperExt) {
+		CPUExt_CorePanic("[fs_super_ClearBit][device does not exist]");
+	}
+	if ((uiInodeNum_in < FS_INODE_ROOT_NUM) 
+	||  (uiInodeNum_in > pstSuperExt->sb.s_ninodes)) {
+		CPUExt_CorePanic("[fs_super_ClearBit][i-node does not exist]");
+	}
+	
+	pstBuf = pstSuperExt->s_imap[uiInodeNum_in >> 13];
+	if (0 == pstBuf) {
+		CPUExt_CorePanic("[fs_super_ClearBit][imap does not exist]");
+	}
+	
+	if (FS_SUPER_CLEAR_BIT(uiInodeNum_in&8191, pstBuf->pbyData)) {
+		drv_disp_Printf("[fs_super_ClearBit][bit already cleared]\r\n");
+	}
+	drv_blk_MakeDirty(pstBuf);
 }
 
 

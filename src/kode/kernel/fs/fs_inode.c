@@ -186,7 +186,7 @@ L_REPEAT_PUT:
 	}
 	if (!(pstInode->ind.i_nlinks)) {
 		fs_inode_Truncate((FS_INODE *)pstInode);
-		fs_bitmap_FreeInode((FS_INODE *)pstInode);
+		fs_inode_Free((FS_INODE *)pstInode);
 		return;
 	}
 	if (pstInode->i_dirt) {
@@ -224,6 +224,36 @@ void fs_inode_Truncate(FS_INODE * pstInode_in)
 	CPUExt_TimeCurrent(&(pstInode->ind.i_time));
 	pstInode->i_ctime = pstInode->ind.i_time;
 }
+
+FS_INODE * fs_inode_New(const CPU_INT16U uiDev_in)
+{
+	return 0;
+}
+
+void fs_inode_Free(FS_INODE * pstInode_inout)
+{
+	FS_INODE_EXT *   pstInode = (FS_INODE_EXT *)pstInode_inout;
+	
+	if (0 == pstInode) {
+		return;
+	}
+	if (0 == pstInode->i_dev) {
+	    Mem_Clr(pstInode, (sizeof(FS_INODE_EXT) - sizeof(DRV_LOCK)));
+		return;
+	}
+	if (pstInode->i_count > 1) {
+		drv_disp_Printf("[i-node][count][%d]\r\n", pstInode->i_count);
+		CPUExt_CorePanic("[fs_inode_Free][i-node count]");
+	}
+	if (pstInode->ind.i_nlinks) {
+		CPUExt_CorePanic("[fs_inode_Free][i-node links]");
+	}
+	
+	fs_super_ClearBit(pstInode->i_dev, pstInode->i_num);
+	Mem_Clr(pstInode, (sizeof(FS_INODE_EXT) - sizeof(DRV_LOCK)));
+	return;
+}
+
 
 FS_PRIVATE FS_INODE_EXT * fs_inode_GetEmpty(void)
 {
