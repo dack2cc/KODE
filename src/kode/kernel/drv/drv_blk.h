@@ -29,6 +29,8 @@ extern DRV_BLK_BUFFER * drv_blk_ReadAhead(const CPU_INT32S iDev_in, const CPU_IN
 extern void drv_blk_Release(DRV_BLK_BUFFER* pstBuf_in);
 extern void drv_blk_MakeDirty(DRV_BLK_BUFFER* pstBuf_in);
 
+extern void drv_blk_Free(const CPU_INT32S iDev_in, const CPU_INT32U uiBlkIdx_in);
+
 extern void drv_blk_NotifyRWEnd(DRV_BLK_BUFFER* pstBuf_in);
 extern void drv_blk_NotifyReqFree(void);
 

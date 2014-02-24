@@ -6,6 +6,7 @@
 #include <drv_blk.h>
 #include <drv_lock.h>
 #include <drv_rd.h>
+#include <drv_disp.h>
 #include <cpu_ext.h>
 #include <os.h>
 #include <std/stdarg.h>
@@ -278,6 +279,20 @@ void drv_blk_MakeDirty(DRV_BLK_BUFFER* pstBuf_in)
 	}
 	
 	pstBufHead->uiIsDirty = 1;
+}
+
+void drv_blk_Free(const CPU_INT32S iDev_in, const CPU_INT32U uiBlkIdx_in)
+{
+	DRV_BLK_BUFFER_HEAD * pstBufHead = drv_blk_HashTableGet(iDev_in, uiBlkIdx_in);
+	
+	if (0 != pstBufHead) {
+		if (pstBufHead->uiRef != 1) {
+			drv_disp_Printf("[drv_blk_Free][%04x:%d][uiRef:%d]\r\n",iDev_in, uiBlkIdx_in, pstBufHead->uiRef);
+		}
+		pstBufHead->uiIsDirty = 0;
+		pstBufHead->uiIsUpToDate = 0;
+		drv_blk_Release((DRV_BLK_BUFFER *)pstBufHead);
+	}
 }
 
 void drv_blk_NotifyRWEnd(DRV_BLK_BUFFER* pstBuf_in)

@@ -63,11 +63,40 @@ FS_PRIVATE FS_SUPER_FILE fs_super_astFile[FS_SUPER_FILE_MAX];
     Private Interface
 ******************************************************************************/
 
+#if 0
 #define FS_SUPER_CLEAR_BIT(nr, addr)  ({\
 register int res __asm__("ax"); \
 __asm__ __volatile__("btrl %2,%3\n\tsetnb %%al": \
 "=a" (res):"0" (0),"r" (nr),"m" (*(addr))); \
 res;})
+#else
+#define FS_SUPER_CLEAR_BIT(nr, addr) ({ \
+	CPU_INT08S iRes = 0; \
+	if (DEF_YES == DEF_BIT_IS_CLR(((CPU_INT08U *)(addr))[nr >> 3], (nr & 0xFF))) { \
+		iRes = 1; \
+	} \
+	else { \
+	    DEF_BIT_CLR(((CPU_INT08U *)(addr))[nr >> 3], (nr & 0xFF)); \
+	} \
+	iRes; \
+})
+#endif
+
+
+#if 0
+#define FS_SUPER_TEST_BIT(bitnr,addr) ({ \
+register int __res __asm__("ax"); \
+__asm__("bt %2,%3;setb %%al":"=a" (__res):"a" (0),"r" (bitnr),"m" (*(addr))); \
+__res; })
+#else
+#define FS_SUPER_TEST_BIT(nr,addr) ({ \
+	CPU_INT08S iRes = 0; \
+	if (DEF_YES == DEF_BIT_IS_SET(((CPU_INT08U *)(addr))[nr >> 3], (nr & 0xFF))) { \
+		iRes = 1; \
+	} \
+	iRes; \
+})
+#endif 
 
 FS_PRIVATE  void fs_super_Wait(FS_SUPER_BLOCK_EXT * pstSuperExt_in);
 FS_PRIVATE  void fs_super_Lock(FS_SUPER_BLOCK_EXT * pstSuperExt_in);
@@ -82,9 +111,10 @@ FS_PRIVATE  void fs_super_CheckDiskChange(const CPU_INT16U  uiDev_in);
 
 void FS_MountRoot(const CPU_INT16U  uiDev_in)
 {
-	CPU_INT32U i = 0;
+	CPU_INT32S i = 0;
 	FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
 	FS_INODE * pstInode = 0;
+	CPU_INT32U iFree = 0;
 	
 	if (FS_INODE_SIZE != sizeof(FS_INODE)) {
 		CPUExt_CorePanic("[FS_super_MountRoot][bad i-node size]");
@@ -107,6 +137,29 @@ void FS_MountRoot(const CPU_INT16U  uiDev_in)
 	if (0 == pstInode) {
 		CPUExt_CorePanic("[FS_super_MountRoot][Unable to read root i-node]");
 	}
+	pstSuperExt->s_isup = pstInode;	
+	fs_inode_AddRef(pstInode);
+	pstSuperExt->s_imount = pstInode;
+	//fs_inode_AddRef(pstInode);
+	//fs_inode_AddRef(pstInode);
+	
+	iFree = 0;
+	i = pstSuperExt->sb.s_nzones;
+	while (-- i >= 0) {
+		if (!FS_SUPER_TEST_BIT((i&8191), (pstSuperExt->s_zmap[i>>13]->pbyData))) {
+			iFree++;
+		}
+	}
+	drv_disp_Printf("[Free Block][%d/%d]\r\n", iFree, pstSuperExt->sb.s_nzones);
+	
+	iFree = 0;
+	i = pstSuperExt->sb.s_ninodes + 1;
+	while (-- i >= 0) {
+		if (!FS_SUPER_TEST_BIT((i&8191), (pstSuperExt->s_imap[i>>13]->pbyData))) {
+			iFree++;
+		}
+	}
+	drv_disp_Printf("[Free iNode][%d/%d]\r\n", iFree, pstSuperExt->sb.s_ninodes);
 }
 
 FS_SUPER_BLOCK * fs_super_Get(const CPU_INT16U uiDev_in)
@@ -158,7 +211,25 @@ CPU_INT32U fs_super_NewBlock(const CPU_INT16U uiDev_in)
 
 void fs_super_FreeBlock(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in)
 {
-	//FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
+	FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
+	CPU_INT16U uiBlk = 0;
+	
+	pstSuperExt = (FS_SUPER_BLOCK_EXT *)fs_super_Get(uiDev_in);
+	if (0 == pstSuperExt) {
+		CPUExt_CorePanic("[fs_super_FreeBlock][device does not exist]");
+	}
+	if ((uiBlk_in <  pstSuperExt->sb.s_firstdatazone) 
+	||  (uiBlk_in >= pstSuperExt->sb.s_nzones)) {
+		CPUExt_CorePanic("[fs_super_FreeBlock][block invalid]");
+	}
+	
+	drv_blk_Free(uiDev_in, uiBlk_in);
+	uiBlk = uiBlk_in - (pstSuperExt->sb.s_firstdatazone - 1);
+	if (FS_SUPER_CLEAR_BIT(uiBlk&8191, pstSuperExt->s_zmap[uiBlk/8192]->pbyData)) {
+		drv_disp_Printf("[fs_super_FreeBlock][block %04x:%d]\r\n", uiDev_in, uiBlk_in);
+		CPUExt_CorePanic("[fs_super_FreeBlock][bit already cleard.]");
+	}
+	drv_blk_MakeDirty(pstSuperExt->s_zmap[uiBlk/8192]);
 }
 
 void fs_super_ClearBit(const CPU_INT16U uiDev_in, const CPU_INT16U uiInodeNum_in)

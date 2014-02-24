@@ -5,7 +5,6 @@
 
 #include <fs_inode.h>
 #include <fs_super.h>
-#include <fs_bitmap.h>
 #include <drv_blk.h>
 #include <drv_lock.h>
 #include <drv_disp.h>
@@ -73,6 +72,7 @@ FS_PRIVATE void fs_inode_Unlock(FS_INODE_EXT * pstInode_inout);
 
 FS_PRIVATE void fs_inode_Write(FS_INODE_EXT* pstInode_in);
 FS_PRIVATE void fs_inode_Read(FS_INODE_EXT* pstInode_inout);
+FS_PRIVATE void fs_inode_Sync(void);
 
 FS_PRIVATE void fs_inode_FreeIndirect(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in);
 FS_PRIVATE void fs_inode_FreeDoubleIndirect(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in);
@@ -85,6 +85,8 @@ FS_PRIVATE void fs_inode_FreeDoubleIndirect(const CPU_INT16U uiDev_in, const CPU
 void fs_inode_Init(void)
 {
 	CPU_INT32U  i = 0;
+	
+	drv_blk_RegisterSync(fs_inode_Sync);
 	
 	for (i =0; i < FS_INODE_EXT_MAX; ++i) {
 		drv_lock_Init(&(fs_inode_astTbl[i].i_wait), FS_INODE_NAME_LOCK);
@@ -211,7 +213,7 @@ void fs_inode_Truncate(FS_INODE * pstInode_in)
 	}
 	for (i = 0; i < 7; ++i) {
 		if (pstInode->ind.i_zone[i]) {
-			fs_bitmap_FreeBlock(pstInode->i_dev, pstInode->ind.i_zone[i]);
+			fs_super_FreeBlock(pstInode->i_dev, pstInode->ind.i_zone[i]);
 			pstInode->ind.i_zone[i] = 0;
 		}
 	}
@@ -254,6 +256,17 @@ void fs_inode_Free(FS_INODE * pstInode_inout)
 	return;
 }
 
+void fs_inode_AddRef(FS_INODE * pstInode_inout)
+{
+	FS_INODE_EXT *   pstInode = (FS_INODE_EXT *)pstInode_inout;
+	
+	if (0 == pstInode) {
+		CPUExt_CorePanic("[fs_inode_AddRef][inode invalid]");
+		return;
+	}
+	
+	pstInode->i_count++;
+}
 
 FS_PRIVATE FS_INODE_EXT * fs_inode_GetEmpty(void)
 {
@@ -385,6 +398,20 @@ FS_PRIVATE void fs_inode_Read(FS_INODE_EXT* pstInode_inout)
 	return;
 }
 
+FS_PRIVATE void fs_inode_Sync(void)
+{
+	CPU_INT32U i = 0;
+	FS_INODE_EXT * pstInode = 0;
+	
+	pstInode = 0 + fs_inode_astTbl;
+	for (i = 0; i < FS_INODE_EXT_MAX; ++i, ++pstInode) {
+		fs_inode_WaitOn(pstInode);
+		if ((pstInode->i_dirt) && !(pstInode->i_pipe)) {
+			fs_inode_Write(pstInode);
+		}
+	}
+}
+
 FS_PRIVATE void fs_inode_FreeIndirect(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in)
 {
 	DRV_BLK_BUFFER * pstBuf = 0;
@@ -399,12 +426,12 @@ FS_PRIVATE void fs_inode_FreeIndirect(const CPU_INT16U uiDev_in, const CPU_INT32
 		puiBlk = (CPU_INT16U *)pstBuf->pbyData;
 		for (i = 0; i < (CPU_EXT_HD_BLOCK_SIZE / sizeof(CPU_INT16U)); ++i, ++puiBlk) {
 			if (0 != (*puiBlk)) {
-				fs_bitmap_FreeBlock(uiDev_in, (*puiBlk));
+				fs_super_FreeBlock(uiDev_in, (*puiBlk));
 			}
 		}
 		drv_blk_Release(pstBuf);
 	}
-	fs_bitmap_FreeBlock(uiDev_in, uiBlk_in);
+	fs_super_FreeBlock(uiDev_in, uiBlk_in);
 }
 
 FS_PRIVATE void fs_inode_FreeDoubleIndirect(const CPU_INT16U uiDev_in, const CPU_INT32U uiBlk_in)
@@ -426,7 +453,7 @@ FS_PRIVATE void fs_inode_FreeDoubleIndirect(const CPU_INT16U uiDev_in, const CPU
 		}
 		drv_blk_Release(pstBuf);
 	}
-	fs_bitmap_FreeBlock(uiDev_in, uiBlk_in);
+	fs_super_FreeBlock(uiDev_in, uiBlk_in);
 }
 
 
