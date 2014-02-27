@@ -6,6 +6,7 @@
 #include <kd/kd.h>
 #include <kd/kdext.h>
 #include <cpu_boot.h>
+#include <std/stdio.h>
 
 /******************************************************************************
     Public Interface
@@ -27,7 +28,13 @@ struct _STACK_START {
     Internal Definition
 ******************************************************************************/
 
+#define MAGIC_ALICE    (0xABCDEF)
+#define MAGIC_JERRY    (0xFEDCBA)
+
 void  s_logo(void);
+void  s_time(void);
+void* s_thread_init(void* param_in);
+
 void* s_thread_alice(void* param_in);
 void* s_thread_jerry(void* param_in);
 
@@ -36,18 +43,20 @@ void* s_thread_jerry(void* param_in);
 ******************************************************************************/
 
 void s_main(void)
-{
+{	
 	KDThreadAttr*  pstAttr = KD_NULL;
 	
 	kdextInit();
-	
-	s_logo();
-	
+
 	pstAttr = kdThreadAttrCreate();
-	kdThreadCreate(pstAttr, s_thread_alice, (void *)0xABCDEF);
+	kdThreadCreate(pstAttr, s_thread_init, (void *)0);
 	kdThreadAttrFree(pstAttr);
 	
-	//kdHandleAssertion(__FILE__, __FILE__, __LINE__);
+	pstAttr = kdThreadAttrCreate();
+	kdThreadCreate(pstAttr, s_thread_alice, (void *)MAGIC_ALICE);
+	kdThreadAttrFree(pstAttr);
+	
+	//kdHandleAssertion(0, __FILE__, __LINE__);
 	
 	kdextRun();
 	
@@ -63,23 +72,46 @@ void s_logo(void)
 	kdLogMessage("  ====  ====  ||    \r\n");
 }
 
+void s_time(void)
+{
+	KDust  ust   = 0;
+	KDtime time  = 0;
+	KDtime timep = 1;
+	
+	ust  = kdGetTimeUST();
+	time = kdTime(&timep);
+	if (time != timep) {
+		kdHandleAssertion("[s_time][time is invalid]", __FILE__, __LINE__);
+	}
+	printf("[Tick:%d][Time:%d][%d] \r\n", (int)ust, (int)time, (int)timep);
+}
+
+void* s_thread_init(void* param_in)
+{
+	s_logo();
+	s_time();
+	kdextSetup();
+	
+	//for (;;);
+	
+	return ((void *)0);
+}
+
 void* s_thread_alice(void* param_in)
 {
 	KDThreadAttr*  pstAttr  = KD_NULL;
 	KDThread*      pstJerry = KD_NULL;
-
-	kdextSetup();
 	
-	if (0xABCDEF == (KDint32)param_in) 
-	kdLogMessage("[alice] Hello (^-^)/ \r\n");
+	if (MAGIC_ALICE == (KDint32)param_in) {
+	    kdLogMessage("[alice] Hello (^-^)/ \r\n");
+	}
 	
 	pstAttr  = kdThreadAttrCreate();
-	pstJerry = kdThreadCreate(pstAttr, s_thread_jerry, (void *)0xFEDCBA);
+	pstJerry = kdThreadCreate(pstAttr, s_thread_jerry, (void *)MAGIC_JERRY);
 	kdThreadAttrFree(pstAttr);
 	
 	kdThreadJoin(pstJerry, 0);
-	
-	kdLogMessage("[alice] Goodbye Jerry (-_-)/ \r\n");
+	kdLogMessage("[alice] Goodbye (-_-)/ \r\n");
 	
 	for (;;);
 	
@@ -88,8 +120,9 @@ void* s_thread_alice(void* param_in)
 
 void* s_thread_jerry(void* param_in)
 {
-	if (0xFEDCBA == (KDint32)param_in) 
-	kdLogMessage("[jerry] This is Jerry going down (=_=) \r\n");
+	if (MAGIC_JERRY == (KDint32)param_in) {
+	    kdLogMessage("[jerry] This is Jerry going down (=_=) \r\n");
+	}
 	
 	//for (;;);
 	

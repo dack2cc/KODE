@@ -3,18 +3,20 @@
     Include
 ******************************************************************************/
 
-#include <kd/kdext.h>
 #include <kd_core.h>
 #include <kd_thread.h>
-#include <os.h>
-#include <cpu_ext.h>
+#include <kd_time.h>
+#include <kd_def.h>
 #include <lib_def.h>
+#include <lib_mem.h>
 #include <drv_disp.h>
 #include <drv_key.h>
 #include <drv_blk.h>
 #include <drv_hd.h>
 #include <drv_rd.h>
 #include <fs.h>
+#include <os.h>
+#include <cpu_ext.h>
 
 /******************************************************************************
     Private Define
@@ -30,87 +32,8 @@ KD_PRIVATE const KDchar*   kd_core_VersionStr  = "00.01";
 KD_PRIVATE const KDuint32  kd_core_PlatformVal = CPU_TYPE_CREATE('X', '8', '6', ' ');
 KD_PRIVATE const KDchar*   kd_core_PlatformStr = "x86_32";
 
-KD_PRIVATE KDint     kd_core_ErrorCode = 0;
-
-enum {
-	KD_KERNEL_FNCT_INVALID = -1,
-	__KF_kdextRun,
-	__KF_kdextSetup,
-	__KF_kdGetError,
-	__KF_kdSetError,
-	/* Assertions and logging */
-	__KF_kdLogMessage,
-	__KF_kdHandleAssertion,
-	/* Versioning and attribute queries */
-	__KF_kdQueryAttribi,
-	__KF_kdQueryAttribcv,
-	__KF_kdQueryIndexedAttribcv,
-	/* Threads and synchronization */
-	__KF_kdThreadAttrCreate,
-	__KF_kdThreadAttrFree,
-	__KF_kdThreadAttrSetDetachState,
-	__KF_kdThreadAttrSetStackSize,
-	__KF_kdextThreadAttrSetPriority,
-	__KF_kdThreadCreate,
-	__KF_kdThreadExit,
-	__KF_kdThreadJoin,
-	__KF_kdThreadDetach,
-	__KF_kdThreadMutexCreate,
-	__KF_kdThreadMutexFree,
-	__KF_kdThreadMutexLock,
-	__KF_kdThreadMutexUnlock,
-	__KF_kdThreadCondCreate,
-	__KF_kdThreadCondFree,
-	__KF_kdThreadCondSignal,
-	__KF_kdThreadCondBroadcast,
-	__KF_kdThreadCondWait,
-	__KF_kdThreadSemCreate,
-	__KF_kdThreadSemFree,
-	__KF_kdThreadSemWait,
-	__KF_kdThreadSemPost,
-	KD_KERNEL_FNCT_MAX
-};
-
-
-CPU_EXT_DEFINE_KERNEL_FNCT_0(void,  kdextRun);
-CPU_EXT_DEFINE_KERNEL_FNCT_0(void,  kdextSetup);
-CPU_EXT_DEFINE_KERNEL_FNCT_0(KDint, kdGetError);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(void,  kdSetError, KDint, error);
-
-/* Assertions and logging */
-#ifndef KD_NDEBUG
-CPU_EXT_DEFINE_KERNEL_FNCT_1(void,  kdLogMessage, const KDchar *, string);
-#endif /* KD_NDEBUG */
-CPU_EXT_DEFINE_KERNEL_FNCT_3(void,  kdHandleAssertion, const KDchar *, condition, const KDchar *, filename, KDint, linenumber);
-
-/* Versioning and attribute queries */
-CPU_EXT_DEFINE_KERNEL_FNCT_2(KDint, kdQueryAttribi, KDint, attribute, KDint *, value);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(const KDchar *, kdQueryAttribcv, KDint, attribute);
-CPU_EXT_DEFINE_KERNEL_FNCT_2(const KDchar *, kdQueryIndexedAttribcv, KDint, attribute, KDint, index);
-
-/* Threads and synchronization */
-CPU_EXT_DEFINE_KERNEL_FNCT_2(KDint, kdextThreadAttrSetPriority, KDThreadAttr *, attr, KDint, priority);
-CPU_EXT_DEFINE_KERNEL_FNCT_0(KDThreadAttr *, kdThreadAttrCreate);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadAttrFree, KDThreadAttr *, attr);
-CPU_EXT_DEFINE_KERNEL_FNCT_2(KDint, kdThreadAttrSetDetachState, KDThreadAttr *, attr, KDint, detachstate);
-CPU_EXT_DEFINE_KERNEL_FNCT_2(KDint, kdThreadAttrSetStackSize, KDThreadAttr *, attr, KDsize, stacksize);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(void,  kdThreadExit, void *, retval);
-CPU_EXT_DEFINE_KERNEL_FNCT_2(KDint, kdThreadJoin, KDThread *, thread, void **, retval);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadDetach, KDThread *, thread);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDThreadMutex*, kdThreadMutexCreate, const void *, mutexattr);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadMutexFree, KDThreadMutex *, mutex);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadMutexLock, KDThreadMutex *, mutex);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadMutexUnlock, KDThreadMutex *, mutex);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDThreadCond *, kdThreadCondCreate, const void *, attr);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadCondFree, KDThreadCond *, cond);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadCondSignal, KDThreadCond *, cond);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadCondBroadcast, KDThreadCond *, cond);
-CPU_EXT_DEFINE_KERNEL_FNCT_2(KDint, kdThreadCondWait, KDThreadCond *, cond, KDThreadMutex *, mutex);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDThreadSem *,  kdThreadSemCreate, KDuint, value);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadSemFree, KDThreadSem *, sem);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadSemWait, KDThreadSem *, sem);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadSemPost, KDThreadSem *, sem);
-
+KD_PRIVATE KDint     kd_core_iErrorCode = 0;
+KD_PRIVATE KDchar    kd_core_aszMsgBuf[KD_MSG_BUF_MAX];
 
 /******************************************************************************
     Private Interface
@@ -170,6 +93,10 @@ kdextInit(void)
 	CPUExt_GateRegisterKernelFnct(__KF_kdThreadSemWait,            (CPU_FNCT_VOID)(kd_thread_SemWait));
 	CPUExt_GateRegisterKernelFnct(__KF_kdThreadSemPost,            (CPU_FNCT_VOID)(kd_thread_SemPost));
 	
+	/* Time functions */
+	CPUExt_GateRegisterKernelFnct(__KF_kdGetTimeUST, (CPU_FNCT_VOID)(kd_time_GetUST));
+	CPUExt_GateRegisterKernelFnct(__KF_kdTime,       (CPU_FNCT_VOID)(kd_time_GetWallClock));
+	
 	/* => we are in initialize process of Ring 0 */
 	OSInit(&err);
 	/* <= we are in Task 0 of Ring 3 */
@@ -201,50 +128,55 @@ KD_PRIVATE void  kd_core_Setup(void)
 	FS_MountRoot(0x101);
 }
 
-KDThread * kdThreadCreate(const KDThreadAttr *attr, void *(*start_routine)(void *), void *arg)
-{
-	CPU_DATA  __res = 0;
-	
-	__asm__ volatile ( \
-		"int $0x80" \
-		: "=a" (__res) \
-		: "0" (__KF_kdThreadCreate), \
-		  "b" ((CPU_DATA)(attr)), \
-		  "c" ((CPU_DATA)(start_routine)), \
-		  "d" ((CPU_DATA)(arg)) \
-	);
-	
-	return ((KDThread *)(__res));
-}
-
 void  kd_core_LogMessage(const KDchar* pszString_in)
 {
-	CPUExt_DispPrint(pszString_in);
+	KDint i = 0;
+	
+	if (0 == pszString_in) {
+		return;
+	}
+	
+	for (i = 0; i < sizeof(kd_core_aszMsgBuf); ++i) {
+		CPU_EXT_GET_FS_BYTE(kd_core_aszMsgBuf[i], pszString_in + i);
+		if ('\0' == kd_core_aszMsgBuf[i]) {
+			break;
+		}
+	}
+	if (i >= sizeof(kd_core_aszMsgBuf)) {
+		kd_core_aszMsgBuf[sizeof(kd_core_aszMsgBuf) - 1] = '\0';
+	}
+	
+	CPUExt_DispPrint(kd_core_aszMsgBuf);
 }
 
 void kd_core_Assert(const KDchar *condition, const KDchar *filename, KDint linenumber)
 {
-	/* make the message of assert */
-	
+	CPUExt_DispPrint("[");
+	kd_core_LogMessage(condition);
+	CPUExt_DispPrint("]");
+	CPUExt_DispPrint("[");
+	kd_core_LogMessage(filename);
+	CPUExt_DispPrint("]");
+	drv_disp_Printf("[%d]", linenumber);
 	
 	/* panic to stop the os */
-	CPUExt_CorePanic(condition);
+	CPUExt_CorePanic("");
 }
 
 KD_PRIVATE KDint kd_core_GetError(void)
 {
-	return (kd_core_ErrorCode);
+	return (kd_core_iErrorCode);
 }
 
 void  kd_core_SetError(KDint error)
 {
-	kd_core_ErrorCode = error;
+	kd_core_iErrorCode = error;
 }
 
 KD_PRIVATE KDint kd_core_QueryAttribi(KDint attribute, KDint *value)
 {
 	if (KD_NULL == value) {
-		kd_core_ErrorCode = KD_EACCES;
+		kd_core_iErrorCode = KD_EACCES;
 		return (KD_EACCES);
 	}
 	
@@ -259,7 +191,7 @@ KD_PRIVATE KDint kd_core_QueryAttribi(KDint attribute, KDint *value)
 		(*value) = kd_core_PlatformVal;
 		break;
 	default:
-		kd_core_ErrorCode = KD_EINVAL;
+		kd_core_iErrorCode = KD_EINVAL;
 		return (KD_EINVAL);		
 		break;
 	}
@@ -284,13 +216,13 @@ KD_PRIVATE const KDchar * kd_core_QueryAttribcv(KDint attribute)
 		break;
 	}
 
-	kd_core_ErrorCode = KD_EINVAL;
+	kd_core_iErrorCode = KD_EINVAL;
 	return (KD_NULL);
 }
 
 KD_PRIVATE const KDchar * kd_core_QueryIndexedAttribcv(KDint attribute, KDint index)
 {
-	kd_core_ErrorCode = KD_EINVAL;
+	kd_core_iErrorCode = KD_EINVAL;
 	return (KD_NULL);
 }
 

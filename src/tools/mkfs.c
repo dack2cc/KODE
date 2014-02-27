@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 //#define MKFS_DEBUG
 
@@ -29,6 +30,8 @@ struct super_block {
 
 static struct super_block Super;
 
+#define S_IFDIR  0040000
+
 #define SUPER_MAGIC                 (0x137F)
 #define UPPER(size,n)               ((size+((n)-1))/(n))
 #define BITS_PER_BLOCK(blocksize)   (blocksize << 3)
@@ -52,6 +55,12 @@ static unsigned char root_block[BLOCK_SIZE] =
 ROOT_INO_STRING ".\0\0\0\0\0\0\0\0\0\0\0\0\0"
 ROOT_INO_STRING "..\0\0\0\0\0\0\0\0\0\0\0\0"
 BAD_INO_STRING  ".badblocks\0\0\0\0";
+
+void die(char * str)
+{
+	fprintf(stderr,"%s\n",str);
+	exit(1);
+}
 
 void make_super(const unsigned int uiBlockSize_in, const unsigned int uiBlockCount_in)
 {
@@ -81,7 +90,7 @@ void make_super(const unsigned int uiBlockSize_in, const unsigned int uiBlockCou
 #endif // MKFS_DEBUG
 }
 
-void make_map(unsigned char * pbyMap_out, const int iSize_in, const int iStart_in, const int iCount_in, const int iBlocks_in) 
+void make_map(unsigned char * pbyMap_out, const int iSize_in, const int iFreeStart_in, const int iFreeCount_in, const int iBlocks_in) 
 {
 	int i = 0;
 	int count = 0;
@@ -94,12 +103,12 @@ void make_map(unsigned char * pbyMap_out, const int iSize_in, const int iStart_i
 #endif // MKFS_DEBUG
 	
 	memset(pbyMap_out, 0xFF, iSize_in);
-	for (i = iStart_in; i < iCount_in; ++i) {
+	for (i = iFreeStart_in; i < iFreeCount_in; ++i) {
 		UNMARK(pbyMap_out, i);
 	}
 	
 	// check the result
-	for (i = iStart_in/8; i < iSize_in; ++i) {
+	for (i = iFreeStart_in/8; i < iSize_in; ++i) {
 		if (0xFF == pbyMap_out[i]) {
 			break;
 		}
@@ -114,8 +123,8 @@ void make_map(unsigned char * pbyMap_out, const int iSize_in, const int iStart_i
 			count--;
 		}
 	}
-	if (count != iCount_in) {
-		fprintf(stderr, "[make_map][ERROR][%d][%d] \r\n", iCount_in, count);
+	if (count != iFreeCount_in) {
+		fprintf(stderr, "[make_map][ERROR][%d][%d] \r\n", iFreeCount_in, count);
 	}
 	for (i = count/8; i < iBlocks_in; ++i) {
 		if (0xFF != pbyMap_out[i]) {
@@ -124,10 +133,22 @@ void make_map(unsigned char * pbyMap_out, const int iSize_in, const int iStart_i
 	}
 }
 
-void die(char * str)
+
+void make_root_inode(unsigned char * pbyBuf_out)
 {
-	fprintf(stderr,"%s\n",str);
-	exit(1);
+	struct d_inode * pstInode = (struct d_inode *)pbyBuf_out;
+	
+	if (32 != sizeof(struct d_inode)) {
+		die("[make_root_inode][i-node size invalid.");
+	}
+
+	pstInode->i_mode = S_IFDIR + 0755;
+	pstInode->i_uid  = 0;
+	pstInode->i_size = 32;
+	pstInode->i_time = time(NULL);
+	pstInode->i_gid  = 0;
+	pstInode->i_nlinks  = 2;	
+	pstInode->i_zone[0] = Super.s_firstdatazone;
 }
 
 void usage(void)
@@ -164,13 +185,13 @@ int main(int argc, char** argv)
 	make_map(inode_map, I_MAP_SLOTS * BLOCK_SIZE, 1, Super.s_ninodes, Super.s_imap_blocks);
 	
 	// zone map
-	make_map(zone_map, Z_MAP_SLOTS * BLOCK_SIZE, Super.s_firstdatazone, Super.s_nzones, Super.s_zmap_blocks);
+	make_map(zone_map, Z_MAP_SLOTS * BLOCK_SIZE, Super.s_firstdatazone + 1, Super.s_nzones, Super.s_zmap_blocks);
 	
+	// inode
 	inode_buffer = malloc(INODE_BLOCKS(512)*BLOCK_SIZE);
 	if (0 == inode_buffer) {
 		die("out of memory \r\n");
 	}
-	
 	
 	
 	i = write(1, inode_map, Super.s_imap_blocks * BLOCK_SIZE);
@@ -183,6 +204,16 @@ int main(int argc, char** argv)
 		die("write failed \r\n");
 	}
 	blocks += Super.s_zmap_blocks;
+	i = write(1, inode_buffer, INODE_BLOCKS(512)*BLOCK_SIZE);
+	if (i !=  INODE_BLOCKS(512)*BLOCK_SIZE) {
+		die("write failed \r\n");
+	}
+	blocks += INODE_BLOCKS(512);
+	i = write(1, root_block, sizeof(root_block));
+	if (i != BLOCK_SIZE) {
+		die("write failed \r\n");
+	}
+	blocks += 1;
 	
 	// fill the reset
 	memset(buf, 0x00, 1024);

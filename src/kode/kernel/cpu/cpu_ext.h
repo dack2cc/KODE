@@ -67,6 +67,40 @@ type name(atype a,btype b,ctype c) \
 }
 
 /*
+    Transfer Data between User and Kernel space
+*/
+#define CPU_EXT_GET_FS_BYTE(val_out, addr_in)  {\
+	unsigned register char _v; \
+	__asm__("movb %%fs:%1, %0":"=r"(_v):"m"(*(addr_in))); \
+	(val_out) = _v; \
+}
+
+#define CPU_EXT_GET_FS_WORD(val_out, addr_in)  {\
+	unsigned short _v; \
+	__asm__ ("movw %%fs:%1,%0":"=r" (_v):"m" (*(addr_in))); \
+	(val_out) = _v; \
+}
+
+#define CPU_EXT_GET_FS_LONG(val_out, addr_in)  {\
+	unsigned long _v; \
+	__asm__ ("movl %%fs:%1,%0":"=r" (_v):"m" (*(addr_in))); \
+	(val_out) = _v; \
+}
+
+#define CPU_EXT_PUT_FS_BYTE(val_in, addr_out)  {\
+	__asm__ ("movb %0,%%fs:%1"::"r" (va_inl),"m" (*(addr_out))); \
+}
+
+#define CPU_EXT_PUT_FS_WORD(val_in, addr_out)  {\
+	__asm__ ("movw %0,%%fs:%1"::"r" (val_in),"m" (*(addr_out))); \
+}
+
+#define CPU_EXT_PUT_FS_LONG(val_in, addr_out)  {\
+	__asm__ ("movl %0,%%fs:%1"::"r" (val_in),"m" (*(addr_out))); \
+}
+
+
+/*
     RAM Disk
 */
 #define CPU_EXT_RAM_DISK_START   (256)
@@ -185,6 +219,7 @@ typedef struct _CPU_EXT_TIME {
 } CPU_EXT_TIME;
 
 extern void CPUExt_TimeCurrent(CPU_INT32U * puiTime_out);
+extern void CPUExt_TimeTick(CPU_INT32U * puiTick_out);
 
 #endif /* __CPU_EXT_H__ */
 

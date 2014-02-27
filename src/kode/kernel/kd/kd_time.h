@@ -12,5 +12,8 @@
     Public Interface
 ******************************************************************************/
 
+KDust  kd_time_GetUST(void);
+KDtime kd_time_GetWallClock(KDtime * timep);
+
 #endif // __KD_TIME_H__
 

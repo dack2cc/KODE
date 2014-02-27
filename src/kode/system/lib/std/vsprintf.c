@@ -255,3 +255,18 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 	return str-buf;
 }
 
+int sprintf(char * buf_out, const char *fmt_in, ...)
+{
+	va_list args;
+	int i = 0;
+	
+	
+
+	va_start(args, fmt_in);
+	i = vsprintf(buf_out, fmt_in, args);
+	va_end(args);
+	
+	return (i);
+
+}
+

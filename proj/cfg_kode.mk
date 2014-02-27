@@ -75,8 +75,7 @@ KODE_KERNEL_DRV_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNE
 KODE_KERNEL_LIB_DIR := lib
 KODE_KERNEL_LIB_SRC_S := 
 KODE_KERNEL_LIB_SRC_C := lib_pool.c \
-                         lib_mem.c \
-                         lib_vsprintf.c
+                         lib_mem.c 
 KODE_KERNEL_LIB_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_LIB_DIR)/%.o, $(KODE_KERNEL_LIB_SRC_S)) \
                        $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_LIB_DIR)/%.o, $(KODE_KERNEL_LIB_SRC_C))
 
@@ -91,10 +90,22 @@ KODE_KERNEL_FS_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL
 KODE_KERNEL_KD_DIR := kd
 KODE_KERNEL_KD_SRC_S := 
 KODE_KERNEL_KD_SRC_C := kd_core.c \
-                        kd_thread.c 
+                        kd_thread.c \
+                        kd_time.c
 KODE_KERNEL_KD_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)/%.o, $(KODE_KERNEL_KD_SRC_S)) \
                       $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)/%.o, $(KODE_KERNEL_KD_SRC_C))
 
+KODE_SYSTEM_DIR := system
+KODE_SYSTEM_LIB_DIR := lib
+
+KODE_SYSTEM_LIB_KD_DIR := kd
+KODE_SYSTEM_LIB_KD_SRC := kd_syscall.c
+KODE_SYSTEM_LIB_KD_OBJ := $(patsubst %.c, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR)/$(KODE_SYSTEM_LIB_KD_DIR)/%.o, $(KODE_SYSTEM_LIB_KD_SRC))
+
+KODE_SYSTEM_LIB_STD_DIR := std
+KODE_SYSTEM_LIB_STD_SRC := vsprintf.c \
+                           printf.c 
+KODE_SYSTEM_LIB_STD_OBJ := $(patsubst %.c, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR)/$(KODE_SYSTEM_LIB_STD_DIR)/%.o, $(KODE_SYSTEM_LIB_STD_SRC))
 
 
 KODE_OBJ := $(KODE_STARTUP_OBJ) \
@@ -103,7 +114,9 @@ KODE_OBJ := $(KODE_STARTUP_OBJ) \
             $(KODE_KERNEL_DRV_OBJ) \
             $(KODE_KERNEL_LIB_OBJ) \
             $(KODE_KERNEL_FS_OBJ) \
-            $(KODE_KERNEL_KD_OBJ) 
+            $(KODE_KERNEL_KD_OBJ) \
+            $(KODE_SYSTEM_LIB_KD_OBJ) \
+            $(KODE_SYSTEM_LIB_STD_OBJ)
             
 
 KODE_DBG := $(patsubst %.o, %.s, $(KODE_OBJ))
@@ -117,7 +130,11 @@ BUILD_DIR += $(BUILD_ROOT)/$(KODE_ROOT) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_LIB_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR) \
-             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR)
+             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR) \
+             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR) \
+             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR) \
+             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR)/$(KODE_SYSTEM_LIB_KD_DIR) \
+             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR)/$(KODE_SYSTEM_LIB_STD_DIR)
              
 INC_DIR += -I$(SRC_ROOT)/$(KODE_ROOT) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/include \

@@ -19,7 +19,12 @@
 #define STRINGIFY(x) #x
 
 #define SYSTEM_IMAGE_SECTS  (512) //(1024)
-#define HDISK_SECTS         (153*4*17)
+#define RAMDISK_SECTS       (512)
+#define HDISK_CYL           (153)
+#define HDISK_HEAD          (4)
+#define HDISK_SPT           (16)
+#define HDISK_SECTS         (HDISK_CYL*HDISK_HEAD*HDISK_SPT) // cylinders * heads * sectors
+
 
 void die(char * str)
 {
@@ -30,6 +35,42 @@ void die(char * str)
 void usage(void)
 {
 	die("Usage: build boot setup system [> image]");
+}
+
+void makePRT(unsigned char* pbyBuf_inout, int iReservedSector_in, int iSizeInSector_in)
+{
+	int iHeadStart = 0;
+	int iHeadEnd = 0;
+	int iCylStart = 0;
+	//int iCylEnd = 0;
+	int iSecStart = 0;
+	
+	iSecStart = iReservedSector_in + 1;
+	iCylStart = iHeadStart / (HDISK_HEAD * HDISK_SPT);
+	
+	iHeadEnd = (iSizeInSector_in + (HDISK_SPT - 1)) / HDISK_SPT;
+	//iHeadStart
+
+	pbyBuf_inout[02] = 0x01;
+	pbyBuf_inout[03] = 0x01;
+}
+
+void makeMBR(unsigned char* pbyBuf_inout)
+{
+	unsigned char * pbyMBR = pbyBuf_inout + 0x1BE;
+	
+	if ((0 == pbyBuf_inout) 
+	|| ((*(unsigned short *)(pbyBuf_inout+510)) != 0xAA55)) {
+		die("[makeMBR][Boot block hasn't got boot flag (0xAA55)]");
+	}
+	
+	makePRT(pbyMBR, SYSTEM_IMAGE_SECTS, RAMDISK_SECTS);
+	pbyMBR[0] = 0x80;
+	
+	//makePRT(pbyBuf_inout + 446, 0, SYSTEM_IMAGE_SECTS);
+	//pbyBuf_inout[446] = 0x80;
+	//makePRT(pbyBuf_inout + 446 + 16, SYSTEM_IMAGE_SECTS, RAMDISK_SECTS);
+	
 }
 
 int main(int argc, char ** argv)
@@ -83,6 +124,7 @@ int main(int argc, char ** argv)
 		die("Boot block hasn't got boot flag (0xAA55)");
 	buf[508] = (char) minor_root;
 	buf[509] = (char) major_root;
+	//makeMBR((unsigned char *)buf);
 	i=write(1,buf,512);
 	if (i!=512)
 		die("Write call failed");

@@ -88,6 +88,13 @@ void CPUExt_TimeCurrent(CPU_INT32U * puiTime_out)
 	}
 }
 
+void CPUExt_TimeTick(CPU_INT32U * puiTick_out)
+{
+	if (0 != puiTick_out) {
+		(*puiTick_out) = cpu_time_stCtl.uiTick;
+	}
+}
+
 void  cpu_time_ISR_Tick(void)
 {
 	++cpu_time_stCtl.uiTick;
