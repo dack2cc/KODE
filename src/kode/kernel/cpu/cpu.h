@@ -142,6 +142,12 @@ typedef            void      (*CPU_FNCT_PTR )(void *p_obj);     /* See Note #2b.
 //#define  CPU_PRIVATE  static
 #define  CPU_PRIVATE  
 
+#define  CPU_ERR_NO_MEMORY                                21u
+#define  CPU_ERR_BAD_PARAM                                22u
+#define  CPU_ERR_FATAL                                    23u
+#define  CPU_ERR_INTERNAL                                 24u
+
+
 /*$PAGE*/
 /*
 *********************************************************************************************************
@@ -168,6 +174,7 @@ typedef            void      (*CPU_FNCT_PTR )(void *p_obj);     /* See Note #2b.
                                                                 /* Define  CPU         word sizes (see Note #1) :       */
 #define  CPU_CFG_ADDR_SIZE              CPU_WORD_SIZE_32        /* Defines CPU address word size  (in octets).          */
 #define  CPU_CFG_DATA_SIZE              CPU_WORD_SIZE_32        /* Defines CPU data    word size  (in octets).          */
+#define  CPU_CFG_DATA_SIZE_MAX          CPU_CFG_DATA_SIZE
 
 #define  CPU_CFG_ENDIAN_TYPE            CPU_ENDIAN_TYPE_BIG     /* Defines CPU data    word-memory order (see Note #2). */
 

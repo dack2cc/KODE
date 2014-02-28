@@ -3,7 +3,7 @@
 *                                                uC/CPU
 *                                    CPU CONFIGURATION & PORT LAYER
 *
-*                          (c) Copyright 2004-2011; Micrium, Inc.; Weston, FL
+*                          (c) Copyright 2004-2013; Micrium, Inc.; Weston, FL
 *
 *               All rights reserved.  Protected by international copyright laws.
 *
@@ -15,6 +15,8 @@
 *               Please help us continue to provide the Embedded community with the finest 
 *               software available.  Your honesty is greatly appreciated.
 *
+*               You can find our product's user manual, API reference, release notes and
+*               more information at https://doc.micrium.com.
 *               You can contact us at www.micrium.com.
 *********************************************************************************************************
 */
@@ -25,7 +27,7 @@
 *                                      CPU CONFIGURATION DEFINES
 *
 * Filename      : cpu_def.h
-* Version       : V1.28.01
+* Version       : V1.30.01
 * Programmer(s) : ITJ
 *********************************************************************************************************
 */
@@ -34,21 +36,44 @@
 /*
 *********************************************************************************************************
 *                                               MODULE
+*
+* Note(s) : (1) This CPU definition header file is protected from multiple pre-processor inclusion 
+*               through use of the CPU definition module present pre-processor macro definition.
 *********************************************************************************************************
 */
 
 #ifndef  CPU_DEF_MODULE_PRESENT
 #define  CPU_DEF_MODULE_PRESENT
 
-/*$PAGE*/
+
 /*
 *********************************************************************************************************
-*                                          STANDARD DEFINES
+*                                   CORE CPU MODULE VERSION NUMBER
+*
+* Note(s) : (1) (a) The core CPU module software version is denoted as follows :
+*
+*                       Vx.yy.zz
+*
+*                           where
+*                                   V               denotes 'Version' label
+*                                   x               denotes     major software version revision number
+*                                   yy              denotes     minor software version revision number
+*                                   zz              denotes sub-minor software version revision number
+*
+*               (b) The software version label #define is formatted as follows :
+*
+*                       ver = x.yyzz * 100 * 100
+*
+*                           where
+*                                   ver             denotes software version number scaled as an integer value
+*                                   x.yyzz          denotes software version number, where the unscaled integer 
+*                                                       portion denotes the major version number & the unscaled 
+*                                                       fractional portion denotes the (concatenated) minor 
+*                                                       version numbers
 *********************************************************************************************************
 */
 
-#define  DEF_DISABLED    (0u)
-#define  DEF_ENABLED     (1u)
+#define  CPU_CORE_VERSION                              13001u   /* See Note #1.                                         */
 
 
 /*
@@ -103,7 +128,6 @@
 #define  CPU_STK_GROWTH_HI_TO_LO                   2u   /* CPU stk decs towards lower  mem addrs (see Note #1b).        */
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                   CRITICAL SECTION CONFIGURATION
@@ -184,12 +208,13 @@
 #define  CPU_CRITICAL_METHOD_STATUS_LOCAL          3u   /* Save/Restore int status to local var (see Note #1c).         */
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                             MODULE END
+*
+* Note(s) : (1) See 'cpu_def.h  MODULE'.
 *********************************************************************************************************
 */
 
-#endif                                                  /* End of CPU definition module include.                        */
+#endif                                                  /* End of CPU def module include.                               */
 

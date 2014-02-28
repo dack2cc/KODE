@@ -3,7 +3,7 @@
 *                                                uC/CPU
 *                                    CPU CONFIGURATION & PORT LAYER
 *
-*                          (c) Copyright 2004-2011; Micrium, Inc.; Weston, FL
+*                          (c) Copyright 2004-2013; Micrium, Inc.; Weston, FL
 *
 *               All rights reserved.  Protected by international copyright laws.
 *
@@ -15,6 +15,8 @@
 *               Please help us continue to provide the Embedded community with the finest 
 *               software available.  Your honesty is greatly appreciated.
 *
+*               You can find our product's user manual, API reference, release notes and
+*               more information at https://doc.micrium.com.
 *               You can contact us at www.micrium.com.
 *********************************************************************************************************
 */
@@ -25,7 +27,7 @@
 *                                           CORE CPU MODULE
 *
 * Filename      : cpu_core.h
-* Version       : V1.28.01
+* Version       : V1.30.01
 * Programmer(s) : SR
 *                 ITJ
 *********************************************************************************************************
@@ -40,42 +42,14 @@
 /*
 *********************************************************************************************************
 *                                               MODULE
+*
+* Note(s) : (1) This core CPU header file is protected from multiple pre-processor inclusion through use of 
+*               the  core CPU module present pre-processor macro definition.
 *********************************************************************************************************
 */
 
-#ifndef  CPU_CORE_MODULE_PRESENT
+#ifndef  CPU_CORE_MODULE_PRESENT                                /* See Note #1.                                         */
 #define  CPU_CORE_MODULE_PRESENT
-
-
-/*$PAGE*/
-/*
-*********************************************************************************************************
-*                                   CORE CPU MODULE VERSION NUMBER
-*
-* Note(s) : (1) (a) The core CPU module software version is denoted as follows :
-*
-*                       Vx.yy.zz
-*
-*                           where
-*                                   V               denotes 'Version' label
-*                                   x               denotes     major software version revision number
-*                                   yy              denotes     minor software version revision number
-*                                   zz              denotes sub-minor software version revision number
-*
-*               (b) The software version label #define is formatted as follows :
-*
-*                       ver = x.yyzz * 100 * 100
-*
-*                           where
-*                                   ver             denotes software version number scaled as an integer value
-*                                   x.yyzz          denotes software version number, where the unscaled integer 
-*                                                       portion denotes the major version number & the unscaled 
-*                                                       fractional portion denotes the (concatenated) minor 
-*                                                       version numbers
-*********************************************************************************************************
-*/
-
-#define  CPU_CORE_VERSION                              12801u   /* See Note #1.                                         */
 
 
 /*
@@ -129,15 +103,15 @@
 */
 
 #include  <cpu.h>
+#include  <lib_def.h>
+#include  <cpu_cfg.h>
 
 #if (CPU_CFG_NAME_EN == DEF_ENABLED)
-#include  <lib_def.h>
 #include  <lib_mem.h>
 #include  <lib_str.h>
 #endif
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                          CPU CONFIGURATION
@@ -186,37 +160,27 @@
 
 /*
 *********************************************************************************************************
-*                                           CPU ERROR CODES
-*********************************************************************************************************
-*/
-
-#define  CPU_ERR_NONE                                      0u
-#define  CPU_ERR_NULL_PTR                                 10u
-
-#define  CPU_ERR_NAME_SIZE                              1000u
-
-#define  CPU_ERR_TS_FREQ_INVALID                        2000u
-
-
-#define  CPU_ERR_NO_MEMORY                                21u
-#define  CPU_ERR_BAD_PARAM                                22u
-#define  CPU_ERR_FATAL                                    23u
-#define  CPU_ERR_INTERNAL                                 24u
-
-/*$PAGE*/
-/*
-*********************************************************************************************************
 *                                             DATA TYPES
 *********************************************************************************************************
 */
 
+
 /*
 *********************************************************************************************************
-*                                      CPU ERROR CODES DATA TYPE
+*                                           CPU ERROR CODES
 *********************************************************************************************************
 */
 
-typedef  CPU_INT16U  CPU_ERR;
+typedef enum cpu_err {
+
+    CPU_ERR_NONE                            =         0u,
+    CPU_ERR_NULL_PTR                        =        10u,
+
+    CPU_ERR_NAME_SIZE                       =      1000u,
+
+    CPU_ERR_TS_FREQ_INVALID                 =      2000u
+
+} CPU_ERR;
 
 
 /*
@@ -296,7 +260,6 @@ CPU_CORE_EXT  CPU_TS_TMR       CPU_IntDisMeasMax_cnts;          /* ... non-reset
 #endif
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                               MACRO'S
@@ -363,7 +326,7 @@ CPU_CORE_EXT  CPU_TS_TMR       CPU_IntDisMeasMax_cnts;          /* ... non-reset
 *                           (A) Note that 'err_rtn_val' in the return statement MUST NOT be enclosed in 
 *                               parentheses.  This allows CPU_SW_EXCEPTION() to return from functions that 
 *                               return 'void', i.e. NO return type or value (see also Note #2b2A).
-*$PAGE*
+*
 *                       (2) In order for CPU_SW_EXCEPTION() to return from functions with various return 
 *                           types/values, each caller function MUST pass an appropriate error return type 
 *                           & value to CPU_SW_EXCEPTION().
@@ -374,7 +337,7 @@ CPU_CORE_EXT  CPU_TS_TMR       CPU_IntDisMeasMax_cnts;          /* ... non-reset
 *                               warnings that CPU_SW_EXCEPTION() is passed too few arguments.  However, 
 *                               the compiler may warn that CPU_SW_EXCEPTION() does NOT prevent creating 
 *                               null statements on lines with NO other code statements.
-*                       
+*
 *                           Example CPU_SW_EXCEPTION() calls :
 *
 *                               void  Fnct (CPU_ERR  *p_err)
@@ -420,7 +383,29 @@ CPU_CORE_EXT  CPU_TS_TMR       CPU_IntDisMeasMax_cnts;          /* ... non-reset
 #endif
 
 
-/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                           CPU_VAL_UNUSED()
+*
+* Description : 
+*
+* Argument(s) : none.
+*
+* Return(s)   : none.
+*
+* Caller(s)   : #### various.
+*
+* Note(s)     : none.
+*********************************************************************************************************
+*/
+
+
+#define  CPU_VAL_UNUSED(val)        ((void)&(val));
+
+
+#define  CPU_VAL_IGNORED(val)       CPU_VAL_UNUSED(val)
+
+
 /*
 *********************************************************************************************************
 *                                          CPU_TYPE_CREATE()
@@ -492,7 +477,6 @@ CPU_CORE_EXT  CPU_TS_TMR       CPU_IntDisMeasMax_cnts;          /* ... non-reset
 #endif
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                         FUNCTION PROTOTYPES
@@ -500,13 +484,21 @@ CPU_CORE_EXT  CPU_TS_TMR       CPU_IntDisMeasMax_cnts;          /* ... non-reset
 * Note(s) : (1) CPU interrupts disabled time measurement functions prototyped/defined only if 
 *               CPU_CFG_INT_DIS_MEAS_EN  #define'd in 'cpu_cfg.h'.
 *
-*           (2) CPU_CntLeadZeros() prototyped/defined respectively in :
+*           (2) (a) CPU_CntLeadZeros()  defined in :
 *
-*               (a) 'cpu.h'/'cpu_a.asm',       if CPU_CFG_LEAD_ZEROS_ASM_PRESENT      #define'd in 'cpu.h'/
-*                                                 'cpu_cfg.h' to enable assembly-version function
+*                   (1) 'cpu_a.asm',  if CPU_CFG_LEAD_ZEROS_ASM_PRESENT       #define'd in 'cpu.h'/
+*                                         'cpu_cfg.h' to enable assembly-optimized function(s)
 *
-*               (b) 'cpu_core.h'/'cpu_core.c', if CPU_CFG_LEAD_ZEROS_ASM_PRESENT  NOT #define'd in 'cpu.h'/
-*                                                 'cpu_cfg.h' to enable C-source-version function otherwise
+*                   (2) 'cpu_core.c', if CPU_CFG_LEAD_ZEROS_ASM_PRESENT   NOT #define'd in 'cpu.h'/
+*                                         'cpu_cfg.h' to enable C-source-optimized function(s)
+*
+*               (b) CPU_CntTrailZeros() defined in :
+*
+*                   (1) 'cpu_a.asm',  if CPU_CFG_TRAIL_ZEROS_ASM_PRESENT      #define'd in 'cpu.h'/
+*                                         'cpu_cfg.h' to enable assembly-optimized function(s)
+*
+*                   (2) 'cpu_core.c', if CPU_CFG_TRAIL_ZEROS_ASM_PRESENT  NOT #define'd in 'cpu.h'/
+*                                         'cpu_cfg.h' to enable C-source-optimized function(s)
 *********************************************************************************************************
 */
 
@@ -566,12 +558,63 @@ void             CPU_IntDisMeasStop       (void);
 
 
 
-#ifndef  CPU_CFG_LEAD_ZEROS_ASM_PRESENT                                 /* --------- CPU CNT LEAD ZEROS FNCTS --------- */
-CPU_DATA         CPU_CntLeadZeros         (CPU_DATA          val);      /* See Note #2.                                 */
+                                                                        /* ----------- CPU CNT ZEROS FNCTS ------------ */
+#ifdef  CPU_CFG_LEAD_ZEROS_ASM_PRESENT
+#ifdef __cplusplus
+extern  "C" {
+#endif
+#endif
+
+CPU_DATA         CPU_CntLeadZeros         (CPU_DATA    val);
+
+#ifdef  CPU_CFG_LEAD_ZEROS_ASM_PRESENT
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+#if     (CPU_CFG_DATA_SIZE_MAX >= CPU_WORD_SIZE_08)
+CPU_DATA         CPU_CntLeadZeros08       (CPU_INT08U  val);
+#endif
+#if     (CPU_CFG_DATA_SIZE_MAX >= CPU_WORD_SIZE_16)
+CPU_DATA         CPU_CntLeadZeros16       (CPU_INT16U  val);
+#endif
+#if     (CPU_CFG_DATA_SIZE_MAX >= CPU_WORD_SIZE_32)
+CPU_DATA         CPU_CntLeadZeros32       (CPU_INT32U  val);
+#endif
+#if     (CPU_CFG_DATA_SIZE_MAX >= CPU_WORD_SIZE_64)
+CPU_DATA         CPU_CntLeadZeros64       (CPU_INT64U  val);
 #endif
 
 
-/*$PAGE*/
+#ifdef  CPU_CFG_LEAD_ZEROS_ASM_PRESENT
+#ifdef __cplusplus
+extern  "C" {
+#endif
+#endif
+  
+CPU_DATA         CPU_CntTrailZeros        (CPU_DATA    val);
+
+#ifdef  CPU_CFG_LEAD_ZEROS_ASM_PRESENT
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+#if     (CPU_CFG_DATA_SIZE_MAX >= CPU_WORD_SIZE_08)
+CPU_DATA         CPU_CntTrailZeros08      (CPU_INT08U  val);
+#endif
+#if     (CPU_CFG_DATA_SIZE_MAX >= CPU_WORD_SIZE_16)
+CPU_DATA         CPU_CntTrailZeros16      (CPU_INT16U  val);
+#endif
+#if     (CPU_CFG_DATA_SIZE_MAX >= CPU_WORD_SIZE_32)
+CPU_DATA         CPU_CntTrailZeros32      (CPU_INT32U  val);
+#endif
+#if     (CPU_CFG_DATA_SIZE_MAX >= CPU_WORD_SIZE_64)
+CPU_DATA         CPU_CntTrailZeros64      (CPU_INT64U  val);
+#endif
+
+
 /*
 *********************************************************************************************************
 *                                         FUNCTION PROTOTYPES
@@ -636,7 +679,6 @@ void  CPU_TS_TmrInit(void);
 #endif
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                           CPU_TS_TmrRd()
@@ -724,7 +766,6 @@ CPU_TS_TMR  CPU_TS_TmrRd(void);
 #endif
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                         CPU_TSxx_to_uSec()
@@ -737,9 +778,9 @@ CPU_TS_TMR  CPU_TS_TmrRd(void);
 *
 * Caller(s)   : Application.
 *
-*               This function is an (optional) CPU module application interface (API) function which 
-*               MAY be implemented by application/BSP function(s) [see Note #1] & MAY be called by 
-*               application function(s).
+*               This function is an (optional) CPU module application programming interface (API) 
+*               function which MAY be implemented by application/BSP function(s) [see Note #1] & 
+*               MAY be called by application function(s).
 *
 * Note(s)     : (1) CPU_TS32_to_uSec()/CPU_TS64_to_uSec() are application/BSP functions that MAY be 
 *                   optionally defined by the developer when either of the following CPU features is 
@@ -790,7 +831,6 @@ CPU_INT64U  CPU_TS64_to_uSec(CPU_TS64  ts_cnts);
 #endif
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                        CONFIGURATION ERRORS
@@ -871,7 +911,6 @@ CPU_INT64U  CPU_TS64_to_uSec(CPU_TS64  ts_cnts);
 #endif
 
 
-/*$PAGE*/
                                                                 /* Correctly configured in 'cpu_core.h'; DO NOT MODIFY. */
 #ifndef  CPU_CFG_TS_TMR_EN
 #error  "CPU_CFG_TS_TMR_EN                     not #define'd in 'cpu_core.h'"
@@ -942,24 +981,49 @@ CPU_INT64U  CPU_TS64_to_uSec(CPU_TS64  ts_cnts);
 #endif
 
 
+#ifndef  CPU_CFG_TRAIL_ZEROS_ASM_PRESENT
+#if 0                                                           /* Optionally configured in 'cpu_cfg.h'; DO NOT MODIFY. */
+#error  "CPU_CFG_TRAIL_ZEROS_ASM_PRESENT       not #define'd in 'cpu.h'/'cpu_cfg.h'"
+#endif
+#endif
+
+
+/*
+*********************************************************************************************************
+*                                    CPU PORT CONFIGURATION ERRORS
+*********************************************************************************************************
+*/
+
+#ifndef  CPU_CFG_ADDR_SIZE
+#error  "CPU_CFG_ADDR_SIZE      not #define'd in 'cpu.h'"
+#endif
+
+#ifndef  CPU_CFG_DATA_SIZE
+#error  "CPU_CFG_DATA_SIZE      not #define'd in 'cpu.h'"
+#endif
+
+#ifndef  CPU_CFG_DATA_SIZE_MAX
+#error  "CPU_CFG_DATA_SIZE_MAX  not #define'd in 'cpu.h'"
+#endif
+
+
 /*
 *********************************************************************************************************
 *                                    LIBRARY CONFIGURATION ERRORS
 *********************************************************************************************************
 */
 
-#if (CPU_CFG_NAME_EN == DEF_ENABLED)
                                                                 /* See 'cpu_core.h  Note #1a'.                          */
 #if     (LIB_VERSION < 13500u)
 #error  "LIB_VERSION  [SHOULD be >= V1.35.00]"
 #endif
-#endif 
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                             MODULE END
+*
+* Note(s) : (1) See 'cpu_core.h  MODULE'.
 *********************************************************************************************************
 */
 

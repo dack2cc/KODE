@@ -43,7 +43,6 @@
 #ifndef  CPU_CFG_MODULE_PRESENT
 #define  CPU_CFG_MODULE_PRESENT
 
-
 /*
 *********************************************************************************************************
 *                                       CPU NAME CONFIGURATION
@@ -66,7 +65,7 @@
                                                                 /*   DEF_ENABLED   CPU host name ENABLED                */
 
                                                                 /* Configure CPU host name ASCII string size ...        */
-#define  CPU_CFG_NAME_SIZE                                16u   /* ... (see Note #2).                                   */
+#define  CPU_CFG_NAME_SIZE                                0u   /* ... (see Note #2).                                   */
 
 
 /*$PAGE*/
@@ -163,8 +162,8 @@
 #define  CPU_CFG_LEAD_ZEROS_ASM_PRESENT                         /* ... assembly-version (see Note #1).                  */
 #endif
 
-
 /*$PAGE*/
+
 /*
 *********************************************************************************************************
 *                                             MODULE END
@@ -172,4 +171,5 @@
 */
 
 #endif                                                          /* End of CPU cfg module include.                       */
+
 

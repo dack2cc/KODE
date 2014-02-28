@@ -41,6 +41,11 @@ void CPU_Init(void)
 	return;
 }
 
+void  CPU_SW_Exception(void)
+{
+	for (;;);
+}
+
 CPU_DATA  CPU_CntLeadZeros(CPU_DATA  val_in)
 {
 	CPU_DATA   iCntZeros = 0;

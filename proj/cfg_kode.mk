@@ -75,7 +75,10 @@ KODE_KERNEL_DRV_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNE
 KODE_KERNEL_LIB_DIR := lib
 KODE_KERNEL_LIB_SRC_S := 
 KODE_KERNEL_LIB_SRC_C := lib_pool.c \
-                         lib_mem.c 
+                         lib_mem.c \
+                         lib_ascii.c \
+                         lib_math.c \
+                         lib_str.c
 KODE_KERNEL_LIB_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_LIB_DIR)/%.o, $(KODE_KERNEL_LIB_SRC_S)) \
                        $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_LIB_DIR)/%.o, $(KODE_KERNEL_LIB_SRC_C))
 

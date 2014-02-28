@@ -3,19 +3,22 @@
 *                                                uC/LIB
 *                                        CUSTOM LIBRARY MODULES
 *
-*                          (c) Copyright 2004-2011; Micrium, Inc.; Weston, FL
+*                         (c) Copyright 2004-2014; Micrium, Inc.; Weston, FL
 *
-*               All rights reserved.  Protected by international copyright laws.
+*                  All rights reserved.  Protected by international copyright laws.
 *
-*               uC/LIB is provided in source form to registered licensees ONLY.  It is 
-*               illegal to distribute this source code to any third party unless you receive 
-*               written permission by an authorized Micrium representative.  Knowledge of 
-*               the source code may NOT be used to develop a similar product.
+*                  uC/LIB is provided in source form to registered licensees ONLY.  It is
+*                  illegal to distribute this source code to any third party unless you receive
+*                  written permission by an authorized Micrium representative.  Knowledge of
+*                  the source code may NOT be used to develop a similar product.
 *
-*               Please help us continue to provide the Embedded community with the finest 
-*               software available.  Your honesty is greatly appreciated.
+*                  Please help us continue to provide the Embedded community with the finest
+*                  software available.  Your honesty is greatly appreciated.
 *
-*               You can contact us at www.micrium.com.
+*                  You can find our product's user manual, API reference, release notes and
+*                  more information at: https://doc.micrium.com
+*
+*                  You can contact us at: http://www.micrium.com
 *********************************************************************************************************
 */
 
@@ -25,10 +28,18 @@
 *                                     CORE CUSTOM LIBRARY MODULE
 *
 * Filename      : lib_def.h
-* Version       : V1.35.00
+* Version       : V1.38.00
 * Programmer(s) : ITJ
+*                 FBJ
+*                 JFD
 *********************************************************************************************************
-* Note(s)       : (1) NO compiler-supplied standard library functions are used in library or product software.
+* Note(s)       : (1) Assumes the following versions (or more recent) of software modules are included in
+*                     the project build :
+*
+*                     (a) uC/CPU V1.29.00
+*
+*
+*                 (2) NO compiler-supplied standard library functions are used in library or product software.
 *
 *                     (a) ALL standard library functions are implemented in the custom library modules :
 *
@@ -49,6 +60,9 @@
 /*
 *********************************************************************************************************
 *                                               MODULE
+*
+* Note(s) : (1) This library definition header file is protected from multiple pre-processor inclusion
+*               through use of the library definition module present pre-processor macro definition.
 *********************************************************************************************************
 */
 
@@ -56,7 +70,6 @@
 #define  LIB_DEF_MODULE_PRESENT
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                CUSTOM LIBRARY MODULE VERSION NUMBER
@@ -77,14 +90,14 @@
 *
 *                           where
 *                                   ver             denotes software version number scaled as an integer value
-*                                   x.yyzz          denotes software version number, where the unscaled integer 
-*                                                       portion denotes the major version number & the unscaled 
-*                                                       fractional portion denotes the (concatenated) minor 
+*                                   x.yyzz          denotes software version number, where the unscaled integer
+*                                                       portion denotes the major version number & the unscaled
+*                                                       fractional portion denotes the (concatenated) minor
 *                                                       version numbers
 *********************************************************************************************************
 */
 
-#define  LIB_VERSION                                   13500u   /* See Note #1.                                         */
+#define  LIB_VERSION                                   13800u   /* See Note #1.                                         */
 
 
 /*
@@ -117,17 +130,17 @@
 *********************************************************************************************************
 */
 
+#include  <cpu_def.h>
 #include  <cpu.h>
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                          STANDARD DEFINES
 *********************************************************************************************************
 */
 
-#define  DEF_NULL                                 ((void *)0)
+#define  DEF_NULL                                          0
 
 
                                                                 /* ----------------- BOOLEAN DEFINES ------------------ */
@@ -137,10 +150,8 @@
 #define  DEF_NO                                            0u
 #define  DEF_YES                                           1u
 
-/*
 #define  DEF_DISABLED                                      0u
 #define  DEF_ENABLED                                       1u
-*/
 
 #define  DEF_INACTIVE                                      0u
 #define  DEF_ACTIVE                                        1u
@@ -196,7 +207,6 @@
 #define  DEF_BIT_29                               0x20000000u
 #define  DEF_BIT_30                               0x40000000u
 #define  DEF_BIT_31                               0x80000000u
-/*$PAGE*/
 #define  DEF_BIT_32                       0x0000000100000000u
 #define  DEF_BIT_33                       0x0000000200000000u
 #define  DEF_BIT_34                       0x0000000400000000u
@@ -234,6 +244,10 @@
 #define  DEF_BIT_63                       0x8000000000000000u
 
 
+                                                                /* ------------------ ALIGN DEFINES ------------------- */
+#define  DEF_ALIGN_MAX_NBR_OCTETS                       4096u
+
+
                                                                 /* ------------------ OCTET DEFINES ------------------- */
 #define  DEF_OCTET_NBR_BITS                                8u
 #define  DEF_OCTET_MASK                                 0xFFu
@@ -254,7 +268,6 @@
 #define  DEF_NBR_BASE_HEX                                 16u
 
 
-/*$PAGE*/
                                                                 /* ----------------- INTEGER DEFINES ------------------ */
 #define  DEF_INT_08_NBR_BITS                               8u
 #define  DEF_INT_08_MASK                                0xFFu
@@ -335,10 +348,10 @@
 #define  DEF_INT_64S_NBR_DIG_MAX                          19u
 
 
-
-/*$PAGE*/
                                                                 /* --------------- CPU INTEGER DEFINES ---------------- */
-#define  DEF_INT_CPU_NBR_BITS                           (CPU_CFG_DATA_SIZE * DEF_OCTET_NBR_BITS)
+#define  DEF_INT_CPU_NBR_BITS                           (CPU_CFG_DATA_SIZE     * DEF_OCTET_NBR_BITS)
+#define  DEF_INT_CPU_NBR_BITS_MAX                       (CPU_CFG_DATA_SIZE_MAX * DEF_OCTET_NBR_BITS)
+
 
 
 #if     (DEF_INT_CPU_NBR_BITS == DEF_INT_08_NBR_BITS)
@@ -413,63 +426,80 @@
 #endif
 
 
-
-/*$PAGE*/
                                                                 /* ------------------- TIME DEFINES ------------------- */
-#define  DEF_TIME_NBR_DAY_PER_WK                           7uL
-#define  DEF_TIME_NBR_DAY_PER_YR                         365uL
-#define  DEF_TIME_NBR_DAY_PER_YR_LEAP                    366uL
+#define  DEF_TIME_NBR_DAY_PER_WK                           7u
+#define  DEF_TIME_NBR_DAY_PER_YR                         365u
+#define  DEF_TIME_NBR_DAY_PER_YR_LEAP                    366u
 
-#define  DEF_TIME_NBR_HR_PER_DAY                          24uL
+#define  DEF_TIME_NBR_HR_PER_DAY                          24u
 #define  DEF_TIME_NBR_HR_PER_WK                         (DEF_TIME_NBR_HR_PER_DAY  * DEF_TIME_NBR_DAY_PER_WK     )
 #define  DEF_TIME_NBR_HR_PER_YR                         (DEF_TIME_NBR_HR_PER_DAY  * DEF_TIME_NBR_DAY_PER_YR     )
 #define  DEF_TIME_NBR_HR_PER_YR_LEAP                    (DEF_TIME_NBR_HR_PER_DAY  * DEF_TIME_NBR_DAY_PER_YR_LEAP)
 
-#define  DEF_TIME_NBR_MIN_PER_HR                          60uL
+#define  DEF_TIME_NBR_MIN_PER_HR                          60u
 #define  DEF_TIME_NBR_MIN_PER_DAY                       (DEF_TIME_NBR_MIN_PER_HR  * DEF_TIME_NBR_HR_PER_DAY     )
 #define  DEF_TIME_NBR_MIN_PER_WK                        (DEF_TIME_NBR_MIN_PER_DAY * DEF_TIME_NBR_DAY_PER_WK     )
 #define  DEF_TIME_NBR_MIN_PER_YR                        (DEF_TIME_NBR_MIN_PER_DAY * DEF_TIME_NBR_DAY_PER_YR     )
 #define  DEF_TIME_NBR_MIN_PER_YR_LEAP                   (DEF_TIME_NBR_MIN_PER_DAY * DEF_TIME_NBR_DAY_PER_YR_LEAP)
 
-#define  DEF_TIME_NBR_SEC_PER_MIN                         60uL
+#define  DEF_TIME_NBR_SEC_PER_MIN                         60u
 #define  DEF_TIME_NBR_SEC_PER_HR                        (DEF_TIME_NBR_SEC_PER_MIN * DEF_TIME_NBR_MIN_PER_HR     )
 #define  DEF_TIME_NBR_SEC_PER_DAY                       (DEF_TIME_NBR_SEC_PER_HR  * DEF_TIME_NBR_HR_PER_DAY     )
 #define  DEF_TIME_NBR_SEC_PER_WK                        (DEF_TIME_NBR_SEC_PER_DAY * DEF_TIME_NBR_DAY_PER_WK     )
 #define  DEF_TIME_NBR_SEC_PER_YR                        (DEF_TIME_NBR_SEC_PER_DAY * DEF_TIME_NBR_DAY_PER_YR     )
 #define  DEF_TIME_NBR_SEC_PER_YR_LEAP                   (DEF_TIME_NBR_SEC_PER_DAY * DEF_TIME_NBR_DAY_PER_YR_LEAP)
 
-#define  DEF_TIME_NBR_mS_PER_SEC                        1000uL
-#define  DEF_TIME_NBR_uS_PER_SEC                     1000000uL
-#define  DEF_TIME_NBR_nS_PER_SEC                  1000000000uL
+#define  DEF_TIME_NBR_mS_PER_SEC                        1000u
+#define  DEF_TIME_NBR_uS_PER_SEC                     1000000u
+#define  DEF_TIME_NBR_nS_PER_SEC                  1000000000u
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                             ERROR CODES
 *
-* Note(s) : (1) All generic library error codes are #define'd in 'lib_def.h';
-*               Any module-specific error codes are #define'd in library module header files.
+* Note(s) : (1) All library error codes are #define'd in 'lib_def.h';
 *********************************************************************************************************
 */
 
-#define  LIB_ERR_NONE                                      0u
+typedef enum lib_err {
+
+    LIB_ERR_NONE                            =         0u,
+
+    LIB_MEM_ERR_NONE                        =     10000u,
+    LIB_MEM_ERR_NULL_PTR                    =     10001u,       /* Ptr arg(s) passed NULL ptr(s).                       */
+
+    LIB_MEM_ERR_INVALID_MEM_SIZE            =     10100u,       /* Invalid mem     size.                                */
+    LIB_MEM_ERR_INVALID_MEM_ALIGN           =     10101u,       /* Invalid mem     align.                               */
+    LIB_MEM_ERR_INVALID_SEG_SIZE            =     10110u,       /* Invalid mem seg size.                                */
+    LIB_MEM_ERR_INVALID_SEG_OVERLAP         =     10111u,       /* Invalid mem seg overlaps other mem seg(s).           */
+    LIB_MEM_ERR_INVALID_SEG_EXISTS          =     10112u,       /* Invalid mem seg already exists.                      */
+    LIB_MEM_ERR_INVALID_POOL                =     10120u,       /* Invalid mem pool.                                    */
+    LIB_MEM_ERR_INVALID_BLK_NBR             =     10130u,       /* Invalid mem pool blk nbr.                            */
+    LIB_MEM_ERR_INVALID_BLK_SIZE            =     10131u,       /* Invalid mem pool blk size.                           */
+    LIB_MEM_ERR_INVALID_BLK_ALIGN           =     10132u,       /* Invalid mem pool blk align.                          */
+    LIB_MEM_ERR_INVALID_BLK_IX              =     10133u,       /* Invalid mem pool ix.                                 */
+    LIB_MEM_ERR_INVALID_BLK_ADDR            =     10135u,       /* Invalid mem pool blk addr.                           */
+    LIB_MEM_ERR_INVALID_BLK_ADDR_IN_POOL    =     10136u,       /* Mem pool blk addr already in mem pool.               */
+
+    LIB_MEM_ERR_SEG_EMPTY                   =     10200u,       /* Mem seg  empty; i.e. NO avail mem in seg.            */
+    LIB_MEM_ERR_SEG_OVF                     =     10201u,       /* Mem seg  ovf;   i.e. req'd mem ovfs rem mem in seg.  */
+    LIB_MEM_ERR_POOL_FULL                   =     10205u,       /* Mem pool full;  i.e. all mem blks avail in mem pool. */
+    LIB_MEM_ERR_POOL_EMPTY                  =     10206u,       /* Mem pool empty; i.e. NO  mem blks avail in mem pool. */
+    LIB_MEM_ERR_POOL_UNLIMITED              =     10207u,       /* Mem pool is unlimited.                               */
+
+    LIB_MEM_ERR_HEAP_EMPTY                  =     10210u,       /* Heap seg empty; i.e. NO avail mem in heap.           */
+    LIB_MEM_ERR_HEAP_OVF                    =     10211u,       /* Heap seg ovf;   i.e. req'd mem ovfs rem mem in heap. */
+    LIB_MEM_ERR_HEAP_NOT_FOUND              =     10215u        /* Heap seg NOT found.                                  */
+
+} LIB_ERR;
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                             DATA TYPES
 *********************************************************************************************************
 */
-
-/*
-*********************************************************************************************************
-*                                    LIBRARY ERROR CODES DATA TYPE
-*********************************************************************************************************
-*/
-
-typedef  CPU_INT16U  LIB_ERR;
 
 
 /*
@@ -479,7 +509,30 @@ typedef  CPU_INT16U  LIB_ERR;
 */
 
 
-/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                               TRACING
+*********************************************************************************************************
+*/
+
+                                                                /* Trace level, default to TRACE_LEVEL_OFF.             */
+#ifndef  TRACE_LEVEL_OFF
+#define  TRACE_LEVEL_OFF                                   0u
+#endif
+
+#ifndef  TRACE_LEVEL_INFO
+#define  TRACE_LEVEL_INFO                                  1u
+#endif
+
+#ifndef  TRACE_LEVEL_DBG
+#define  TRACE_LEVEL_DBG                                   2u
+#endif
+
+#ifndef  TRACE_LEVEL_LOG
+#define  TRACE_LEVEL_LOG                                   3u
+#endif
+
+
 /*
 *********************************************************************************************************
 *                                             BIT MACRO'S
@@ -498,23 +551,14 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) (a) 'bit' values that overflow the target CPU &/or compiler environment (e.g. negative 
+* Note(s)     : (1) 'bit' SHOULD be a non-negative integer.
+*
+*               (2) (a) 'bit' values that overflow the target CPU &/or compiler environment (e.g. negative
 *                       or greater-than-CPU-data-size values) MAY generate compiler warnings &/or errors.
-*
-*                   (b) To avoid overflowing any target CPU &/or compiler's integer data type, unsigned 
-*                       bit constant '1' is suffixed with 'L'ong integer modifier.
-*
-*                       This may still be insufficient for CPUs &/or compilers that support 'long long' 
-*                       integer data types, in which case 'LL' integer modifier should be suffixed.  
-*                       However, since almost all 16- & 32-bit CPUs & compilers support 'long' integer 
-*                       data types but many may NOT support 'long long' integer data types, only 'long' 
-*                       integer data types & modifiers are supported.
-*
-*                       See also 'DEF_BITxx()  Note #1b'.
 *********************************************************************************************************
 */
 
-#define  DEF_BIT(bit)                                                   (1uL << (bit))
+#define  DEF_BIT(bit)                                                   (1u << (bit))
 
 
 /*
@@ -529,13 +573,15 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) (a) 'bit' values that overflow the target CPU &/or compiler environment (e.g. negative 
+* Note(s)     : (1) 'bit' SHOULD be a non-negative integer.
+*
+*               (2) (a) 'bit' values that overflow the target CPU &/or compiler environment (e.g. negative
 *                       or greater-than-CPU-data-size values) MAY generate compiler warnings &/or errors.
 *
-*                   (b) To avoid overflowing any target CPU &/or compiler's integer data type, unsigned 
+*                   (b) To avoid overflowing any target CPU &/or compiler's integer data type, unsigned
 *                       bit constant '1' is cast to specified integer data type size.
 *
-*               (2) Ideally, DEF_BITxx() macro's should be named DEF_BIT_xx(); however, these names already 
+*               (3) Ideally, DEF_BITxx() macro's should be named DEF_BIT_xx(); however, these names already
 *                   previously-released for bit constant #define's (see 'STANDARD DEFINES  BIT DEFINES').
 *********************************************************************************************************
 */
@@ -549,7 +595,6 @@ typedef  CPU_INT16U  LIB_ERR;
 #define  DEF_BIT64(bit)                        ((CPU_INT64U)((CPU_INT64U)1u  << (bit)))
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                           DEF_BIT_MASK()
@@ -564,7 +609,9 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) 'bit_mask' SHOULD be an unsigned integer.
+* Note(s)     : (1) (a) 'bit_mask'  SHOULD be an unsigned    integer.
+*
+*                   (b) 'bit_shift' SHOULD be a non-negative integer.
 *
 *               (2) 'bit_shift' values that overflow the target CPU &/or compiler environment (e.g. negative
 *                   or greater-than-CPU-data-size values) MAY generate compiler warnings &/or errors.
@@ -588,7 +635,9 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) 'bit_mask' SHOULD be an unsigned integer.
+* Note(s)     : (1) (a) 'bit_mask'  SHOULD be an unsigned    integer.
+*
+*                   (b) 'bit_shift' SHOULD be a non-negative integer.
 *
 *               (2) 'bit_shift' values that overflow the target CPU &/or compiler environment (e.g. negative
 *                   or greater-than-CPU-data-size values) MAY generate compiler warnings &/or errors.
@@ -604,7 +653,6 @@ typedef  CPU_INT16U  LIB_ERR;
 #define  DEF_BIT_MASK_64(bit_mask, bit_shift)         ((CPU_INT64U)((CPU_INT64U)(bit_mask) << (bit_shift)))
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                           DEF_BIT_FIELD()
@@ -619,17 +667,19 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) (a) 'bit_field'/'bit_shift' values that overflow the target CPU &/or compiler 
-*                       environment (e.g. negative or greater-than-CPU-data-size values) MAY generate 
+* Note(s)     : (1) 'bit_field' & 'bit_shift' SHOULD be non-negative integers.
+*
+*               (2) (a) 'bit_field'/'bit_shift' values that overflow the target CPU &/or compiler
+*                       environment (e.g. negative or greater-than-CPU-data-size values) MAY generate
 *                       compiler warnings &/or errors.
 *
-*                   (b) To avoid overflowing any target CPU &/or compiler's integer data type, unsigned 
+*                   (b) To avoid overflowing any target CPU &/or compiler's integer data type, unsigned
 *                       bit constant '1' is suffixed with 'L'ong integer modifier.
 *
-*                       This may still be insufficient for CPUs &/or compilers that support 'long long' 
-*                       integer data types, in which case 'LL' integer modifier should be suffixed.  
-*                       However, since almost all 16- & 32-bit CPUs & compilers support 'long' integer 
-*                       data types but many may NOT support 'long long' integer data types, only 'long' 
+*                       This may still be insufficient for CPUs &/or compilers that support 'long long'
+*                       integer data types, in which case 'LL' integer modifier should be suffixed.
+*                       However, since almost all 16- & 32-bit CPUs & compilers support 'long' integer
+*                       data types but many may NOT support 'long long' integer data types, only 'long'
 *                       integer data types & modifiers are supported.
 *
 *                       See also 'DEF_BIT_FIELD_xx()  Note #1b'.
@@ -654,11 +704,13 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) (a) 'bit_field'/'bit_shift' values that overflow the target CPU &/or compiler 
-*                       environment (e.g. negative or greater-than-CPU-data-size values) MAY generate 
+* Note(s)     : (1) 'bit_field' & 'bit_shift' SHOULD be non-negative integers.
+*
+*               (2) (a) 'bit_field'/'bit_shift' values that overflow the target CPU &/or compiler
+*                       environment (e.g. negative or greater-than-CPU-data-size values) MAY generate
 *                       compiler warnings &/or errors.
 *
-*                   (b) To avoid overflowing any target CPU &/or compiler's integer data type, unsigned 
+*                   (b) To avoid overflowing any target CPU &/or compiler's integer data type, unsigned
 *                       bit constant '1' is cast to specified integer data type size.
 *********************************************************************************************************
 */
@@ -679,7 +731,7 @@ typedef  CPU_INT16U  LIB_ERR;
                                                                                                                                 : (CPU_INT64U)(DEF_BIT64(bit_field) - (CPU_INT64U)1u)) \
                                                                                                                                                      << (bit_shift)))
 
-/*$PAGE*/
+
 /*
 *********************************************************************************************************
 *                                            DEF_BIT_SET()
@@ -698,7 +750,36 @@ typedef  CPU_INT16U  LIB_ERR;
 *********************************************************************************************************
 */
 
-#define  DEF_BIT_SET(val, mask)                        ((val) |=  (mask))
+#define  DEF_BIT_SET(val, mask)                        ((val) = ((val) | (mask)))
+
+
+/*
+*********************************************************************************************************
+*                                          DEF_BIT_SET_xx()
+*
+* Description : Set specified bit(s) in a value of specified bit size.
+*
+* Argument(s) : val         Value to modify by setting specified bit(s).
+*
+*               mask        Mask of bits to set.
+*
+* Return(s)   : Modified value with specified bit(s) set.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : (1) 'val' & 'mask' SHOULD be unsigned integers.
+*
+*               (2) These macros are deprecated and should be replaced by the DEF_BIT_SET macro.
+*********************************************************************************************************
+*/
+
+#define  DEF_BIT_SET_08(val, mask)                     DEF_BIT_SET(val, mask)
+
+#define  DEF_BIT_SET_16(val, mask)                     DEF_BIT_SET(val, mask)
+
+#define  DEF_BIT_SET_32(val, mask)                     DEF_BIT_SET(val, mask)
+
+#define  DEF_BIT_SET_64(val, mask)                     DEF_BIT_SET(val, mask)
 
 
 /*
@@ -719,10 +800,132 @@ typedef  CPU_INT16U  LIB_ERR;
 *********************************************************************************************************
 */
 
-#define  DEF_BIT_CLR(val, mask)                        ((val) &= ~(mask))
+#define  DEF_BIT_CLR(val, mask)                        ((val) = ((val) & ~(mask)))
 
 
-/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                          DEF_BIT_CLR_xx()
+*
+* Description : Clear specified bit(s) in a value of specified bit size.
+*
+* Argument(s) : val         Value to modify by clearing specified bit(s).
+*
+*               mask        Mask of bits to clear.
+*
+* Return(s)   : Modified value with specified bit(s) clear.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : (1) 'val' & 'mask' SHOULD be unsigned integers.
+*
+*               (2) These macros are deprecated and should be replaced by the DEF_BIT_CLR macro.
+*********************************************************************************************************
+*/
+
+#define  DEF_BIT_CLR_08(val, mask)                     DEF_BIT_CLR(val, mask)
+
+#define  DEF_BIT_CLR_16(val, mask)                     DEF_BIT_CLR(val, mask)
+
+#define  DEF_BIT_CLR_32(val, mask)                     DEF_BIT_CLR(val, mask)
+
+#define  DEF_BIT_CLR_64(val, mask)                     DEF_BIT_CLR(val, mask)
+
+
+/*
+*********************************************************************************************************
+*                                            DEF_BIT_TOGGLE()
+*
+* Description : Toggles specified bit(s) in a value.
+*
+* Argument(s) : val         Value to modify by toggling specified bit(s).
+*
+*               mask        Mask of bits to toggle.
+*
+* Return(s)   : Modified value with specified bit(s) toggled.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : (1) 'val' & 'mask' SHOULD be unsigned integers.
+*********************************************************************************************************
+*/
+
+#define  DEF_BIT_TOGGLE(val, mask)                      ((val) ^= (mask))
+
+
+/*
+*********************************************************************************************************
+*                                           DEF_BIT_FIELD_RD()
+*
+* Description : Reads a 'val' field, masked and shifted, given by mask 'field_mask'.
+*
+* Argument(s) : val         Value to read from.
+*
+*               field_mask  Mask of field to read. See note #1, #2 and #3.
+*
+* Return(s)   : Field value, masked and right-shifted to bit position 0.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : (1) 'field_mask' argument must NOT be 0.
+*
+*               (2) 'field_mask' argument must contain a mask with contiguous set bits.
+*
+*               (3) 'val' & 'field_mask' SHOULD be unsigned integers.
+*********************************************************************************************************
+*/
+
+#define  DEF_BIT_FIELD_RD(val, field_mask)              (((val) & (field_mask)) / ((field_mask) & ~((field_mask) << 1u)))
+
+
+/*
+*********************************************************************************************************
+*                                          DEF_BIT_FIELD_ENC()
+*
+* Description : Encodes given 'field_val' at position given by mask 'field_mask'.
+*
+* Argument(s) : field_val   Value to encode.
+*
+*               field_mask  Mask of field to read. See note #1 and #2.
+*
+* Return(s)   : Field value, masked and left-shifted to field position.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : (1) 'field_mask' argument must contain a mask with contiguous set bits.
+*
+*               (2) 'field_val' & 'field_mask' SHOULD be unsigned integers.
+*********************************************************************************************************
+*/
+
+#define  DEF_BIT_FIELD_ENC(field_val, field_mask)       (((field_val) * ((field_mask) & ~((field_mask) << 1u))) & (field_mask))
+
+
+/*
+*********************************************************************************************************
+*                                           DEF_BIT_FIELD_WR()
+*
+* Description : Writes 'field_val' field at position given by mask 'field_mask' in variable 'var'.
+*
+* Argument(s) : var         Variable to write field to. See note #2.
+*
+*               field_val   Desired value for field. See note #2.
+*
+*               field_mask  Mask of field to write to. See note #1 and #2.
+*
+* Return(s)   : None.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : (1) 'field_mask' argument must contain a mask with contiguous set bits.
+*
+*               (2) 'var', 'field_val' & 'field_mask' SHOULD be unsigned integers.
+*********************************************************************************************************
+*/
+
+#define  DEF_BIT_FIELD_WR(var, field_val, field_mask)   (var) = (((var) & ~(field_mask)) | DEF_BIT_FIELD_ENC(field_val, field_mask))
+
+
 /*
 *********************************************************************************************************
 *                                          DEF_BIT_IS_SET()
@@ -745,8 +948,8 @@ typedef  CPU_INT16U  LIB_ERR;
 *********************************************************************************************************
 */
 
-#define  DEF_BIT_IS_SET(val, mask)                           ((((mask)  !=  0u)  && \
-                                                      (((val) & (mask)) == (mask))) ? (DEF_YES) : (DEF_NO ))
+#define  DEF_BIT_IS_SET(val, mask)                    (((((val) & (mask)) == (mask)) && \
+                                                         ((mask)          !=  0u))    ? (DEF_YES) : (DEF_NO))
 
 
 /*
@@ -771,11 +974,10 @@ typedef  CPU_INT16U  LIB_ERR;
 *********************************************************************************************************
 */
 
-#define  DEF_BIT_IS_CLR(val, mask)                           ((((mask)  !=  0u)  && \
-                                                      (((val) & (mask)) ==  0u))    ? (DEF_YES) : (DEF_NO ))
+#define  DEF_BIT_IS_CLR(val, mask)                    (((((val) & (mask)) ==  0u)  && \
+                                                         ((mask)          !=  0u))  ? (DEF_YES) : (DEF_NO))
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                        DEF_BIT_IS_SET_ANY()
@@ -824,7 +1026,12 @@ typedef  CPU_INT16U  LIB_ERR;
 #define  DEF_BIT_IS_CLR_ANY(val, mask)               ((((val) & (mask)) == (mask))  ? (DEF_NO ) : (DEF_YES))
 
 
-/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                            VALUE MACRO'S
+*********************************************************************************************************
+*/
+
 /*
 *********************************************************************************************************
 *                                          DEF_CHK_VAL_MIN()
@@ -841,16 +1048,16 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) DEF_CHK_VAL_MIN() avoids directly comparing any two values if only one of the values 
-*                   is negative since the negative value might be incorrectly promoted to an arbitrary 
+* Note(s)     : (1) DEF_CHK_VAL_MIN() avoids directly comparing any two values if only one of the values
+*                   is negative since the negative value might be incorrectly promoted to an arbitrary
 *                   unsigned value if the other value to compare is unsigned.
 *
-*               (2) Validation of values is limited to the range supported by the compiler &/or target 
-*                   environment.  All other values that underflow/overflow the supported range will 
+*               (2) Validation of values is limited to the range supported by the compiler &/or target
+*                   environment.  All other values that underflow/overflow the supported range will
 *                   modulo/wrap into the supported range as arbitrary signed or unsigned values.
 *
-*                   Therefore, any values that underflow the most negative signed value or overflow 
-*                   the most positive unsigned value supported by the compiler &/or target environment 
+*                   Therefore, any values that underflow the most negative signed value or overflow
+*                   the most positive unsigned value supported by the compiler &/or target environment
 *                   cannot be validated :
 *
 *                           (    N-1       N     ]
@@ -858,20 +1065,22 @@ typedef  CPU_INT16U  LIB_ERR;
 *                           (                    ]
 *
 *                               where
-*                                       N       Number of data word bits supported by the compiler 
+*                                       N       Number of data word bits supported by the compiler
 *                                                   &/or target environment
 *
-*                   (a) Note that the most negative value, -2^(N-1), is NOT included in the supported 
+*                   (a) Note that the most negative value, -2^(N-1), is NOT included in the supported
 *                       range since many compilers do NOT always correctly handle this value.
+*
+*               (3) 'val' and 'val_min' are compared to 1 instead of 0 to avoid warning generated for
+*                   unsigned numbers.
 *********************************************************************************************************
 */
 
-#define  DEF_CHK_VAL_MIN(val, val_min)            (((!(((val)     >= 0) && ((val_min) < 0))) && \
-                                                     ((((val_min) >= 0) && ((val)     < 0))  || \
+#define  DEF_CHK_VAL_MIN(val, val_min)            (((!(((val)     >= 1) && ((val_min) < 1))) && \
+                                                     ((((val_min) >= 1) && ((val)     < 1))  || \
                                                        ((val) < (val_min)))) ? DEF_FAIL : DEF_OK)
-                                            
 
-/*$PAGE*/
+
 /*
 *********************************************************************************************************
 *                                          DEF_CHK_VAL_MAX()
@@ -888,16 +1097,16 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) DEF_CHK_VAL_MAX() avoids directly comparing any two values if only one of the values 
-*                   is negative since the negative value might be incorrectly promoted to an arbitrary 
+* Note(s)     : (1) DEF_CHK_VAL_MAX() avoids directly comparing any two values if only one of the values
+*                   is negative since the negative value might be incorrectly promoted to an arbitrary
 *                   unsigned value if the other value to compare is unsigned.
 *
-*               (2) Validation of values is limited to the range supported by the compiler &/or target 
-*                   environment.  All other values that underflow/overflow the supported range will 
+*               (2) Validation of values is limited to the range supported by the compiler &/or target
+*                   environment.  All other values that underflow/overflow the supported range will
 *                   modulo/wrap into the supported range as arbitrary signed or unsigned values.
 *
-*                   Therefore, any values that underflow the most negative signed value or overflow 
-*                   the most positive unsigned value supported by the compiler &/or target environment 
+*                   Therefore, any values that underflow the most negative signed value or overflow
+*                   the most positive unsigned value supported by the compiler &/or target environment
 *                   cannot be validated :
 *
 *                           (    N-1       N     ]
@@ -905,25 +1114,27 @@ typedef  CPU_INT16U  LIB_ERR;
 *                           (                    ]
 *
 *                               where
-*                                       N       Number of data word bits supported by the compiler 
+*                                       N       Number of data word bits supported by the compiler
 *                                                   &/or target environment
 *
-*                   (a) Note that the most negative value, -2^(N-1), is NOT included in the supported 
+*                   (a) Note that the most negative value, -2^(N-1), is NOT included in the supported
 *                       range since many compilers do NOT always correctly handle this value.
+*
+*               (3) 'val' and 'val_max' are compared to 1 instead of 0 to avoid warning generated for
+*                   unsigned numbers.
 *********************************************************************************************************
 */
 
-#define  DEF_CHK_VAL_MAX(val, val_max)            (((!(((val_max) >= 0) && ((val)     < 0))) && \
-                                                     ((((val)     >= 0) && ((val_max) < 0))  || \
+#define  DEF_CHK_VAL_MAX(val, val_max)            (((!(((val_max) >= 1) && ((val)     < 1))) && \
+                                                     ((((val)     >= 1) && ((val_max) < 1))  || \
                                                        ((val) > (val_max)))) ? DEF_FAIL : DEF_OK)
-                                                
 
-/*$PAGE*/
+
 /*
 *********************************************************************************************************
 *                                            DEF_CHK_VAL()
 *
-* Description : Validate a value as greater than or equal to a specified minimum value & less than or 
+* Description : Validate a value as greater than or equal to a specified minimum value & less than or
 *                   equal to a specified maximum value.
 *
 * Argument(s) : val        Value to validate.
@@ -932,23 +1143,23 @@ typedef  CPU_INT16U  LIB_ERR;
 *
 *               val_max    Maximum value to test.
 *
-* Return(s)   : DEF_OK,    Value is greater than or equal to minimum value AND 
+* Return(s)   : DEF_OK,    Value is greater than or equal to minimum value AND
 *                                   less    than or equal to maximum value.
 *
 *               DEF_FAIL,  otherwise.
 *
 * Caller(s)   : Application.
 *
-* Note(s)     : (1) DEF_CHK_VAL() avoids directly comparing any two values if only one of the values 
-*                   is negative since the negative value might be incorrectly promoted to an arbitrary 
+* Note(s)     : (1) DEF_CHK_VAL() avoids directly comparing any two values if only one of the values
+*                   is negative since the negative value might be incorrectly promoted to an arbitrary
 *                   unsigned value if the other value to compare is unsigned.
 *
-*               (2) Validation of values is limited to the range supported by the compiler &/or target 
-*                   environment.  All other values that underflow/overflow the supported range will 
+*               (2) Validation of values is limited to the range supported by the compiler &/or target
+*                   environment.  All other values that underflow/overflow the supported range will
 *                   modulo/wrap into the supported range as arbitrary signed or unsigned values.
 *
-*                   Therefore, any values that underflow the most negative signed value or overflow 
-*                   the most positive unsigned value supported by the compiler &/or target environment 
+*                   Therefore, any values that underflow the most negative signed value or overflow
+*                   the most positive unsigned value supported by the compiler &/or target environment
 *                   cannot be validated :
 *
 *                           (    N-1       N     ]
@@ -956,13 +1167,13 @@ typedef  CPU_INT16U  LIB_ERR;
 *                           (                    ]
 *
 *                               where
-*                                       N       Number of data word bits supported by the compiler 
+*                                       N       Number of data word bits supported by the compiler
 *                                                   &/or target environment
 *
-*                   (a) Note that the most negative value, -2^(N-1), is NOT included in the supported 
+*                   (a) Note that the most negative value, -2^(N-1), is NOT included in the supported
 *                       range since many compilers do NOT always correctly handle this value.
 *
-*               (3) DEF_CHK_VAL() does NOT validate that the maximum value ('val_max') is greater than 
+*               (3) DEF_CHK_VAL() does NOT validate that the maximum value ('val_max') is greater than
 *                   or equal to the minimum value ('val_min').
 *********************************************************************************************************
 */
@@ -971,15 +1182,67 @@ typedef  CPU_INT16U  LIB_ERR;
                                                        (DEF_CHK_VAL_MAX(val, val_max) == DEF_FAIL)) ? DEF_FAIL : DEF_OK)
 
 
-/*$PAGE*/
+/*
+*********************************************************************************************************
+*                                         DEF_GET_U_MAX_VAL()
+*
+* Description : Get the maximum unsigned value that can be represented in an unsigned integer variable
+*                   of the same data type size as an object.
+*
+* Argument(s) : obj         Object or data type to return maximum unsigned value (see Note #1).
+*
+* Return(s)   : Maximum unsigned integer value that can be represented by the object, if NO error(s).
+*
+*               0,                                                                    otherwise.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : (1) 'obj' SHOULD be an integer object or data type but COULD also be a character or
+*                   pointer object or data type.
+*********************************************************************************************************
+*/
+
+#if     (CPU_CFG_DATA_SIZE_MAX == CPU_WORD_SIZE_08)
+
+#define  DEF_GET_U_MAX_VAL(obj)                 ((sizeof(obj) == CPU_WORD_SIZE_08) ? DEF_INT_08U_MAX_VAL : 0)
+
+
+#elif   (CPU_CFG_DATA_SIZE_MAX == CPU_WORD_SIZE_16)
+
+#define  DEF_GET_U_MAX_VAL(obj)                 ((sizeof(obj) == CPU_WORD_SIZE_08) ? DEF_INT_08U_MAX_VAL :   \
+                                                ((sizeof(obj) == CPU_WORD_SIZE_16) ? DEF_INT_16U_MAX_VAL : 0))
+
+
+#elif   (CPU_CFG_DATA_SIZE_MAX == CPU_WORD_SIZE_32)
+
+#define  DEF_GET_U_MAX_VAL(obj)                 ((sizeof(obj) == CPU_WORD_SIZE_08) ? DEF_INT_08U_MAX_VAL :    \
+                                                ((sizeof(obj) == CPU_WORD_SIZE_16) ? DEF_INT_16U_MAX_VAL :    \
+                                                ((sizeof(obj) == CPU_WORD_SIZE_32) ? DEF_INT_32U_MAX_VAL : 0)))
+
+
+#elif   (CPU_CFG_DATA_SIZE_MAX == CPU_WORD_SIZE_64)
+
+#define  DEF_GET_U_MAX_VAL(obj)                 ((sizeof(obj) == CPU_WORD_SIZE_08) ? DEF_INT_08U_MAX_VAL :     \
+                                                ((sizeof(obj) == CPU_WORD_SIZE_16) ? DEF_INT_16U_MAX_VAL :     \
+                                                ((sizeof(obj) == CPU_WORD_SIZE_32) ? DEF_INT_32U_MAX_VAL :     \
+                                                ((sizeof(obj) == CPU_WORD_SIZE_64) ? DEF_INT_64U_MAX_VAL : 0))))
+
+#else
+
+#error  "CPU_CFG_DATA_SIZE_MAX  illegally #defined in 'cpu.h'      "
+#error  "                       [See 'cpu.h  CONFIGURATION ERRORS']"
+
+#endif
+
+
 /*
 *********************************************************************************************************
 *                                            MATH MACRO'S
 *
-* Note(s) : (1) Ideally, ALL mathematical macro's & functions SHOULD be defined in the custom mathematics 
+* Note(s) : (1) Ideally, ALL mathematical macro's & functions SHOULD be defined in the custom mathematics
 *               library ('lib_math.*').  #### However, to maintain backwards compatibility with previously-
-*               released modules, mathematical macro & function definitions should only be moved to the 
-*               custom mathematics library once all previously-released modules are updated to include the 
+*               released modules, mathematical macro & function definitions should only be moved to the
+*               custom mathematics library once all previously-released modules are updated to include the
 *               custom mathematics library.
 *********************************************************************************************************
 */
@@ -1024,7 +1287,6 @@ typedef  CPU_INT16U  LIB_ERR;
 #define  DEF_MAX(a, b)                                  (((a) > (b)) ? (a) : (b))
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                              DEF_ABS()
@@ -1044,7 +1306,6 @@ typedef  CPU_INT16U  LIB_ERR;
 #define  DEF_ABS(a)                                     (((a) < 0) ? (-(a)) : (a))
 
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                         FUNCTION PROTOTYPES
@@ -1061,7 +1322,21 @@ typedef  CPU_INT16U  LIB_ERR;
 
 /*
 *********************************************************************************************************
+*                                    LIBRARY CONFIGURATION ERRORS
+*********************************************************************************************************
+*/
+
+                                                                /* See 'lib_def.h  Note #1a'.                           */
+#if     (CPU_CORE_VERSION < 12900u)
+#error  "CPU_CORE_VERSION  [SHOULD be >= V1.29.00]"
+#endif
+
+
+/*
+*********************************************************************************************************
 *                                             MODULE END
+*
+* Note(s) : (1) See 'lib_def.h  MODULE'.
 *********************************************************************************************************
 */
 
