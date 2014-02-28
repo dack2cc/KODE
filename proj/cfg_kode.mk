@@ -86,7 +86,7 @@ KODE_KERNEL_FS_DIR := fs
 KODE_KERNEL_FS_SRC_S := 
 KODE_KERNEL_FS_SRC_C := fs_super.c \
                         fs_inode.c \
-                        fs_bitmap.c 
+                        fs_table.c 
 KODE_KERNEL_FS_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR)/%.o, $(KODE_KERNEL_FS_SRC_S)) \
                       $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR)/%.o, $(KODE_KERNEL_FS_SRC_C))
 
@@ -94,7 +94,8 @@ KODE_KERNEL_KD_DIR := kd
 KODE_KERNEL_KD_SRC_S := 
 KODE_KERNEL_KD_SRC_C := kd_core.c \
                         kd_thread.c \
-                        kd_time.c
+                        kd_time.c \
+                        kd_file.c 
 KODE_KERNEL_KD_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)/%.o, $(KODE_KERNEL_KD_SRC_S)) \
                       $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)/%.o, $(KODE_KERNEL_KD_SRC_C))
 

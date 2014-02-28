@@ -41,20 +41,14 @@ enum {
 	OS_TCB_EXT_MAX
 };
 
+#define OS_FILE_OPEN_PER_TASK   (20u)
 
-//enum {
-//	OS_TCB_REG_INVALID = -1,
-//	OS_TCB_REG_ERR_CODE,   /* CPU_INT32S */
-//	OS_TCB_REG_KERNEL_EN,  /* DEF_DISABLED or DEf_ENABLED */
-//	OS_TCB_REG_TASK_ID,    /* CPU_INT32U */
-//	OS_TCB_REG_MAX
-//};
-
-
-#define OS_TCB_REG_ERR_CODE     0u
-#define OS_TCB_REG_KERNEL_EN    1u
-#define OS_TCB_REG_TASK_ID      2u
-#define OS_TCB_REG_MAX          3u
+#define OS_TCB_REG_ERR_CODE     (0u)
+#define OS_TCB_REG_KERNEL_EN    (1u)
+#define OS_TCB_REG_TASK_ID      (2u)
+#define OS_TCB_REG_FILE_FLAG    (3u)
+#define OS_TCB_REG_FILE_START   (4u)
+#define OS_TCB_REG_MAX          (OS_TCB_REG_FILE_START + OS_FILE_OPEN_PER_TASK)
 
 
 #define OS_TASK_USER_PRIO_START       10u

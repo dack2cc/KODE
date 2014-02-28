@@ -94,3 +94,7 @@ KDtime kdTime(KDtime * timep)
 	return ((KDtime)(__res));
 }
 
+/* File system */
+CPU_EXT_DEFINE_KERNEL_FNCT_2(KDFile *, kdFopen, const KDchar *, pathname, const KDchar *, mode);
+
+

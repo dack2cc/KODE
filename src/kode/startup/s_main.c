@@ -90,7 +90,9 @@ void* s_thread_init(void* param_in)
 {
 	s_logo();
 	s_time();
+	
 	kdextSetup();
+	kdFopen("/", "rw");
 	
 	//for (;;);
 	

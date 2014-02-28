@@ -50,6 +50,8 @@ enum {
 	/* Time functions */
 	__KF_kdGetTimeUST,
 	__KF_kdTime,
+	/* File system */
+	__KF_kdFopen,
 	KD_KERNEL_FNCT_MAX
 };
 

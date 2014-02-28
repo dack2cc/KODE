@@ -5,6 +5,7 @@
 
 #include <fs_super.h>
 #include <fs_inode.h>
+#include <fs_table.h>
 #include <fs.h>
 #include <drv_blk.h>
 #include <drv_lock.h>
@@ -115,6 +116,9 @@ void FS_MountRoot(const CPU_INT16U  uiDev_in)
 	FS_SUPER_BLOCK_EXT * pstSuperExt = 0;
 	FS_INODE * pstInode = 0;
 	CPU_INT32U iFree = 0;
+	
+	fs_inode_Init();
+	fs_table_Init();
 	
 	if (FS_INODE_SIZE != sizeof(FS_INODE)) {
 		CPUExt_CorePanic("[FS_super_MountRoot][bad i-node size]");

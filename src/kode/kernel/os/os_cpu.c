@@ -83,6 +83,7 @@ void OSTaskCreateHook(OS_TCB *p_tcb)
 	CPU_SR      cpu_sr = 0;
 	CPU_DATA*   pExtData = 0;
 	CPU_INT32U  uiTaskId = 0;
+	CPU_INT32U  i = 0;
 	CPU_ERR     cpu_err = CPU_ERR_NONE;
 	OS_ERR      os_err  = OS_ERR_NONE;
 	
@@ -126,6 +127,10 @@ void OSTaskCreateHook(OS_TCB *p_tcb)
 	OSTaskRegSet(p_tcb, OS_TCB_REG_ERR_CODE, cpu_err, &os_err);
 	OSTaskRegSet(p_tcb, OS_TCB_REG_KERNEL_EN, aiArgList[CPU_TASK_ARG_KERNEL_EN], &os_err);
 	OSTaskRegSet(p_tcb, OS_TCB_REG_TASK_ID, uiTaskId, &os_err);
+	OSTaskRegSet(p_tcb, OS_TCB_REG_FILE_FLAG, 0, &os_err);
+	for (i = 0; i < OS_FILE_OPEN_PER_TASK; ++i) {
+		OSTaskRegSet(p_tcb, (OS_TCB_REG_FILE_START + i), 0, &os_err);
+	}
 }
 
 void OSTaskReturnHook(OS_TCB *p_tcb)

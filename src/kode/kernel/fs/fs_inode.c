@@ -49,17 +49,6 @@ typedef struct _FS_INODE_EXT {
 #define FS_INODE_EXT_MAX  (32)
 FS_PRIVATE FS_INODE_EXT fs_inode_astTbl[FS_INODE_EXT_MAX] = {{{0,},},};
 
-typedef struct _FS_INODE_FILE {
-	CPU_INT16U f_mode;
-	CPU_INT16U f_flags;
-	CPU_INT16U f_count;
-	//struct m_inode * f_inode;
-	CPU_INT32S f_pos;
-} FS_INODE_FILE;
-
-#define FS_INODE_FILE_MAX  (64)
-FS_PRIVATE FS_INODE_FILE fs_inode_astFile[FS_INODE_FILE_MAX];
-
 /******************************************************************************
     Private Interface
 ******************************************************************************/
@@ -90,6 +79,7 @@ void fs_inode_Init(void)
 	
 	for (i =0; i < FS_INODE_EXT_MAX; ++i) {
 		drv_lock_Init(&(fs_inode_astTbl[i].i_wait), FS_INODE_NAME_LOCK);
+		fs_inode_astTbl[i].i_count = 0;
 	}
 }
 

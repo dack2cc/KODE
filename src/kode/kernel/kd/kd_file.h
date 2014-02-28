@@ -1,16 +1,18 @@
-#ifndef __FS_BITMAP_H__
-#define __FS_BITMAP_H__
+
+#ifndef __KD_FILE_H__
+#define __KD_FILE_H__
 
 /******************************************************************************
     Include
 ******************************************************************************/
 
-#include <cpu.h>
-#include <fs_inode.h>
+#include <kd/kd.h>
 
 /******************************************************************************
     Public Interface
 ******************************************************************************/
 
-#endif // __FS_BITMAP_H__
+KDFile *  kd_file_Open(const KDchar * pszName_in, const KDchar * pszFlag_in);
+
+#endif // __KD_FILE_H__
 

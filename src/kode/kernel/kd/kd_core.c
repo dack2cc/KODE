@@ -6,6 +6,7 @@
 #include <kd_core.h>
 #include <kd_thread.h>
 #include <kd_time.h>
+#include <kd_file.h>
 #include <kd_def.h>
 #include <lib_def.h>
 #include <lib_mem.h>
@@ -97,6 +98,9 @@ kdextInit(void)
 	CPUExt_GateRegisterKernelFnct(__KF_kdGetTimeUST, (CPU_FNCT_VOID)(kd_time_GetUST));
 	CPUExt_GateRegisterKernelFnct(__KF_kdTime,       (CPU_FNCT_VOID)(kd_time_GetWallClock));
 	
+	/* File System */
+	CPUExt_GateRegisterKernelFnct(__KF_kdFopen, (CPU_FNCT_VOID)(kd_file_Open));
+	
 	/* => we are in initialize process of Ring 0 */
 	OSInit(&err);
 	/* <= we are in Task 0 of Ring 3 */
@@ -130,21 +134,11 @@ KD_PRIVATE void  kd_core_Setup(void)
 
 void  kd_core_LogMessage(const KDchar* pszString_in)
 {
-	KDint i = 0;
-	
 	if (0 == pszString_in) {
 		return;
 	}
 	
-	for (i = 0; i < sizeof(kd_core_aszMsgBuf); ++i) {
-		CPU_EXT_GET_FS_BYTE(kd_core_aszMsgBuf[i], pszString_in + i);
-		if ('\0' == kd_core_aszMsgBuf[i]) {
-			break;
-		}
-	}
-	if (i >= sizeof(kd_core_aszMsgBuf)) {
-		kd_core_aszMsgBuf[sizeof(kd_core_aszMsgBuf) - 1] = '\0';
-	}
+	kd_core_StrReadUserSpace(pszString_in, kd_core_aszMsgBuf, sizeof(kd_core_aszMsgBuf));
 	
 	CPUExt_DispPrint(kd_core_aszMsgBuf);
 }
@@ -224,6 +218,27 @@ KD_PRIVATE const KDchar * kd_core_QueryIndexedAttribcv(KDint attribute, KDint in
 {
 	kd_core_iErrorCode = KD_EINVAL;
 	return (KD_NULL);
+}
+
+void  kd_core_StrReadUserSpace(const KDchar * pszSrcUsr_in, KDchar * pszDstKnl_out, const KDint iDstSize_in)
+{
+	KDint i = 0;
+	
+	if ((0 == pszSrcUsr_in) 
+	||  (0 == pszDstKnl_out) 
+	||  (iDstSize_in <= 0)) {
+		return;
+	}
+	
+	for (i = 0; i < iDstSize_in; ++i) {
+		CPU_EXT_GET_FS_BYTE(pszDstKnl_out[i], pszSrcUsr_in + i);
+		if ('\0' == pszDstKnl_out[i]) {
+			break;
+		}
+	}
+	if (i >= iDstSize_in) {
+		pszDstKnl_out[iDstSize_in - 1] = '\0';
+	}
 }
 
 
