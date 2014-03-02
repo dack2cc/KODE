@@ -149,6 +149,8 @@ KDFile *  kd_file_Open(const KDchar * pszName_in, const KDchar * pszFlag_in)
 	kd_core_StrReadUserSpace(pszName_in, kd_file_aszName, sizeof(kd_file_aszName));
 	kd_core_StrReadUserSpace(pszFlag_in, kd_file_aszFlag, sizeof(kd_file_aszFlag));
 	
+	
+	
 	return ((KDFile *)0);
 }
 
