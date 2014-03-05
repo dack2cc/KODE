@@ -17,6 +17,7 @@
 
 extern void  cpu_key_Init(void);
 extern void  cpu_key_ISR_Input(CPU_DATA uiScanCode_in);
+extern void  cpu_key_ISR_Mouse(CPU_DATA ui_in);
 
 #endif // __CPU_KEY_H__
 

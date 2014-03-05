@@ -9,6 +9,7 @@
 
 TOOL        := tool
 MKFS        := mkfs
+MKSRC       := mksrc
 
 TARGET_ROOT := ./bin
 TARGET_DIR  := $(TARGET_ROOT)
@@ -75,7 +76,7 @@ _PREPARE :
 	if [ ! -d $$DIR ] ; then mkdir $$DIR ; fi \
 	done
 
-_IMAGE : $(TOOL) $(BOOT_BIN)
+_IMAGE : $(TOOL) $(BOOT_BIN) $(MKSRC)
 	@echo "[Build][$(TARGET_BIN)]"
 	@$(BUILD_ROOT)/$(TOOL) $(DEV_FLOPPY) $(BOOT_BIN) > $(TARGET_ROOT)/$(TARGET_BIN)
 	@echo "[Build][$(TARGET_HD)]"
@@ -91,6 +92,11 @@ $(MKFS) :
 	@echo "[Compile ][../src/tools/mkfs.c]"
 	@$(CC) $(CFLAGS) ../src/tools/mkfs.c -o $(BUILD_ROOT)/$(MKFS)
 	@chmod o+x $(BUILD_ROOT)/$(MKFS)
+	
+$(MKSRC) :
+	@echo "[Compile ][../src/tools/mksrc.c]"
+	@$(CC) $(CFLAGS) ../src/tools/mksrc.c -o $(BUILD_ROOT)/$(MKSRC)
+	@chmod o+x $(BUILD_ROOT)/$(MKSRC)
 
 $(BUILD_ROOT)/%.bin : $(BOOT_DIR)/%.nas
 	@echo "[Assemble][$<]"

@@ -26,7 +26,8 @@ KODE_KERNEL_CPU_SRC_S := cpu_gate_s.gas
 KODE_KERNEL_CPU_SRC_C := cpu_gate_c.c \
                          cpu_hd.c \
                          cpu_key.c \
-                         cpu_disp.c \
+                         cpu_disp_text.c \
+                         cpu_disp_8bit.c \
                          cpu_page.c \
                          cpu_task.c \
                          cpu_core.c \
@@ -99,6 +100,11 @@ KODE_KERNEL_KD_SRC_C := kd_core.c \
 KODE_KERNEL_KD_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)/%.o, $(KODE_KERNEL_KD_SRC_S)) \
                       $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)/%.o, $(KODE_KERNEL_KD_SRC_C))
 
+KODE_KERNEL_FONT_DIR := font
+KODE_KERNEL_FONT_SRC := font_hankaku.c
+KODE_KERNEL_FONT_OBJ := $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FONT_DIR)/%.o, $(KODE_KERNEL_FONT_SRC))
+
+
 KODE_SYSTEM_DIR := system
 KODE_SYSTEM_LIB_DIR := lib
 
@@ -119,6 +125,7 @@ KODE_OBJ := $(KODE_STARTUP_OBJ) \
             $(KODE_KERNEL_LIB_OBJ) \
             $(KODE_KERNEL_FS_OBJ) \
             $(KODE_KERNEL_KD_OBJ) \
+            $(KODE_KERNEL_FONT_OBJ) \
             $(KODE_SYSTEM_LIB_KD_OBJ) \
             $(KODE_SYSTEM_LIB_STD_OBJ)
             
@@ -135,6 +142,7 @@ BUILD_DIR += $(BUILD_ROOT)/$(KODE_ROOT) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR) \
+             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FONT_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR)/$(KODE_SYSTEM_LIB_KD_DIR) \
@@ -147,7 +155,8 @@ INC_DIR += -I$(SRC_ROOT)/$(KODE_ROOT) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_LIB_DIR) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR) \
-           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR)
+           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR) \
+           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FONT_DIR) \
 
 # **************************************
 # Make Rule

@@ -3,7 +3,10 @@
     Include
 ******************************************************************************/
 
-#include <cpu_disp.h>
+#include <cpu_disp_text.h>
+
+#if (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_TEXT)
+
 #include <cpu.h>
 #include <cpu_boot.h>
 #include <cpu_asm.h>
@@ -463,4 +466,5 @@ CPU_PRIVATE void cpu_disp_Delete(void)
 	}
 }
 
+#endif /* CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_TEXT */
 

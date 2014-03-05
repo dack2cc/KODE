@@ -1,29 +1,25 @@
-#ifndef __CPU_GATE_H__
-#define __CPU_GATE_H__
+#ifndef __CPU_DISP_8_H__
+#define __CPU_DISP_8_H__
 
 /******************************************************************************
     Include
 ******************************************************************************/
 
-#include <cpu.h>
+#include <cpu_ext.h>
 
 /******************************************************************************
     Define
 ******************************************************************************/
 
-
 /******************************************************************************
     Public Interface
 ******************************************************************************/
 
-extern void cpu_gate_Init(void);
+#if (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_8BIT)
 
-extern CPU_DATA  cpu_gate_ISRKernelFnct(void);
-extern CPU_DATA  cpu_gate_ISRMemPageFault(void);
-extern CPU_DATA  cpu_gate_ISRTimeTick(void);
-extern CPU_DATA  cpu_gate_ISRKeyboard(void);
-extern CPU_DATA  cpu_gate_ISRHardDisk(void);
-extern CPU_DATA  cpu_gate_ISRMouse(void);
+extern void  cpu_disp_Init(void);
 
-#endif // __CPU_GATE_H__
+#endif /* CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_8BIT */
+
+#endif // __CPU_DISP_8_H__
 

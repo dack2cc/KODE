@@ -57,6 +57,19 @@ L_START:
 	mov [10], bx
 	mov [12], cx
 	
+	; enter VGA 320x200 8bit color mode
+	mov al, 0x13
+	mov ah, 0x00
+	int 0x10
+	mov al, 8            ; color mode
+	mov [14], al
+	mov ax, 320          ; width
+	mov [16], ax         
+	mov ax, 200          ; high
+	mov [18], ax         
+	mov eax, 0x000a0000  ; video memory address
+	mov [20], eax
+	
 	; Get hd0 data
 	mov ax, 0x0000
 	mov ds, ax
@@ -157,6 +170,11 @@ L_END_MOVE:
 	out 0x21, al
 	dw 0x00EB, 0x00EB
 	out 0xA1, al
+
+    ; check for PS/2 pointing device
+    ;int 0x11
+    ;test al, 0x04
+    ;jz L_ERROR
 
 	; enter 32-bit proctected mode
 	mov ax, 0x0001

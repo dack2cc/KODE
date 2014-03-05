@@ -67,9 +67,10 @@ void s_main(void)
 
 void s_logo(void)
 {
-	kdLogMessage("  ====  ====  ||    \r\n");
-	kdLogMessage("    ||    ||  ||=== \r\n");
-	kdLogMessage("  ====  ====  ||    \r\n");
+	//kdLogMessage("  ====  ====  ||    \r\n");
+	//kdLogMessage("    ||    ||  ||=== \r\n");
+	//kdLogMessage("  ====  ====  ||    \r\n");
+	kdLogMessage("kode OS 4 kokoto \r\n");
 }
 
 void s_time(void)

@@ -53,4 +53,8 @@ void cpu_key_ISR_Input(CPU_DATA uiScanCode_in)
 	return;
 }
 
+void  cpu_key_ISR_Mouse(CPU_DATA ui_in)
+{
+	CPUExt_DispPrint("[Mouse][Received] ");
+}
 

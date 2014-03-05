@@ -5,7 +5,6 @@
 
 #define CPU_CORE_MODULE
 #include <cpu_core.h>
-#include <cpu_disp.h>
 #include <cpu_page.h>
 #include <cpu_gate.h>
 #include <cpu_task.h>
@@ -13,6 +12,14 @@
 #include <cpu_key.h>
 #include <cpu_hd.h>
 #include <cpu_ext.h>
+
+#if   (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_TEXT)
+#include <cpu_disp_text.h>
+#elif (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_8BIT)
+#include <cpu_disp_8bit.h>
+#else  /* CPU_EXT_DISP_MODE */
+#error  No Supported Display Mode.
+#endif /* CPU_EXT_DISP_MODE */
 
 /******************************************************************************
     Private Define

@@ -12,6 +12,17 @@
     Definition
 ******************************************************************************/
 
+/*
+    Display Mode
+*/
+#define CPU_EXT_DISP_MODE_TEXT  (0)
+#define CPU_EXT_DISP_MODE_8BIT  (1)
+#define CPU_EXT_DISP_MODE  (CPU_EXT_DISP_MODE_8BIT)
+
+
+/*
+    System Call
+*/
 CPU_CORE_EXT  CPU_INT32S  cpu_core_iErrorCode;
 
 #define CPU_EXT_DEFINE_KERNEL_FNCT_0(type, name) \

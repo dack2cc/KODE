@@ -4,7 +4,6 @@
 ******************************************************************************/
 
 #include <cpu_gate.h>
-#include <cpu_disp.h>
 #include <cpu_task.h>
 #include <cpu_time.h>
 #include <cpu_asm.h>
@@ -63,6 +62,25 @@ void cpu_gate_Init(void)
 	uiKeyboardState=_asm_inb_p(0x61);       /* read the keyboard state */
 	_asm_outb_p(uiKeyboardState|0x80,0x61); /* disable the keyboard */
 	_asm_outb(uiKeyboardState,0x61);        /* enable the keyboard  */
+
+	/* start the mouse function */
+/*	_asm_outb_p(0x60, 0x64);
+	while (1) if (0 == (0x02 & _asm_inb_p(0x64))) break;
+	_asm_outb_p(0x47, 0x60);
+	while (1) if (0 == (0x02 & _asm_inb_p(0x64))) break;
+	
+	_asm_set_isr_intr(0x2C, &cpu_gate_ISRMouse);
+	while (1) if (0 == (0x02 & _asm_inb_p(0x64))) break;
+	_asm_outb_p(0xA8, 0x64);
+	while (1) if (0 == (0x02 & _asm_inb_p(0x64))) break;
+	_asm_outb_p(0xD4, 0x64);
+	while (1) if (0 == (0x02 & _asm_inb_p(0x64))) break;
+	_asm_outb_p(0xF4, 0x60);
+	while (1) if (0 == (0x02 & _asm_inb_p(0x64))) break;
+	_asm_outb_p(0x60, 0x64);
+	while (1) if (0 == (0x02 & _asm_inb_p(0x64))) break;
+	_asm_outb_p(0x47, 0x60);
+*/
 	
 	/* start the harddisk function */
 	_asm_set_isr_intr(0x2E, &cpu_gate_ISRHardDisk);
