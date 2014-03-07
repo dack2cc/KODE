@@ -24,7 +24,7 @@
 #define _DRV_KEY_SCAN_CODE_MASK  (0xFF)
 
 typedef struct _DRV_KEY_QUEUE {
-	CPU_EXT_KEY_EVENT  buf[_DRV_KEY_MSG_QTY];
+	CPU_EXT_PS2_EVENT  buf[_DRV_KEY_MSG_QTY];
 	CPU_INT08U         head;
 	CPU_INT08U         tail;
 } DRV_KEY_QUEUE;
@@ -170,7 +170,7 @@ void drv_key_Init(void)
     );
 	
 	if (OS_ERR_NONE == err) {
-		CPUExt_KeyRegisterHandler(drv_key_Handler);
+		CPUExt_PS2RegisterHandler(CPU_EXT_PS2_TYPE_KEY, drv_key_Handler);
 	}
 	
 	return;
@@ -182,7 +182,7 @@ DRV_PRIVATE  void drv_key_TaskMain(void* pParam_in)
 	OS_ERR              err = OS_ERR_NONE;
 	void*               pMsg = 0;
 	OS_MSG_SIZE         size = 0;
-	CPU_EXT_KEY_EVENT*  pstKeyEvent = 0;
+	CPU_EXT_PS2_EVENT*  pstKeyEvent = 0;
 	
 	for (;;) {
 		pMsg = OSTaskQPend(
@@ -195,13 +195,12 @@ DRV_PRIVATE  void drv_key_TaskMain(void* pParam_in)
 		
 		if ((OS_ERR_NONE != err) 
 		||  (0 == pMsg) 
-		||  (sizeof(CPU_EXT_KEY_EVENT) != size)) {
+		||  (sizeof(CPU_EXT_PS2_EVENT) != size)) {
 			continue;
 		}
 		
-		pstKeyEvent = (CPU_EXT_KEY_EVENT *)pMsg;
+		pstKeyEvent = (CPU_EXT_PS2_EVENT *)pMsg;
 		drv_key_apfnReceiver[pstKeyEvent->uiScanCode](pstKeyEvent->uiScanCode);
-		//CPUExt_DispPrint("Key Driver Receive Scan Code. \r\n");
 	}
 	
 	return;
@@ -210,8 +209,8 @@ DRV_PRIVATE  void drv_key_TaskMain(void* pParam_in)
 DRV_PRIVATE  void drv_key_Handler(void* pstKeyEvent_in)
 {
 	OS_ERR              err = OS_ERR_NONE;
-	CPU_EXT_KEY_EVENT*  pstKeyMsg = 0;
-	CPU_EXT_KEY_EVENT*  pstKeyEvent = (CPU_EXT_KEY_EVENT *)pstKeyEvent_in;
+	CPU_EXT_PS2_EVENT*  pstKeyMsg = 0;
+	CPU_EXT_PS2_EVENT*  pstKeyEvent = (CPU_EXT_PS2_EVENT *)pstKeyEvent_in;
 	
 	if (0 == pstKeyEvent) {
 		return;
@@ -223,7 +222,7 @@ DRV_PRIVATE  void drv_key_Handler(void* pstKeyEvent_in)
 	OSTaskQPost(
 		/* p_tcb    */ &(drv_key_stCtl.stTcb),
 		/* p_void   */ (void *)pstKeyMsg,
-		/* msg_size */ sizeof(CPU_EXT_KEY_EVENT),
+		/* msg_size */ sizeof(CPU_EXT_PS2_EVENT),
 		/* opt      */ OS_OPT_POST_FIFO,
 		/* p_err    */ &err
 	);

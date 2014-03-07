@@ -11,6 +11,7 @@
 #include <lib_def.h>
 #include <lib_mem.h>
 #include <drv_disp.h>
+#include <drv_mice.h>
 #include <drv_key.h>
 #include <drv_blk.h>
 #include <drv_hd.h>
@@ -117,19 +118,23 @@ KD_PRIVATE void kd_core_Run(void)
 
 KD_PRIVATE void  kd_core_Setup(void)
 {
-	//CPU_INT16U  uiRootDev = 0;
 	drv_disp_Init();
+	drv_mice_Init();
 	drv_key_Init();
-	
+/*	
 	drv_hd_Init();
 	drv_rd_Init();	
 	drv_blk_Init();
 	
 	drv_hd_Setup();
 	drv_rd_Setup();
-	
-	//CPUExt_HDGetRootDevice(&uiRootDev);
-	FS_MountRoot(0x101);
+
+	{
+		//CPU_INT16U  uiRootDev = 0;	
+		//CPUExt_HDGetRootDevice(&uiRootDev);
+		FS_MountRoot(0x101);
+	}
+*/
 }
 
 void  kd_core_LogMessage(const KDchar* pszString_in)

@@ -25,7 +25,7 @@ KODE_KERNEL_CPU_DIR := cpu
 KODE_KERNEL_CPU_SRC_S := cpu_gate_s.gas
 KODE_KERNEL_CPU_SRC_C := cpu_gate_c.c \
                          cpu_hd.c \
-                         cpu_key.c \
+                         cpu_ps2.c \
                          cpu_disp_text.c \
                          cpu_disp_8bit.c \
                          cpu_page.c \
@@ -65,6 +65,7 @@ KODE_KERNEL_DRV_DIR := drv
 KODE_KERNEL_DRV_SRC_S := 
 KODE_KERNEL_DRV_SRC_C := drv_disp.c \
                          drv_lock.c \
+                         drv_mice.c \
                          drv_key.c \
                          drv_blk.c \
                          drv_hd.c \

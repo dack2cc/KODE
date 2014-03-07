@@ -71,6 +71,8 @@ void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in)
 	CPU_INT32S  iValidPageCnt  = 0;
 	CPU_ADDR    adrPhyMemStart = 0;
 	
+	//drv_disp_Printf("[Memory][%d MB]\r\n", X86_MEM_EXT_SIZE_IN_KB/1024);
+	
 	/* get the end of memory */
 	cpu_page_stCtl.adrPhyMemEnd  = CPU_PAGE_LOW_ADDR_PHY + (X86_MEM_EXT_SIZE_IN_KB * 1024);
 	cpu_page_stCtl.adrPhyMemEnd &= 0xfffff000;

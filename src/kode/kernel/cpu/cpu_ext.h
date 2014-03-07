@@ -13,14 +13,6 @@
 ******************************************************************************/
 
 /*
-    Display Mode
-*/
-#define CPU_EXT_DISP_MODE_TEXT  (0)
-#define CPU_EXT_DISP_MODE_8BIT  (1)
-#define CPU_EXT_DISP_MODE  (CPU_EXT_DISP_MODE_8BIT)
-
-
-/*
     System Call
 */
 CPU_CORE_EXT  CPU_INT32S  cpu_core_iErrorCode;
@@ -111,12 +103,6 @@ type name(atype a,btype b,ctype c) \
 }
 
 
-/*
-    RAM Disk
-*/
-#define CPU_EXT_RAM_DISK_START   (256)
-#define CPU_EXT_RAM_DISK_SIZE    (512 * 1024)
-
 /******************************************************************************
     Public Interface
 ******************************************************************************/
@@ -131,15 +117,24 @@ extern void CPUExt_CorePanic(const CPU_CHAR* pszMsg_in);
 */
 extern CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in);
 extern void        CPUExt_DispChar(const CPU_CHAR chAscii_in);
+extern void        CPUExt_DispMouse(const CPU_INT32S iOffsetX_in, const CPU_INT32S iOffsetY_in);
 
 /*
     Input
 */
-typedef struct _CPU_EXT_KEY_EVENT {
-	CPU_INT08U  uiScanCode;
-} CPU_EXT_KEY_EVENT;
 
-extern void CPUExt_KeyRegisterHandler(CPU_FNCT_PTR pfnKeyHandler_in);
+enum {
+	CPU_EXT_PS2_TYPE_KEY = 0,
+	CPU_EXT_PS2_TYPE_MOUSE,
+};
+
+typedef struct _CPU_EXT_PS2_EVENT {
+	CPU_INT08U  uiScanCode;
+} CPU_EXT_PS2_EVENT;
+
+extern void CPUExt_PS2RegisterHandler(const CPU_INT08S iType_in, CPU_FNCT_PTR pfnKeyHandler_in);
+extern void CPUExt_PS2MouseType(CPU_INT08U * puiType_out);
+extern void CPUExt_PS2MouseReset(void);
 
 /*
     Task

@@ -21,13 +21,18 @@
 #define CPU_DISP_MEM_ADR   ((*(CPU_INT32U *)0x90014))
 
 #define CPU_DISP_DESK_BAR_H (24)
-#define CPU_DISP_DESK_BG    (CPU_EXT_COLOR_555555)
+#define CPU_DISP_DESK_BG    (CPU_EXT_COLOR_0000FF)
 
 #define CPU_DISP_LOGO_Y     ((CPU_DISP_DESK_BAR_H - 16) / 2)
 #define CPU_DISP_LOGO_X     (3)
 
 #define CPU_DISP_TIME_X     (CPU_DISP_WIDTH - 5 * FONT_W - 3)
 #define CPU_DISP_TIME_Y     (CPU_DISP_LOGO_Y)
+
+#define CPU_DISP_MOUSE_X    (100)
+#define CPU_DISP_MOUSE_Y    (0)
+#define CPU_DISP_MOUSE_W    (8)
+#define CPU_DISP_MOUSE_H    (16)
 
 CPU_PRIVATE const CPU_INT08U cpu_disp_auiLogoL[] = {
 	0x20, 0x30, 0x38, 0x3C, 0x2E, 0x27, 0x2F, 0x3F, 
@@ -88,6 +93,24 @@ CPU_PRIVATE const CPU_INT08U cpu_disp_auiColorTbl[CPU_EXT_COLOR_MAX * 3] =
 	0xAA, 0xAA, 0xAA, /* 17 : light white */
 };
 
+typedef struct _CPU_EXT_DISP_LAYER {
+	CPU_INT08U * pbyBuf;
+    CPU_INT16U   uiX;
+	CPU_INT16U   uiY;
+	CPU_INT16U   uiW;
+	CPU_INT16U   uiH;
+	CPU_INT16U   uiZ;
+	CPU_INT16U   uiType;
+} CPU_EXT_DISP_LAYER;
+
+typedef struct _CPU_DISP_LAYER {
+	CPU_EXT_DISP_LAYER       stLayer;
+	struct _CPU_DISP_LAYER * pstPrev;
+	struct _CPU_DISP_LAYER * pstNext;
+} CPU_DISP_LAYER;
+
+#define CPU_DISP_LAYER_MAX  (256)
+
 typedef struct _CPU_DISP_CONTROL {
 	CPU_INT08U  uiScrMode;
 	CPU_INT16U  uiScrW;
@@ -110,9 +133,16 @@ typedef struct _CPU_DISP_CONTROL {
 	CPU_INT16U  uiPosCol;
 	CPU_INT16U  uiPosX;
 	CPU_INT16U  uiPosY;
+	
+	CPU_INT16U  uiMouseX;
+	CPU_INT16U  uiMouseY;
+	
+	CPU_DISP_LAYER * pstLayerFree;
+	CPU_DISP_LAYER * pstLayerAct;
 } CPU_DISP_CONTROL;
 
 CPU_PRIVATE CPU_DISP_CONTROL cpu_disp_stCtl;
+CPU_PRIVATE CPU_DISP_LAYER   cpu_disp_astLayer[CPU_DISP_LAYER_MAX];
 
 /******************************************************************************
     Private Interface
@@ -129,7 +159,7 @@ CPU_PRIVATE void cpu_disp_FillBox(
 	const CPU_INT16U uiRightBottomX_in,
 	const CPU_INT16U uiRightBottomY_in
 );
-CPU_PRIVATE void cpu_disp_PutFont(
+CPU_PRIVATE void cpu_disp_PutFont8x16(
 	const CPU_INT08U uiColorIdx_in,
 	const CPU_INT16U uiPosX_in,
 	const CPU_INT16U uiPosY_in,
@@ -141,6 +171,7 @@ CPU_PRIVATE void cpu_disp_LineFeed(void);
 CPU_PRIVATE void cpu_disp_CarriageReturn(void);
 CPU_PRIVATE void cpu_disp_ScrollUp(void);
 
+CPU_PRIVATE void cpu_disp_MouseMove(const CPU_INT16U uiX_in, const CPU_INT16U uiY_in);
 
 /******************************************************************************
     Function Definition
@@ -148,6 +179,12 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void);
 
 void cpu_disp_Init(void)
 {	
+	CPU_INT32U i = 0;
+	
+	for (i = 0; i < CPU_DISP_LAYER_MAX; ++i) {
+		cpu_disp_astLayer[i].
+	}
+	
 	cpu_disp_stCtl.uiScrMode   = CPU_DISP_MODE;
 	cpu_disp_stCtl.uiScrW      = CPU_DISP_WIDTH;
 	cpu_disp_stCtl.uiScrH      = CPU_DISP_HEIGHT;
@@ -174,7 +211,10 @@ void cpu_disp_Init(void)
 	cpu_disp_Logo();
 	cpu_disp_Time();
 	
-	cpu_disp_PutFont(CPU_EXT_COLOR_000000, 100, 2, cpu_disp_auiMouse);
+	cpu_disp_stCtl.uiMouseX = cpu_disp_stCtl.uiScrW;
+	cpu_disp_stCtl.uiMouseY = cpu_disp_stCtl.uiScrH;
+	cpu_disp_MouseMove(CPU_DISP_MOUSE_X, CPU_DISP_MOUSE_Y);
+	
 }
 
 
@@ -202,6 +242,34 @@ void CPUExt_DispChar(const CPU_CHAR chAscii_in)
 	cpu_disp_SetCode(chAscii_in);
 }
 
+void CPUExt_DispMouse(const CPU_INT32S iOffsetX_in, const CPU_INT32S iOffsetY_in)
+{
+	CPU_INT32S iX = cpu_disp_stCtl.uiMouseX + iOffsetX_in;
+	CPU_INT32S iY = cpu_disp_stCtl.uiMouseY + iOffsetY_in;
+	
+	if (iX < 0) {
+		iX = 0;
+	}
+	else if (iX > (cpu_disp_stCtl.uiScrW - CPU_DISP_MOUSE_W)) {
+		iX = (cpu_disp_stCtl.uiScrW - CPU_DISP_MOUSE_W);
+	}
+	else {
+		// EMPTY
+	}
+	
+	if (iY < 0) {
+		iY = 0;
+	}
+	else if (iY > (cpu_disp_stCtl.uiScrH - CPU_DISP_MOUSE_H)) {
+		iY = (cpu_disp_stCtl.uiScrH - CPU_DISP_MOUSE_H);
+	}
+	else {
+		// EMPTY
+	}
+	
+	cpu_disp_MouseMove(iX, iY);
+}
+
 CPU_PRIVATE void cpu_disp_SetPalette(const CPU_INT32U iStart_in, const CPU_INT32U iEnd_in, const CPU_INT08U * pbyRGB_in)
 {
 	CPU_SR_ALLOC();
@@ -222,23 +290,23 @@ CPU_PRIVATE void cpu_disp_SetPalette(const CPU_INT32U iStart_in, const CPU_INT32
 
 CPU_PRIVATE void cpu_disp_Logo(void)
 {
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 0*8, CPU_DISP_LOGO_Y, cpu_disp_auiLogoL);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 1*8, CPU_DISP_LOGO_Y, cpu_disp_auiLogoR);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 2*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'k' * cpu_disp_stCtl.uiFontPitch);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 3*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'o' * cpu_disp_stCtl.uiFontPitch);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 4*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'd' * cpu_disp_stCtl.uiFontPitch);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 5*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'e' * cpu_disp_stCtl.uiFontPitch);
-	//cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 6*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'T' * cpu_disp_stCtl.uiFontPitch);
-	//cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 7*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'O' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 0*8, CPU_DISP_LOGO_Y, cpu_disp_auiLogoL);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 1*8, CPU_DISP_LOGO_Y, cpu_disp_auiLogoR);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 2*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'k' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 3*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'o' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 4*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'd' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 5*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'e' * cpu_disp_stCtl.uiFontPitch);
+	//cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 6*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'T' * cpu_disp_stCtl.uiFontPitch);
+	//cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 7*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'O' * cpu_disp_stCtl.uiFontPitch);
 }
 
 CPU_PRIVATE void cpu_disp_Time(void)
 {
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 0*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + '2' * cpu_disp_stCtl.uiFontPitch);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 1*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + '3' * cpu_disp_stCtl.uiFontPitch);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 2*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + ':' * cpu_disp_stCtl.uiFontPitch);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 3*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + '5' * cpu_disp_stCtl.uiFontPitch);
-	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 4*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + '5' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 0*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + '2' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 1*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + '3' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 2*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + ':' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 3*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + '5' * cpu_disp_stCtl.uiFontPitch);
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_TIME_X + 4*8, CPU_DISP_TIME_Y, cpu_disp_stCtl.pbyFont + '5' * cpu_disp_stCtl.uiFontPitch);
 }
 
 CPU_PRIVATE void cpu_disp_Desktop(void)
@@ -298,7 +366,7 @@ CPU_PRIVATE void cpu_disp_FillBox(
 	}
 }
 
-CPU_PRIVATE void cpu_disp_PutFont(
+CPU_PRIVATE void cpu_disp_PutFont8x16(
 	const CPU_INT08U uiColorIdx_in,
 	const CPU_INT16U uiPosX_in,
 	const CPU_INT16U uiPosY_in,
@@ -337,7 +405,7 @@ CPU_PRIVATE void cpu_disp_SetCode(const CPU_CHAR chCode_in)
 	    		cpu_disp_LineFeed();
 	    	}
 	    	
-	    	cpu_disp_PutFont(CPU_EXT_COLOR_FFFFFF, cpu_disp_stCtl.uiPosX, cpu_disp_stCtl.uiPosY, cpu_disp_stCtl.pbyFont + chCode_in * cpu_disp_stCtl.uiFontPitch);
+	    	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, cpu_disp_stCtl.uiPosX, cpu_disp_stCtl.uiPosY, cpu_disp_stCtl.pbyFont + chCode_in * cpu_disp_stCtl.uiFontPitch);
 		
 	        cpu_disp_stCtl.uiPosX   += cpu_disp_stCtl.uiFontW;
 	        cpu_disp_stCtl.uiPosCol += 1;
@@ -415,6 +483,28 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 	}
 	
 	cpu_disp_FillBox(CPU_DISP_DESK_BG, 0, uiDstY, cpu_disp_stCtl.uiScrW - 1, cpu_disp_stCtl.uiScrH - 1);
+}
+
+void cpu_disp_MouseMove(const CPU_INT16U uiX_in, const CPU_INT16U uiY_in)
+{
+	if ((uiX_in == cpu_disp_stCtl.uiMouseX) 
+	&&  (uiY_in == cpu_disp_stCtl.uiMouseY)) {
+		return;
+	}
+	
+	// clean the previous mouse
+	cpu_disp_FillBox( 
+		CPU_DISP_DESK_BG, 
+		cpu_disp_stCtl.uiMouseX, 
+		cpu_disp_stCtl.uiMouseY, 
+		cpu_disp_stCtl.uiMouseX + CPU_DISP_MOUSE_W, 
+		cpu_disp_stCtl.uiMouseY + CPU_DISP_MOUSE_H
+	);
+	
+	// draw the current mouse
+	cpu_disp_stCtl.uiMouseX = uiX_in;
+	cpu_disp_stCtl.uiMouseY = uiY_in;
+	cpu_disp_PutFont8x16(CPU_EXT_COLOR_000000, cpu_disp_stCtl.uiMouseX, cpu_disp_stCtl.uiMouseY, cpu_disp_auiMouse);
 }
 
 #endif /* CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_8BIT */

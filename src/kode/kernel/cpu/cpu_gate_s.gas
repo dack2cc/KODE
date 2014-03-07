@@ -197,22 +197,26 @@ _cpu_gate_ISRKeyboard:
 	inb $0x60,%al
 
 	pushl %eax       # parameter 0 : KeyCode
-    call _cpu_key_ISR_Input
+    call _cpu_ps2_ISR_Input
     addl $4,%esp     # ignore the parameter of function call
 
-    inb $0x61,%al    # restart the keyboard
-	jmp 1f
-1:	jmp 1f
-1:	orb $0x80,%al
-	jmp 1f
-1:	jmp 1f
-1:	outb %al,$0x61
-	jmp 1f
-1:	jmp 1f
-1:	andb $0x7F,%al
-	outb %al,$0x61
-	movb $0x20,%al
-	outb %al,$0x20
+;    inb $0x61,%al    # restart the keyboard
+;	jmp 1f
+;1:	jmp 1f
+;1:	orb $0x80,%al
+;	jmp 1f
+;1:	jmp 1f
+;1:	outb %al,$0x61
+;	jmp 1f
+;1:	jmp 1f
+;1:	andb $0x7F,%al
+;	outb %al,$0x61
+	
+	movb $0x20,%al   # EOI
+	outb %al, $0x20 
+    jmp 1f           # give port chance to breathe
+1:  jmp 1f
+1:  outb %al, $0xA0  # End the interrupt
 
     #pop %fs
 	pop %es
@@ -244,12 +248,10 @@ _cpu_gate_ISRHardDisk:
 	mov %ax,%fs
     
     movb $0x20,%al   # The auto EOI is not set by init,
-    outb %al, $0xA0  # so it needs to send EOI manually.
-    
-    jmp 1f          # give port chance to breathe
+    outb %al, $0xA0  # so it needs to send EOI manually.    
+    jmp 1f           # give port chance to breathe
 1:  jmp 1f
-1:
-    outb %al,$0x20   # End the interrupt
+1:  outb %al,$0x20   # End the interrupt
     
     call _cpu_hd_ISR_HardDisk
     
@@ -280,9 +282,30 @@ _cpu_gate_ISRMouse:
 	mov %ax,%es
 	#mov %ax,%fs
 
-	pushl %eax       # parameter 0 : KeyCode
-    call _cpu_key_ISR_Mouse
+    sub %eax, %eax
+    inb $0x60, %al
+
+	pushl %eax       # parameter 0 : 
+    call _cpu_ps2_ISR_Mouse
     addl $4,%esp     # ignore the parameter of function call
+
+;    movb $0x64, %al
+;    outb %al, $0xA0
+;    jmp 1f           # give port chance to breathe
+;1:  jmp 1f
+;1:  movb $0x62, %al
+;    outb %al, $0x20
+;    jmp 1f           # give port chance to breathe
+;1:  jmp 1f
+;1:
+
+   
+    movb $0x20,%al   # The auto EOI is not set by init,
+    outb %al, $0xA0  # so it needs to send EOI manually.    
+    jmp 1f           # give port chance to breathe
+1:  jmp 1f
+1:  outb %al, $0x20  # End the interrupt
+
 
     #pop %fs
 	pop %es

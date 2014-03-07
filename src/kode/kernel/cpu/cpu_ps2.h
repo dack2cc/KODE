@@ -1,5 +1,5 @@
-#ifndef __CPU_KEY_H__
-#define __CPU_KEY_H__
+#ifndef __CPU_PS2_H__
+#define __CPU_PS2_H__
 
 /******************************************************************************
     Include
@@ -15,9 +15,9 @@
     Public Interface
 ******************************************************************************/
 
-extern void  cpu_key_Init(void);
-extern void  cpu_key_ISR_Input(CPU_DATA uiScanCode_in);
-extern void  cpu_key_ISR_Mouse(CPU_DATA ui_in);
+extern void  cpu_ps2_Init(void);
+extern void  cpu_ps2_ISR_Input(CPU_DATA uiScanCode_in);
+extern void  cpu_ps2_ISR_Mouse(CPU_DATA uiScanCode_in);
 
-#endif // __CPU_KEY_H__
+#endif // __CPU_PS2_H__
 

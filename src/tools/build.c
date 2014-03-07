@@ -196,6 +196,7 @@ int main(int argc, char ** argv)
 		sectors += 1;
 	}
 	
+	// copy the file system for ram disk
 	if (argc >= 6) {
 		if ((id=open(argv[5],O_RDONLY,0))<0)
 			die("Unable to open 'file system'");

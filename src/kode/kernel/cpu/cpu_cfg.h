@@ -166,6 +166,48 @@
 
 /*
 *********************************************************************************************************
+*                                CPU DISPLAY MODE CONFIGURATION
+*
+* Note(s) : (1) Configure CPU_EXT_DISP_MODE to specify the display mode :
+*
+*               (a) CPU_EXT_DISP_MODE_TEXT    the text only.
+*
+*               (b) CPU_EXT_DISP_MODE_8BIT    the 8bit color mode.
+*                                             also known as 256 color with palatten.
+*
+*               See also 'cpu_ext.h  FUNCTION of CPUExt_DispXXX'
+\*********************************************************************************************************
+*/
+#define CPU_EXT_DISP_MODE_TEXT  (0)
+#define CPU_EXT_DISP_MODE_8BIT  (1)
+
+#define CPU_EXT_DISP_MODE  (CPU_EXT_DISP_MODE_8BIT)
+
+/*$PAGE*/
+
+/*
+*********************************************************************************************************
+*                                CPU RAM DISK CONFIGURATION
+*
+* Note(s) : (1) Configure CPU_EXT_RAM_DISK_START to specify the ram disk image position in hard disk.
+*               It depands on the making of hard disk image.
+*
+*               See also 'build.c'
+*
+*           (2) Configure CPU_EXT_RAM_DISK_SIZE to specify the size of ram disk image.
+*               It depands on the making of ram disk image.
+*
+*               See also 'mkfs.c'
+\*********************************************************************************************************
+*/
+#define CPU_EXT_RAM_DISK_START   (256)
+#define CPU_EXT_RAM_DISK_SIZE    (512 * 1024)
+
+/*$PAGE*/
+
+
+/*
+*********************************************************************************************************
 *                                             MODULE END
 *********************************************************************************************************
 */
