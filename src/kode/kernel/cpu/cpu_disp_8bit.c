@@ -182,7 +182,7 @@ void cpu_disp_Init(void)
 	CPU_INT32U i = 0;
 	
 	for (i = 0; i < CPU_DISP_LAYER_MAX; ++i) {
-		cpu_disp_astLayer[i].
+	//	cpu_disp_astLayer[i].
 	}
 	
 	cpu_disp_stCtl.uiScrMode   = CPU_DISP_MODE;
