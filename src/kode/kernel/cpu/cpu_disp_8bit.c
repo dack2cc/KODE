@@ -237,6 +237,24 @@ CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
 	return (iCharCnt);
 }
 
+void CPUExt_DispSetPalette(const CPU_INT32U * puiColor_in, const CPU_INT32U uiColorCnt_in, const CPU_INT32U uiStartIdx_in)
+{
+	CPU_SR_ALLOC();
+	
+	CPU_INT32U i = 0;
+	
+	CPU_CRITICAL_ENTER();
+	
+	_asm_outb(uiStartIdx_in, 0x03C8);
+	for (i = 0; i < uiColorCnt_in; ++i) {
+		_asm_outb((puiColor_in[i]&0xFF), 0x03C9);
+		_asm_outb((puiColor_in[i]&0xFF00 >> 8), 0x03C9);
+		_asm_outb((puiColor_in[i]&0xFF0000 >> 16), 0x03C9);
+	}
+
+	CPU_CRITICAL_EXIT();
+}
+
 void CPUExt_DispChar(const CPU_CHAR chAscii_in)
 {
 	cpu_disp_SetCode(chAscii_in);

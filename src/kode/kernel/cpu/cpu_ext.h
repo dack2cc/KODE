@@ -117,6 +117,7 @@ extern void CPUExt_CorePanic(const CPU_CHAR* pszMsg_in);
 */
 extern CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in);
 extern void        CPUExt_DispChar(const CPU_CHAR chAscii_in);
+extern void        CPUExt_DispSetPalette(const CPU_INT32U * puiColor_in, const CPU_INT32U uiColorCnt_in, const CPU_INT32U uiStartIdx_in);
 extern void        CPUExt_DispMouse(const CPU_INT32S iOffsetX_in, const CPU_INT32S iOffsetY_in);
 
 /*
@@ -165,8 +166,12 @@ extern CPU_ERR  CPUExt_GateRegisterKernelFnct(const CPU_INT32U  uiFnctNum_in, CP
 /*
     Physical Memory
 */
+
+#define  CPU_EXT_PAGE_SIZE  (4*1024)  // 4 KB
+
 extern void  CPUExt_PageGetFree(CPU_ADDR*  paddrPhysical_out);
 extern void  CPUExt_PageRelease(const CPU_ADDR  addrPhysical_in);
+extern void  CPUExt_PageGetExtendSpace(CPU_ADDR*  paddrPhysicalStart_out, CPU_ADDR*  paddrPhysicalEnd_out);
 extern void  CPUExt_PageGetBufferSpace(CPU_ADDR*  paddrPhysicalStart_out, CPU_ADDR*  paddrPhysicalEnd_out);
 extern void  CPUExt_PageGetRamdiskSpace(CPU_ADDR*  paddrPhysicalStart_out, CPU_ADDR*  paddrPhysicalEnd_out);
 

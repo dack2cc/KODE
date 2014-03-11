@@ -8,8 +8,11 @@
 #include <kd_time.h>
 #include <kd_file.h>
 #include <kd_def.h>
+#include <cpu_ext.h>
+#include <os.h>
 #include <lib_def.h>
 #include <lib_mem.h>
+#include <lib_pool.h>
 #include <drv_disp.h>
 #include <drv_mice.h>
 #include <drv_key.h>
@@ -17,8 +20,8 @@
 #include <drv_hd.h>
 #include <drv_rd.h>
 #include <fs.h>
-#include <os.h>
-#include <cpu_ext.h>
+#include <GUI.h>
+
 
 /******************************************************************************
     Private Define
@@ -118,9 +121,17 @@ KD_PRIVATE void kd_core_Run(void)
 
 KD_PRIVATE void  kd_core_Setup(void)
 {
+	CPU_ADDR adrStart = 0;
+	CPU_ADDR adrEnd   = 0;
+	
 	drv_disp_Init();
 	drv_mice_Init();
 	drv_key_Init();
+	
+	CPUExt_PageGetExtendSpace(&adrStart, &adrEnd);
+	lib_pool_Init(adrStart, adrEnd);
+	drv_disp_Printf("[ExtendMem][0x%X : %d KB] \r\n", adrStart, (adrEnd - adrStart)/1024);
+	
 /*	
 	drv_hd_Init();
 	drv_rd_Init();	
@@ -135,6 +146,8 @@ KD_PRIVATE void  kd_core_Setup(void)
 		FS_MountRoot(0x101);
 	}
 */
+	
+	GUI_Init();
 }
 
 void  kd_core_LogMessage(const KDchar* pszString_in)

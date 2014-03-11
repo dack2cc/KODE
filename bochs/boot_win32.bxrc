@@ -3,14 +3,14 @@
 ###############################################################
 
 # how much memory the emulated machine will have
-megs: 16
+megs: 32
 
 # filename of ROM images
 romimage: file=./BIOS-bochs-latest
 vgaromimage: file=./VGABIOS-lgpl-latest
 
 # what disk images will be used 
-#floppya: 1_44=../proj/bin/boot.img, status=inserted
+#floppya: 1_44=./haribote.img, status=inserted
 #floppyb: 1_44=floppyb.img, status=inserted
 
 # hard disk
@@ -35,7 +35,7 @@ boot:c
 log: bochsout.txt
 
 # disable the mouse, since DLX is text only
-#mouse: enabled=0
+#mouse: enabled=0, type=ps2
 
 # enable key mapping, using US layout as default.
 #

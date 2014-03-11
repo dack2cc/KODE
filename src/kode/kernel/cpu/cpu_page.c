@@ -39,6 +39,8 @@ CPU_PRIVATE  CPU_PAGE_BUFFER_INFO  cpu_page_astBufInf[] = {
 
 typedef struct _CPU_PAGE_CONTROL {
 	CPU_ADDR  adrPhyMemEnd;
+	CPU_ADDR  adrPhyExtStart;
+	CPU_ADDR  adrPhyExtEnd;
 	CPU_ADDR  adrPhyBufStart;
 	CPU_ADDR  adrPhyBufEnd;
 	CPU_ADDR  adrPhyRamdiskStart;
@@ -74,13 +76,15 @@ void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in)
 	//drv_disp_Printf("[Memory][%d MB]\r\n", X86_MEM_EXT_SIZE_IN_KB/1024);
 	
 	/* get the end of memory */
-	cpu_page_stCtl.adrPhyMemEnd  = CPU_PAGE_LOW_ADDR_PHY + (X86_MEM_EXT_SIZE_IN_KB * 1024);
-	cpu_page_stCtl.adrPhyMemEnd &= 0xfffff000;
+	cpu_page_stCtl.adrPhyExtEnd  = CPU_PAGE_LOW_ADDR_PHY + (X86_MEM_EXT_SIZE_IN_KB * 1024);
+	cpu_page_stCtl.adrPhyExtEnd &= 0xfffff000;
 	
 	/* restrict the max memroy size */
+	cpu_page_stCtl.adrPhyMemEnd = cpu_page_stCtl.adrPhyExtEnd;
 	if (cpu_page_stCtl.adrPhyMemEnd > CPU_PAGE_MEM_SIZE_MAX) {
 		cpu_page_stCtl.adrPhyMemEnd = CPU_PAGE_MEM_SIZE_MAX;
 	}
+	cpu_page_stCtl.adrPhyExtStart = cpu_page_stCtl.adrPhyMemEnd;
 	
 	/* buffer space is after the kernel image */
 	cpu_page_stCtl.adrPhyBufStart = (CPU_ADDR)(&end);
@@ -115,6 +119,19 @@ void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in)
 	return;
 }
 
+void  CPUExt_PageGetExtendSpace(
+	CPU_ADDR*  paddrPhysicalStart_out, 
+	CPU_ADDR*  paddrPhysicalEnd_out
+)
+{
+	if (0 != paddrPhysicalStart_out) {
+		(*paddrPhysicalStart_out) = cpu_page_stCtl.adrPhyExtStart;
+	}
+	if (0 != paddrPhysicalEnd_out) {
+		(*paddrPhysicalEnd_out) = cpu_page_stCtl.adrPhyExtEnd;
+	}
+}
+
 void  CPUExt_PageGetBufferSpace(
 	CPU_ADDR*  paddrPhysicalStart_out, 
 	CPU_ADDR*  paddrPhysicalEnd_out
@@ -123,7 +140,6 @@ void  CPUExt_PageGetBufferSpace(
 	if (0 != paddrPhysicalStart_out) {
 		(*paddrPhysicalStart_out) = cpu_page_stCtl.adrPhyBufStart;
 	}
-	
 	if (0 != paddrPhysicalEnd_out) {
 		(*paddrPhysicalEnd_out) = cpu_page_stCtl.adrPhyBufEnd;
 	}
