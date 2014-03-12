@@ -94,6 +94,7 @@ void  lib_pool_Init(const CPU_ADDR addrStart_in, const CPU_ADDR addrEnd_in)
 	&& ((addrEnd_in - addrStart_in) > _LIB_POOL_PAGE_SIZE)) {
 		lib_pool_stCtl.astFree[0].adrPhy = addrStart_in;
 		lib_pool_stCtl.astFree[0].size   = addrEnd_in - addrStart_in;
+		lib_pool_stCtl.uiFreeCnt = 1;
 	}
 }
 
@@ -287,7 +288,11 @@ LIB_PRIVATE  void* lib_pool_MallocLTPage(CPU_SIZE_T size_in)
 	
 	CPU_INT_DIS();
 	
+	//drv_disp_Printf("[freeCnt][%d]\r\n", lib_pool_stCtl.uiFreeCnt);	
+	
 	for (i = 0; i < lib_pool_stCtl.uiFreeCnt; ++i) {
+	    //drv_disp_Printf("[free(%d)Siz][%dKB]\r\n", i, lib_pool_stCtl.astFree[0].size / 1024);
+	    //drv_disp_Printf("[free(%d)Adr][0x%X]\r\n", i, lib_pool_stCtl.astFree[0].adrPhy);
 		if (lib_pool_stCtl.astFree[i].size >= size_in) {
 			adrPhy = lib_pool_stCtl.astFree[i].adrPhy;
 			lib_pool_stCtl.astFree[i].adrPhy += size_in;

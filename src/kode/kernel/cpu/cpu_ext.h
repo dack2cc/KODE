@@ -118,6 +118,11 @@ extern void CPUExt_CorePanic(const CPU_CHAR* pszMsg_in);
 extern CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in);
 extern void        CPUExt_DispChar(const CPU_CHAR chAscii_in);
 extern void        CPUExt_DispSetPalette(const CPU_INT32U * puiColor_in, const CPU_INT32U uiColorCnt_in, const CPU_INT32U uiStartIdx_in);
+extern void        CPUExt_DispResolution(CPU_INT32U * puiWidthPixel_out, CPU_INT32U * puiHeightPixel_out);
+extern void        CPUExt_DispBitPerPixel(CPU_INT08U * puiBPP_out);
+extern void        CPUExt_DispBitBlt(const CPU_INT08U * pbySrcBuf_in, 
+	                                 const CPU_INT32U uiLX_in, const CPU_INT32U uiUY_in, 
+	                                 const CPU_INT32U uiRX_in, const CPU_INT32U uiDY_in);
 extern void        CPUExt_DispMouse(const CPU_INT32S iOffsetX_in, const CPU_INT32S iOffsetY_in);
 
 /*

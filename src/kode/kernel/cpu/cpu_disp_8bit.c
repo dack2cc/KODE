@@ -247,13 +247,70 @@ void CPUExt_DispSetPalette(const CPU_INT32U * puiColor_in, const CPU_INT32U uiCo
 	
 	_asm_outb(uiStartIdx_in, 0x03C8);
 	for (i = 0; i < uiColorCnt_in; ++i) {
-		_asm_outb((puiColor_in[i]&0xFF), 0x03C9);
-		_asm_outb((puiColor_in[i]&0xFF00 >> 8), 0x03C9);
-		_asm_outb((puiColor_in[i]&0xFF0000 >> 16), 0x03C9);
+		_asm_outb((puiColor_in[i]&0x0000FF), 0x03C9);
+		_asm_outb(((puiColor_in[i]&0x00FF00) >> 8), 0x03C9);
+		_asm_outb(((puiColor_in[i]&0xFF0000) >> 16), 0x03C9);
 	}
 
 	CPU_CRITICAL_EXIT();
 }
+
+void CPUExt_DispResolution(CPU_INT32U * puiWidthPixel_out, CPU_INT32U * puiHeightPixel_out)
+{
+	if (0 != puiWidthPixel_out) {
+		(*puiWidthPixel_out) = cpu_disp_stCtl.uiScrW;
+	}
+	if (0 != puiHeightPixel_out) {
+		(*puiHeightPixel_out) = cpu_disp_stCtl.uiScrH;
+	}
+}
+
+void  CPUExt_DispBitPerPixel(CPU_INT08U * puiBPP_out)
+{
+	if (0 != puiBPP_out) {
+		(*puiBPP_out) = cpu_disp_stCtl.uiScrMode;
+	}
+}
+
+void CPUExt_DispBitBlt(
+	const CPU_INT08U * pbyBuf_in, 
+	const CPU_INT32U uiLX_in, const CPU_INT32U uiUY_in, 
+	const CPU_INT32U uiRX_in, const CPU_INT32U uiDY_in
+)
+{
+	CPU_SR_ALLOC();
+
+	CPU_INT08U* pbyVRAM = (CPU_INT08U *)(cpu_disp_stCtl.uiMemStart);
+	CPU_INT32U  uiPitch = cpu_disp_stCtl.uiMemPitch;
+	CPU_INT32U  uiBPP   = cpu_disp_stCtl.uiScrMode / 8;
+	CPU_INT32U  y = 0;
+	
+	//drv_disp_Printf("[LX][%d]\r\n", uiLX_in);
+	//drv_disp_Printf("[RX][%d]\r\n", uiRX_in);
+	//drv_disp_Printf("[UY][%d]\r\n", uiUY_in);
+	//drv_disp_Printf("[DY][%d]\r\n", uiDY_in);
+	
+	if ((0 == pbyBuf_in) 
+	||  (uiLX_in >= uiRX_in) || (uiRX_in >= cpu_disp_stCtl.uiScrW)
+	||  (uiUY_in >= uiDY_in) || (uiDY_in >= cpu_disp_stCtl.uiScrH)) {
+		return;
+	}
+	
+	CPU_CRITICAL_ENTER();
+	
+	for (y = uiUY_in; y <= uiDY_in; ++y) {
+		Mem_Copy(
+			(pbyVRAM + y * uiPitch + uiLX_in),
+			(pbyBuf_in + y * uiPitch + uiLX_in),
+			(uiRX_in - uiLX_in) * uiBPP
+		);
+	}
+	
+	//CPUExt_DispPrint("[BitBlt][Complete]\r\n");
+	
+	CPU_CRITICAL_EXIT();
+}
+
 
 void CPUExt_DispChar(const CPU_CHAR chAscii_in)
 {

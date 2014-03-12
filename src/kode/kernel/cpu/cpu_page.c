@@ -16,7 +16,7 @@ extern int end;
     Private Define
 ******************************************************************************/
 
-#define CPU_PAGE_MEM_SIZE_MAX    (16*1024*1024)  /* 16MB */
+#define CPU_PAGE_MEM_SIZE_MAX    (12*1024*1024)  /* 12MB */
 #define CPU_PAGE_LOW_ADDR_PHY    (0x100000)      /* 1MB  */
 #define CPU_PAGE_VALID_MEM_SIZE  (CPU_PAGE_MEM_SIZE_MAX - CPU_PAGE_LOW_ADDR_PHY)
 #define CPU_PAGE_VALID_NR        (CPU_PAGE_VALID_MEM_SIZE >> 12)

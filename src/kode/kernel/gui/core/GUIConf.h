@@ -20,7 +20,7 @@
 #define GUI_SUPPORT_MEMDEV   0
 
 #define GUI_OS               0
-#define GUI_NUM_LAYERS       256
+#define GUI_NUM_LAYERS       32
 #define GUI_CURSOR_LAYER     1
 #define GUI_SUPPORT_ROTATION 0
 

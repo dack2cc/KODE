@@ -4,6 +4,7 @@
 
 #include <GUI.h>
 #include <cpu_ext.h>
+#include <lib_pool.h>
 
 /******************************************************************************
     Private Define
@@ -12,7 +13,7 @@
 #define GUI_CORE_BG_COLOR      (GUI_BLUE)
 #define GUI_CORE_BG_COLOR_IDX  (0)
 
-GUI_PRIVATE  CPU_INT32U  gui_core_auiColor[] = {
+GUI_PRIVATE  LCD_COLOR  gui_core_auiColor[] = {
 	GUI_BLUE,
 	GUI_GREEN,
 	GUI_RED,
@@ -42,6 +43,11 @@ GUI_PRIVATE  CPU_INT32U  gui_core_auiColor[] = {
 	GUI_INVALID_COLOR
 };
 
+GUI_PRIVATE LCD_PHYSPALETTE gui_core_stPalette = {
+	GUI_COUNTOF(gui_core_auiColor),
+	gui_core_auiColor
+};
+
 /******************************************************************************
     Private Interface
 ******************************************************************************/
@@ -51,14 +57,26 @@ GUI_PRIVATE  CPU_INT32U  gui_core_auiColor[] = {
     Function Definition
 ******************************************************************************/
 
-
 /*********************************************************************
 *
 *       General routines
 */
 int  GUI_Init(void)
 {
-	CPUExt_DispSetPalette(gui_core_auiColor, GUI_COUNTOF(gui_core_auiColor), 0);
+	LCD_Init();
+	LCD_SetLUT(&gui_core_stPalette);
+	
+	{
+		CPU_INT08U i = 0;
+		
+		for (i = 0; i < GUI_COUNTOF(gui_core_auiColor); ++i) {
+	        LCD_SetColorIndex(i);
+	        LCD_FillRect(i * 10, 0, (i + 1) * 10, 10);
+				
+		}
+		
+	    LCD_Refresh();
+	}
 	
 	return (0);
 }
