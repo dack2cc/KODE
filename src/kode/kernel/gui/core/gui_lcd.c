@@ -54,6 +54,8 @@ GUI_PRIVATE void LCD_BitBlt(const GUI_LCD_LAYER * pstLayer_in);
 */
 int LCD_Init(void)
 {	
+	Mem_Clr(&gui_lcd_stCtl, sizeof(gui_lcd_stCtl));
+	
 	CPUExt_DispBitPerPixel(&(gui_lcd_stCtl.uiBitPerPixel));
 	CPUExt_DispResolution(&(gui_lcd_stCtl.uiWidth), &(gui_lcd_stCtl.uiHeight));
 	
@@ -65,16 +67,6 @@ int LCD_Init(void)
 	}
 	drv_disp_Printf("[LCD_Init][BufAddr:0x%X]\r\n", gui_lcd_stCtl.pbyBuf);
 	drv_disp_Printf("[LCD_Init][BufSize:%dKB]\r\n", gui_lcd_stCtl.uiBufSize / 1024);
-	
-	gui_lcd_stCtl.uiDrawColorIdx = 0;
-	gui_lcd_stCtl.uiBGColorIdx = 0;
-	
-	gui_lcd_stCtl.stDirty.x0 = 0;
-	gui_lcd_stCtl.stDirty.y0 = 0;
-	gui_lcd_stCtl.stDirty.x1 = 0;
-	gui_lcd_stCtl.stDirty.y1 = 0;
-	
-	Mem_Clr(gui_lcd_stCtl.astLayer, sizeof(gui_lcd_stCtl.astLayer));
 	
 	return (0);
 }
@@ -193,12 +185,12 @@ int LCD_GetYSizeMax(void)
 
 int LCD_GetVXSizeMax(void)
 {
-	return (gui_lcd_stCtl.uiWidth);
+	return (gui_lcd_stCtl.stDirty.x1 - gui_lcd_stCtl.stDirty.x0);
 }
 
 int LCD_GetVYSizeMax(void)
 {
-	return (gui_lcd_stCtl.uiHeight);
+	return (gui_lcd_stCtl.stDirty.y1 - gui_lcd_stCtl.stDirty.y0);
 }
 
 int LCD_GetBitsPerPixelMax(void)
@@ -229,20 +221,64 @@ int LCD_GetColorIndex (void)
 
 GUI_PRIVATE void LCD_BitBlt(const GUI_LCD_LAYER * pstLayer_in)
 {
-	//CPU_INT32U y = 0;
+	CPU_INT32U i = 0;
+	CPU_INT32U uiSrcX = 0;
+	CPU_INT32U uiSrcY = 0;
+	CPU_INT32U uiDstX = 0;
+	CPU_INT32U uiDstY = 0;
+	CPU_INT32U uiRegW = 0;
+	CPU_INT32U uiRegH = 0;
+	CPU_INT08U * pbyDst   = gui_lcd_stCtl.pbyBuf;
+	CPU_INT32U uiDstPitch = gui_lcd_stCtl.uiBufPitch;
+	CPU_INT08U * pbySrc   = 0;
+	CPU_INT32U uiSrcPitch = 0;
 	
 	if ((0 == pstLayer_in) 
+	||  (0 == pstLayer_in->pbyVRAM)
 	||  (0 == pstLayer_in->uiVisOnOff)
 	||  (0 == pstLayer_in->uiSizeW)
 	||  (0 == pstLayer_in->uiSizeH)
 	||  (0 == pstLayer_in->uiVSizeW)
 	||  (0 == pstLayer_in->uiVSizeH)
 	||  (pstLayer_in->stPos.x >= gui_lcd_stCtl.uiWidth)
-	||  (pstLayer_in->stPos.y >= gui_lcd_stCtl.uiHeight)) {
+	||  (pstLayer_in->stPos.y >= gui_lcd_stCtl.uiHeight)
+	||  (pstLayer_in->stPos.x + pstLayer_in->uiVSizeW < 0)
+	||  (pstLayer_in->stPos.y + pstLayer_in->uiVSizeH < 0)) {
 		return;
 	}
 	
+	pbySrc     = pstLayer_in->pbyVRAM;
+	uiSrcPitch = pstLayer_in->uiSizeW;
 	
+	if (pstLayer_in->stPos.x < 0) {
+		uiSrcX = -(pstLayer_in->stPos.x);
+		uiDstX = 0;
+		uiRegH = pstLayer_in->uiVSizeW + pstLayer_in->stPos.x;
+	}
+	else {
+		uiSrcX = 0;
+		uiDstX = pstLayer_in->stPos.x;
+		uiRegW = pstLayer_in->uiVSizeW;
+	}
+	
+	if (pstLayer_in->stPos.y < 0) {
+		uiSrcY = -(pstLayer_in->stPos.y);
+		uiDstY = 0;
+		uiRegH = pstLayer_in->uiVSizeH + pstLayer_in->stPos.y;
+	}
+	else {
+		uiSrcY = 0;
+		uiDstY = pstLayer_in->stPos.y;
+		uiRegH = pstLayer_in->uiVSizeH;
+	}
+	
+	for (i = 0; i < uiRegH; ++i) {
+		Mem_Copy(
+			pbyDst + (uiDstY + i) * uiDstPitch + uiDstX,
+			pbySrc + (uiSrcY + i) * uiSrcPitch + uiSrcX,
+			uiRegW
+		);
+	}
 }
 
 

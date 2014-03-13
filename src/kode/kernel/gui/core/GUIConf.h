@@ -27,7 +27,6 @@
 #define GUI_MEMCPY(pDest, pSrc, NumBytes) Mem_Copy(pDest, pSrc, NumBytes)
 #define GUI_MEMSET(pDest, val, NumBytes)  Mem_Set(pDest, val, NumBytes)
 
-
 /******************************************************************************
     Public Interface
 ******************************************************************************/
