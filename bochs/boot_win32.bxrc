@@ -11,11 +11,11 @@ vgaromimage: file=./VGABIOS-lgpl-latest
 
 # what disk images will be used 
 #floppya: 1_44=./haribote.img, status=inserted
-#floppyb: 1_44=floppyb.img, status=inserted
+#floppyb: 1_44=./bin/boot.img, status=inserted
 
 # hard disk
 ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
-ata0-master: type=disk, path="../proj/bin/disk.img", cylinders=153, heads=4, spt=16
+ata0-master: type=disk, path="./bin/disk.img", cylinders=153, heads=4, spt=16
 
 # usb disk
 #usb_uhci: enabled=1, port1=../proj/bin/disk.img

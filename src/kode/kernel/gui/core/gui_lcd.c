@@ -12,8 +12,8 @@
 ******************************************************************************/
 
 typedef struct _GUI_LCD_LAYER {
-	//CPU_INT32U   uiAlpha;
-	//CPU_INT32U   uiAlphaMode;
+	CPU_INT32U   uiAlpha;
+	CPU_INT32U   uiAlphaMode;
 	GUI_POINT    stPos;
 	CPU_INT32U   uiSizeW;
 	CPU_INT32U   uiSizeH;
@@ -21,6 +21,9 @@ typedef struct _GUI_LCD_LAYER {
 	CPU_INT08U * pbyVRAM;
 	CPU_INT32U   uiVSizeW;
 	CPU_INT32U   uiVSizeH;
+	CPU_INT32U   uiChromaMode;
+	LCD_COLOR    clChromaMin;
+	LCD_COLOR    clChromaMax;
 } GUI_LCD_LAYER;
 
 typedef struct _GUI_LCD_CONTROL {
@@ -137,6 +140,27 @@ void LCD_FillRect(int x0, int y0, int x1, int y1)
 	}
 }
 
+unsigned int LCD_GetPixelIndex(int x, int y)
+{
+	if ((0 == gui_lcd_stCtl.pbyBuf) 
+	||  (x < 0) || (x >= gui_lcd_stCtl.uiWidth)
+	||  (y < 0) || (y >= gui_lcd_stCtl.uiHeight)) {
+		return (0);
+	}
+	
+	return (*(gui_lcd_stCtl.pbyBuf + y * gui_lcd_stCtl.uiBufPitch + x));
+}
+
+int LCD_GetBkColorIndex (void)
+{
+	return (gui_lcd_stCtl.uiBGColorIdx);
+}
+
+int LCD_GetColorIndex (void)
+{
+	return (gui_lcd_stCtl.uiDrawColorIdx);
+}
+
 
 /*********************************************************************
 *
@@ -171,52 +195,6 @@ int LCD_Refresh  (void)
 int LCD_RefreshEx(int LayerIndex)
 {
 	return (LCD_ERR0);
-}
-
-int LCD_GetXSizeMax(void)
-{
-	return (gui_lcd_stCtl.uiWidth);
-}
-
-int LCD_GetYSizeMax(void)
-{
-	return (gui_lcd_stCtl.uiHeight);
-}
-
-int LCD_GetVXSizeMax(void)
-{
-	return (gui_lcd_stCtl.stDirty.x1 - gui_lcd_stCtl.stDirty.x0);
-}
-
-int LCD_GetVYSizeMax(void)
-{
-	return (gui_lcd_stCtl.stDirty.y1 - gui_lcd_stCtl.stDirty.y0);
-}
-
-int LCD_GetBitsPerPixelMax(void)
-{
-	return (gui_lcd_stCtl.uiBitPerPixel);
-}
-
-unsigned int LCD_GetPixelIndex(int x, int y)
-{
-	if ((0 == gui_lcd_stCtl.pbyBuf) 
-	||  (x < 0) || (x >= gui_lcd_stCtl.uiWidth)
-	||  (y < 0) || (y >= gui_lcd_stCtl.uiHeight)) {
-		return (0);
-	}
-	
-	return (*(gui_lcd_stCtl.pbyBuf + y * gui_lcd_stCtl.uiBufPitch + x));
-}
-
-int LCD_GetBkColorIndex (void)
-{
-	return (gui_lcd_stCtl.uiBGColorIdx);
-}
-
-int LCD_GetColorIndex (void)
-{
-	return (gui_lcd_stCtl.uiDrawColorIdx);
 }
 
 GUI_PRIVATE void LCD_BitBlt(const GUI_LCD_LAYER * pstLayer_in)
@@ -279,6 +257,168 @@ GUI_PRIVATE void LCD_BitBlt(const GUI_LCD_LAYER * pstLayer_in)
 			uiRegW
 		);
 	}
+	
+	if (gui_lcd_stCtl.stDirty.x0 > uiDstX) {
+		gui_lcd_stCtl.stDirty.x0 = uiDstX;
+	}
+	if (gui_lcd_stCtl.stDirty.x1 < (uiDstX + uiRegW)) {
+		gui_lcd_stCtl.stDirty.x1 = (uiDstX + uiRegW);
+	}
+	if (gui_lcd_stCtl.stDirty.y0 > uiDstY) {
+		gui_lcd_stCtl.stDirty.y0 = uiDstY;
+	}
+	if (gui_lcd_stCtl.stDirty.y1 < (uiDstY + uiRegH)) {
+		gui_lcd_stCtl.stDirty.y1 = (uiDstY + uiRegH);
+	}
+}
+
+/*********************************************************************
+*
+*       Defines for device capabilities
+*/
+int LCD_GetXSizeMax(void)
+{
+	return (gui_lcd_stCtl.uiWidth);
+}
+
+int LCD_GetYSizeMax(void)
+{
+	return (gui_lcd_stCtl.uiHeight);
+}
+
+int LCD_GetVXSizeMax(void)
+{
+	return (gui_lcd_stCtl.stDirty.x1 - gui_lcd_stCtl.stDirty.x0);
+}
+
+int LCD_GetVYSizeMax(void)
+{
+	return (gui_lcd_stCtl.stDirty.y1 - gui_lcd_stCtl.stDirty.y0);
+}
+
+int LCD_GetBitsPerPixelMax(void)
+{
+	return (gui_lcd_stCtl.uiBitPerPixel);
+}
+
+
+/*********************************************************************
+*
+*       Set layer properties
+*/
+int LCD_SetAlphaEx(int LayerIndex, int Alpha)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)
+	||  (Alpha < 0)
+	||  (Alpha > 0xFF)) {
+		return (LCD_ERR0);
+	}
+	
+	gui_lcd_stCtl.astLayer[LayerIndex].uiAlpha = Alpha;
+	return (0);
+}
+
+int LCD_SetPosEx(int LayerIndex, int xPos, int yPos)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)) {
+		return (LCD_ERR0);
+	}
+
+	gui_lcd_stCtl.astLayer[LayerIndex].stPos.x = xPos;
+	gui_lcd_stCtl.astLayer[LayerIndex].stPos.y = yPos;
+	return (0);
+}
+
+int LCD_SetSizeEx(int LayerIndex, int xSize, int ySize)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)
+	||  (xSize < 0)
+	||  (ySize < 0)) {
+		return (LCD_ERR0);
+	}
+
+	gui_lcd_stCtl.astLayer[LayerIndex].uiSizeW = xSize;
+	gui_lcd_stCtl.astLayer[LayerIndex].uiSizeH = ySize;
+	return (0);
+}
+
+int LCD_SetVisEx(int LayerIndex, int OnOff)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)) {
+		return (LCD_ERR0);
+	}
+	
+	if (0 != OnOff) {
+		OnOff = 1;
+	}
+	
+	gui_lcd_stCtl.astLayer[LayerIndex].uiVisOnOff = OnOff;
+	return (0);
+}
+
+int LCD_SetVRAMAddrEx(int LayerIndex, void * pVRAM)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)) {
+		return (LCD_ERR0);
+	}
+	
+	gui_lcd_stCtl.astLayer[LayerIndex].pbyVRAM = (CPU_INT08U *)pVRAM;
+	return (0);
+}
+
+int LCD_SetVSizeEx(int LayerIndex, int xSize, int ySize)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)
+	||  (xSize < 0)
+	||  (ySize < 0)) {
+		return (LCD_ERR0);
+	}
+
+	gui_lcd_stCtl.astLayer[LayerIndex].uiVSizeW = xSize;
+	gui_lcd_stCtl.astLayer[LayerIndex].uiVSizeH = ySize;
+	return (0);
+}
+
+int LCD_SetAlphaModeEx(int LayerIndex, int AlphaMode)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)
+	||  (AlphaMode < 0)) {
+		return (LCD_ERR0);
+	}
+
+	gui_lcd_stCtl.astLayer[LayerIndex].uiAlphaMode = AlphaMode;
+	return (0);
+}
+
+int LCD_SetChromaModeEx(int LayerIndex, int ChromaMode)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)
+	||  (ChromaMode < 0)) {
+		return (LCD_ERR0);
+	}
+
+	gui_lcd_stCtl.astLayer[LayerIndex].uiChromaMode = ChromaMode;
+	return (0);
+}
+
+int LCD_SetChromaEx(int LayerIndex, LCD_COLOR ChromaMin, LCD_COLOR ChromaMax)
+{
+	if ((LayerIndex < 0) 
+	||  (LayerIndex >= GUI_NUM_LAYERS)) {
+		return (LCD_ERR0);
+	}
+
+	gui_lcd_stCtl.astLayer[LayerIndex].clChromaMin = ChromaMin;
+	gui_lcd_stCtl.astLayer[LayerIndex].clChromaMax = ChromaMax;
+	return (0);
 }
 
 

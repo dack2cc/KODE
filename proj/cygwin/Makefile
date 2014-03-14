@@ -7,9 +7,12 @@
 # Build Target
 # **************************************
 
-TOOL        := tool
+TOOLS_DIR   := tools
+MKIMG       := mkimg
 MKFS        := mkfs
 MKSRC       := mksrc
+
+INSTALL_DIR := ../../bochs
 
 TARGET_ROOT := ./bin
 TARGET_DIR  := $(TARGET_ROOT)
@@ -30,7 +33,7 @@ DEV_HDISK  := HDISK
 # Networking Assembly Build
 # **************************************
 
-BOOT_DIR := ../src/kode/boot
+BOOT_DIR := ../../src/kode/boot
 BOOT_SRC := boot.nas \
             setup.nas
 
@@ -43,7 +46,7 @@ NASMFLAGS := -f bin -w+orphan-labels
 # GNU Tools Build
 # **************************************
 
-SRC_ROOT := ../src
+SRC_ROOT := ../../src
 INC_DIR  := 
 
 ASFLAGS    += -march=i386+387 --32
@@ -76,26 +79,25 @@ _PREPARE :
 	if [ ! -d $$DIR ] ; then mkdir $$DIR ; fi \
 	done
 
-_IMAGE : $(TOOL) $(BOOT_BIN) $(MKSRC)
+_IMAGE : $(MKIMG) $(BOOT_BIN) $(MKSRC)
 	@echo "[Build][$(TARGET_BIN)]"
-	@$(BUILD_ROOT)/$(TOOL) $(DEV_FLOPPY) $(BOOT_BIN) > $(TARGET_ROOT)/$(TARGET_BIN)
+	@$(BUILD_ROOT)/$(MKIMG) $(DEV_FLOPPY) $(BOOT_BIN) > $(TARGET_ROOT)/$(TARGET_BIN)
 	@echo "[Build][$(TARGET_HD)]"
-	@$(BUILD_ROOT)/$(TOOL) $(DEV_HDISK) $(BOOT_BIN) > $(TARGET_ROOT)/$(TARGET_HD)
+	@$(BUILD_ROOT)/$(MKIMG) $(DEV_HDISK) $(BOOT_BIN) > $(TARGET_ROOT)/$(TARGET_HD)
 
-
-$(TOOL) :
-	@echo "[Compile ][../src/tools/build.c]"
-	@$(CC) $(CFLAGS) ../src/tools/build.c -o $(BUILD_ROOT)/$(TOOL)
-	@chmod o+x $(BUILD_ROOT)/$(TOOL)
+$(MKIMG) :
+	@echo "[Compile ][$(SRC_ROOT)/$(TOOLS_DIR)/$(MKIMG).c]"
+	@$(CC) $(CFLAGS) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKIMG).c -o $(BUILD_ROOT)/$(MKIMG)
+	@chmod o+x $(BUILD_ROOT)/$(MKIMG)
 
 $(MKFS) :
-	@echo "[Compile ][../src/tools/mkfs.c]"
-	@$(CC) $(CFLAGS) ../src/tools/mkfs.c -o $(BUILD_ROOT)/$(MKFS)
+	@echo "[Compile ][$(SRC_ROOT)/$(TOOLS_DIR)/$(MKFS).c]"
+	@$(CC) $(CFLAGS) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKFS).c -o $(BUILD_ROOT)/$(MKFS)
 	@chmod o+x $(BUILD_ROOT)/$(MKFS)
 	
 $(MKSRC) :
-	@echo "[Compile ][../src/tools/mksrc.c]"
-	@$(CC) $(CFLAGS) ../src/tools/mksrc.c -o $(BUILD_ROOT)/$(MKSRC)
+	@echo "[Compile ][$(SRC_ROOT)/$(TOOLS_DIR)/$(MKSRC).c]"
+	@$(CC) $(CFLAGS) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKSRC).c -o $(BUILD_ROOT)/$(MKSRC)
 	@chmod o+x $(BUILD_ROOT)/$(MKSRC)
 
 $(BUILD_ROOT)/%.bin : $(BOOT_DIR)/%.nas
@@ -123,6 +125,7 @@ clean :
 	@rm -fr $(BUILD_ROOT)
 	@rm -fr $(DEBUG_ROOT)
 	@rm -fr $(TARGET_ROOT)
+	@rm -fr $(INSTALL_DIR)/$(TARGET_DIR)
 	
 debug :
 	@echo "[BOOT_BIN][$(BOOT_BIN)]"
@@ -140,6 +143,15 @@ debug_linux :
 debug_kode :
 	@echo "[KODE_OBJ][$(KODE_OBJ)]"
 	@echo "[KODE_DBG][$(KODE_DBG)]"
+
+install :
+	@cp -fr $(TARGET_DIR) $(INSTALL_DIR)
+	
+run :
+	@cp -fr $(TARGET_DIR) $(INSTALL_DIR)
+	@cd $(INSTALL_DIR)
+	@bochs -q -f boot_win32.bxrc
+	@cd -
 
 # **************************************
 # Sub Target
