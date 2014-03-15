@@ -68,6 +68,7 @@ KODE_KERNEL_DRV_SRC_C := drv_disp.c \
                          drv_mice.c \
                          drv_key.c \
                          drv_blk.c \
+                         drv_gfx.c \
                          drv_hd.c \
                          drv_rd.c 
 KODE_KERNEL_DRV_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR)/%.o, $(KODE_KERNEL_DRV_SRC_S)) \
@@ -106,16 +107,10 @@ KODE_KERNEL_FONT_SRC := font_hankaku.c
 KODE_KERNEL_FONT_OBJ := $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FONT_DIR)/%.o, $(KODE_KERNEL_FONT_SRC))
 
 KODE_KERNEL_GUI_DIR := gui
-
-KODE_KERNEL_GUI_CORE_DIR := core
-KODE_KERNEL_GUI_CORE_SRC := gui_core.c \
-                            gui_dev.c \
-                            gui_lcd.c
-KODE_KERNEL_GUI_CORE_OBJ := $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)/$(KODE_KERNEL_GUI_CORE_DIR)/%.o, $(KODE_KERNEL_GUI_CORE_SRC))
-
-KODE_KERNEL_GUI_GFX_DIR := gfx
-KODE_KERNEL_GUI_GFX_SRC := gfx_api.c 
-KODE_KERNEL_GUI_GFX_OBJ := $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)/$(KODE_KERNEL_GUI_GFX_DIR)/%.o, $(KODE_KERNEL_GUI_GFX_SRC))
+KODE_KERNEL_GUI_SRC := gui_core.c \
+                       gui_mice.c \
+                       gui_bg.c
+KODE_KERNEL_GUI_OBJ := $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)/%.o, $(KODE_KERNEL_GUI_SRC))
 
 
 KODE_SYSTEM_DIR := system
@@ -139,12 +134,10 @@ KODE_OBJ := $(KODE_STARTUP_OBJ) \
             $(KODE_KERNEL_FS_OBJ) \
             $(KODE_KERNEL_KD_OBJ) \
             $(KODE_KERNEL_FONT_OBJ) \
-            $(KODE_KERNEL_GUI_CORE_OBJ) \
+            $(KODE_KERNEL_GUI_OBJ) \
             $(KODE_SYSTEM_LIB_KD_OBJ) \
             $(KODE_SYSTEM_LIB_STD_OBJ)
             
-
-#            $(KODE_KERNEL_GUI_GFX_OBJ) \
 
 
 KODE_DBG := $(patsubst %.o, %.s, $(KODE_OBJ))
@@ -161,8 +154,6 @@ BUILD_DIR += $(BUILD_ROOT)/$(KODE_ROOT) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FONT_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR) \
-             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)/$(KODE_KERNEL_GUI_CORE_DIR) \
-             $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)/$(KODE_KERNEL_GUI_GFX_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR) \
              $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR)/$(KODE_SYSTEM_LIB_KD_DIR) \
@@ -177,8 +168,7 @@ INC_DIR += -I$(SRC_ROOT)/$(KODE_ROOT) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_DRV_DIR) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FS_DIR) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_FONT_DIR) \
-           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)/$(KODE_KERNEL_GUI_CORE_DIR) \
-           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)/$(KODE_KERNEL_GUI_GFX_DIR) \
+           -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)
 
 
 # **************************************
