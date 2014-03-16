@@ -3,6 +3,7 @@
 ******************************************************************************/
 
 #include <gui.h>
+#include <gui_def.h>
 #include <drv_gfx.h>
 #include <drv_disp.h>
 #include <lib_mem.h>
@@ -26,6 +27,25 @@ GUI_PRIVATE  GUI_BT_CONTROL  gui_bg_stCtl;
     Private Interface
 ******************************************************************************/
 
+GUI_PRIVATE CPU_INT08U gui_bg_auiLogo[] = {
+	__X_____, _____X__,
+	__XX____, ____XX__,
+	__XXX___, ___XXX__,
+	__XXXX__, __XXXX__,
+	__X_XXX_, _XXX_X__,
+	__X__XXX, XXX__X__,
+	__X_XXXX, XXXX_X__,
+	__XXXXXX, XXXXXX__,
+	_XXX__XX, XX__XXX_,
+	XXX____X, X____XXX,
+	XXXX__XX, XX__XXXX,
+	XXXXXXXX, XXXXXXXX,
+	__XXXXXX, XXXXXX__,
+	___XX___, ___XX___,
+	____XX__, __XX____,
+	_____XXX, XXX_____,
+};
+#define GUI_BG_LOGO_MAX    (sizeof(gui_bg_auiLogo)/sizeof(CPU_INT08U))
 
 
 /******************************************************************************

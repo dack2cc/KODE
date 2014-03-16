@@ -58,6 +58,7 @@ typedef struct _DRV_GFX_SHEET_EXT {
 	DRV_GFX_SHEET               stSht;
 	CPU_INT32U                  uiPitch;
 	CPU_INT08U *                pbyAddr;
+	CPU_INT32U                  uiHandle;
 	struct _DRV_GFX_SHEET_EXT * pstPrev;
 	struct _DRV_GFX_SHEET_EXT * pstNext;
 } DRV_GFX_SHEET_EXT;
@@ -81,8 +82,8 @@ typedef struct _DRV_GFX_CONTROL {
 	DRV_GFX_SHEET_EXT * pstShtFree;
 } DRV_GFX_CONTROL;
 
-DRV_PRIVATE  DRV_GFX_CONTROL   drv_gfx_stCtl;
-DRV_PRIVATE DRV_GFX_SHEET_EXT  drv_gfx_astSurface[DRV_GFX_SHEET_MAX];
+DRV_PRIVATE  DRV_GFX_CONTROL    drv_gfx_stCtl;
+DRV_PRIVATE  DRV_GFX_SHEET_EXT  drv_gfx_astSheet[DRV_GFX_SHEET_MAX];
 
 /******************************************************************************
     Private Interface
@@ -96,13 +97,25 @@ DRV_PRIVATE DRV_GFX_SHEET_EXT  drv_gfx_astSurface[DRV_GFX_SHEET_MAX];
 
 void drv_gfx_Init(void)
 {
-	CPU_INT32U i = 0;
+	DRV_GFX_SHEET_EXT * pstSheet = 0;
+	CPU_INT32U  i = 0;
 	
-	Mem_Clr(&drv_gfx_stCtl,     sizeof(drv_gfx_stCtl));
-	Mem_Clr(drv_gfx_astSurface, sizeof(drv_gfx_astSurface));
+	Mem_Clr(&drv_gfx_stCtl,   sizeof(drv_gfx_stCtl));
+	Mem_Clr(drv_gfx_astSheet, sizeof(drv_gfx_astSheet));
 	
 	for (i = 0; i < DRV_GFX_SHEET_MAX; ++i) {
+		drv_gfx_astSheet[i].uiHandle = i;
 	}
+	
+	pstSheet = drv_gfx_astSheet + DRV_GFX_SHEET_MAX - 1;
+	while (pstSheet >= drv_gfx_astSheet) {
+		pstSheet->pstNext = pstSheet + 1;
+		pstSheet->pstPrev = pstSheet - 1;
+		pstSheet--;
+	}
+	drv_gfx_astSheet[0].pstPrev = drv_gfx_astSheet + DRV_GFX_SHEET_MAX - 1;
+	drv_gfx_astSheet[DRV_GFX_SHEET_MAX - 1].pstNext = drv_gfx_astSheet;
+	drv_gfx_stCtl.pstShtFree = drv_gfx_astSheet;
 	
 	CPUExt_DispBitPerPixel(&(drv_gfx_stCtl.uiBitPerPixel));
 	CPUExt_DispResolution(&(drv_gfx_stCtl.uiWidth), &(drv_gfx_stCtl.uiHeight));
@@ -113,8 +126,8 @@ void drv_gfx_Init(void)
 	if (0 == drv_gfx_stCtl.pbyBufAdr) {
 		CPUExt_CorePanic("[drv_gfx_Init][Out Of Memory]");
 	}
-	drv_disp_Printf("[drv_gfx_Init][BufAddr:0x%X]\r\n", drv_gfx_stCtl.pbyBufAdr);
-	drv_disp_Printf("[drv_gfx_Init][BufSize:%dKB]\r\n", drv_gfx_stCtl.uiBufSize / 1024);
+	//drv_disp_Printf("[drv_gfx_Init][BufAddr:0x%X]\r\n", drv_gfx_stCtl.pbyBufAdr);
+	//drv_disp_Printf("[drv_gfx_Init][BufSize:%dKB]\r\n", drv_gfx_stCtl.uiBufSize / 1024);
 	
 	CPUExt_DispSetPalette(drv_gfx_auiPalette, DRV_GFX_PALETTE_MAX, 0);
 	
@@ -133,6 +146,28 @@ void drv_gfx_GetLayerInfo(DRV_GFX_LAYER * pstLayer_out)
 
 void drv_gfx_CreateSheet(const DRV_GFX_SHEET * pstSheet_in, DRV_GFX_HANDLE * phSheet_out)
 {
+	DRV_GFX_SHEET_EXT * pstSheet = drv_gfx_stCtl.pstShtFree;
+	
+	if ((0 == pstSheet_in) 
+	||  (0 == phSheet_out) 
+	||  (0 == drv_gfx_stCtl.pstShtFree)) {
+		return;
+	}
+	
+	pstSheet->stSht = (*pstSheet_in);
+	
+	pstSheet->pstNext->pstPrev = pstSheet->pstPrev;
+	pstSheet->pstPrev->pstNext = pstSheet->pstNext;
+	drv_gfx_stCtl.pstShtFree = pstSheet->pstNext;	
+	
+	if (0 == drv_gfx_stCtl.pstShtActv) {
+		drv_gfx_stCtl.pstShtActv = pstSheet;
+		pstSheet->pstNext = 0;
+		pstSheet->pstPrev = 0;
+	}
+	else {
+		
+	}
 }
 
 void drv_gfx_DeleteSheet(const DRV_GFX_HANDLE hSheet_in)

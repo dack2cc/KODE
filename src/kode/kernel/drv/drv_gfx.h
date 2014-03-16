@@ -98,8 +98,8 @@ extern void drv_gfx_Init(void);
 extern void drv_gfx_GetLayerInfo(DRV_GFX_LAYER * pstLayer_out);
 extern void drv_gfx_Refresh(void);
 
-extern void drv_gfx_CreateSurface(const DRV_GFX_SHEET* pstSheet_in, DRV_GFX_HANDLE * phSheet_out);
-extern void drv_gfx_DeleteSurface(const DRV_GFX_HANDLE hSheet_in);
+extern void drv_gfx_CreateSheet(const DRV_GFX_SHEET* pstSheet_in, DRV_GFX_HANDLE * phSheet_out);
+extern void drv_gfx_DeleteSheet(const DRV_GFX_HANDLE hSheet_in);
 
 extern void drv_gfx_SetVisible(const DRV_GFX_HANDLE hSheet_in, const CPU_INT08U uiIsVisible_in);
 extern void drv_gfx_SetFont( const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_DATA * pstFont_in);
