@@ -346,7 +346,7 @@ FS_PRIVATE  FS_SUPER_BLOCK_EXT * fs_super_Read(const CPU_INT16U  uiDev_in)
 	if (0 == pstBuffer) {
 		pstSuperExt->s_dev = 0;
 		fs_super_Free(pstSuperExt);
-		CPUExt_DispPrint("[fs_super_Read][block read failed] \r\n");
+		drv_disp_Printf("[fs_super_Read][block read failed] \r\n");
 		return 0;
 	}
 	*((FS_SUPER_BLOCK *)pstSuperExt) = *((FS_SUPER_BLOCK *)(pstBuffer->pbyData));
@@ -366,7 +366,7 @@ FS_PRIVATE  FS_SUPER_BLOCK_EXT * fs_super_Read(const CPU_INT16U  uiDev_in)
 	if (FS_SUPER_MAGIC != pstSuperExt->sb.s_magic) {
 		pstSuperExt->s_dev = 0;
 		fs_super_Free(pstSuperExt);
-		CPUExt_DispPrint("[fs_super_Read][magic number invalid] \r\n");
+		drv_disp_Printf("[fs_super_Read][magic number invalid] \r\n");
 		return 0;
 	}
 	

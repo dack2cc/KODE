@@ -5,6 +5,7 @@
 
 #include <drv_hd.h>
 #include <drv_blk.h>
+#include <drv_disp.h>
 #include <cpu_ext.h>
 
 /******************************************************************************
@@ -78,7 +79,7 @@ void drv_hd_Setup(void)
 		drv_blk_Release(pstBuf);
 	}
 	
-	CPUExt_DispPrint("[HardDisk][Setup Complete] \r\n");
+	drv_disp_Printf("[HardDisk][Setup Complete] \r\n");
 #endif // DRV_HD_TEST
 }
 
@@ -89,7 +90,7 @@ DRV_PRIVATE void drv_hd_NotifyRW(void * pRequest_in)
 	drv_blk_NotifyRWEnd((DRV_BLK_BUFFER *)pRequest_in);
 
 #else  // DRV_HD_TEST
-	CPUExt_DispPrint("[drv_hd_NotifyRW][callback coming] \r\n");
+	drv_disp_Printf("[drv_hd_NotifyRW][callback coming] \r\n");
 	if (pRequest_in != &(drv_hd_stReq)) {
 		CPUExt_CorePanic("[drv_hd_NotifyRW][pointer invalid]");
 	}
@@ -107,7 +108,7 @@ DRV_PRIVATE void drv_hd_NotifyRW(void * pRequest_in)
 		for (i = 0; i < DRV_HD_TEST_MAX; ++i) {
 			drv_hd_abyBuffer[i] = 0x00;
 		}
-		CPUExt_DispPrint("[drv_hd_NotifyRW][writing is OK] \r\n");
+		drv_disp_Printf("[drv_hd_NotifyRW][writing is OK] \r\n");
 		drv_hd_stReq.in.iCmd = CPU_EXT_HD_CMD_READ;
 		CPUExt_HDRequest(&drv_hd_stReq);
 	}
@@ -118,7 +119,7 @@ DRV_PRIVATE void drv_hd_NotifyRW(void * pRequest_in)
 				CPUExt_CorePanic("[drv_hd_NotifyRW][read is failed]");
 			}
 		}
-		CPUExt_DispPrint("[drv_hd_NotifyRW][reading is OK] \r\n");
+		drv_disp_Printf("[drv_hd_NotifyRW][reading is OK] \r\n");
 	}
 	else {
 		CPUExt_CorePanic("[drv_hd_NotifyRW][command exception]");

@@ -158,17 +158,17 @@ void  kd_core_LogMessage(const KDchar* pszString_in)
 	
 	kd_core_StrReadUserSpace(pszString_in, kd_core_aszMsgBuf, sizeof(kd_core_aszMsgBuf));
 	
-	CPUExt_DispPrint(kd_core_aszMsgBuf);
+	drv_disp_Printf(kd_core_aszMsgBuf);
 }
 
 void kd_core_Assert(const KDchar *condition, const KDchar *filename, KDint linenumber)
 {
-	CPUExt_DispPrint("[");
-	kd_core_LogMessage(condition);
-	CPUExt_DispPrint("]");
-	CPUExt_DispPrint("[");
-	kd_core_LogMessage(filename);
-	CPUExt_DispPrint("]");
+	drv_disp_Printf("[");
+	drv_disp_Printf(condition);
+	drv_disp_Printf("]");
+	drv_disp_Printf("[");
+	drv_disp_Printf(filename);
+	drv_disp_Printf("]");
 	drv_disp_Printf("[%d]", linenumber);
 	
 	/* panic to stop the os */

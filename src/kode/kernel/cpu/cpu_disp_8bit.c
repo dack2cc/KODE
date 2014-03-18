@@ -21,7 +21,7 @@
 #define CPU_DISP_MEM_ADR   ((*(CPU_INT32U *)0x90014))
 
 #define CPU_DISP_DESK_BAR_H (24)
-#define CPU_DISP_DESK_BG    (CPU_EXT_COLOR_0000FF)
+#define CPU_DISP_DESK_BG    (2)
 
 #define CPU_DISP_LOGO_Y     ((CPU_DISP_DESK_BAR_H - 16) / 2)
 #define CPU_DISP_LOGO_X     (3)
@@ -206,14 +206,14 @@ void cpu_disp_Init(void)
 	cpu_disp_stCtl.uiPosX      = 0;
 	cpu_disp_stCtl.uiPosY      = CPU_DISP_DESK_BAR_H;
 	
-	cpu_disp_SetPalette(0, (CPU_EXT_COLOR_MAX - 1), cpu_disp_auiColorTbl);	
-	cpu_disp_Desktop();
-	cpu_disp_Logo();
-	cpu_disp_Time();
+	//cpu_disp_SetPalette(0, (CPU_EXT_COLOR_MAX - 1), cpu_disp_auiColorTbl);	
+	//cpu_disp_Desktop();
+	//cpu_disp_Logo();
+	//cpu_disp_Time();
 	
-	cpu_disp_stCtl.uiMouseX = cpu_disp_stCtl.uiScrW;
-	cpu_disp_stCtl.uiMouseY = cpu_disp_stCtl.uiScrH;
-	cpu_disp_MouseMove(CPU_DISP_MOUSE_X, CPU_DISP_MOUSE_Y);
+	//cpu_disp_stCtl.uiMouseX = cpu_disp_stCtl.uiScrW;
+	//cpu_disp_stCtl.uiMouseY = cpu_disp_stCtl.uiScrH;
+	//cpu_disp_MouseMove(CPU_DISP_MOUSE_X, CPU_DISP_MOUSE_Y);
 	
 }
 
@@ -222,10 +222,14 @@ CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
 {
 	CPU_CHAR*  pbyChar  = 0;
 	CPU_INT32U iCharCnt = 0;
+
+	CPU_SR_ALLOC();
 	
 	if (0 == pszStr_in) {
 		return (0);
 	}
+
+	CPU_CRITICAL_ENTER();
 	
 	pbyChar = (CPU_CHAR *)pszStr_in;
 	while ('\0' != (*pbyChar)) {
@@ -233,6 +237,8 @@ CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
 		++pbyChar;
 		++iCharCnt;
 	}
+
+	CPU_CRITICAL_EXIT();
 	
 	return (iCharCnt);
 }
@@ -285,26 +291,34 @@ void CPUExt_DispBitBlt(
 	CPU_INT32U  uiBPP   = cpu_disp_stCtl.uiScrMode / 8;
 	CPU_INT32U  y = 0;
 	
-	//drv_disp_Printf("[LX][%d]\r\n", uiLX_in);
-	//drv_disp_Printf("[RX][%d]\r\n", uiRX_in);
-	//drv_disp_Printf("[UY][%d]\r\n", uiUY_in);
-	//drv_disp_Printf("[DY][%d]\r\n", uiDY_in);
+	//drv_disp_Printf("[LX:%d][RX:%d][UY:%d][DY:%d]\r\n", uiLX_in, uiRX_in, uiUY_in, uiDY_in);
 	
 	if ((0 == pbyBuf_in) 
-	||  (uiLX_in >= uiRX_in) || (uiRX_in >= cpu_disp_stCtl.uiScrW)
-	||  (uiUY_in >= uiDY_in) || (uiDY_in >= cpu_disp_stCtl.uiScrH)) {
+	||  (uiLX_in > uiRX_in) || (uiRX_in >= cpu_disp_stCtl.uiScrW)
+	||  (uiUY_in > uiDY_in) || (uiDY_in >= cpu_disp_stCtl.uiScrH)) {
+		//CPUExt_CorePanic("[CPUExt_DispBitBlt][Invalid Calling]");
 		return;
 	}
 	
 	CPU_CRITICAL_ENTER();
 	
+#if 1
 	for (y = uiUY_in; y <= uiDY_in; ++y) {
 		Mem_Copy(
-			(pbyVRAM + y * uiPitch + uiLX_in),
+			(pbyVRAM   + y * uiPitch + uiLX_in),
 			(pbyBuf_in + y * uiPitch + uiLX_in),
-			(uiRX_in - uiLX_in) * uiBPP
+			(uiRX_in - uiLX_in + 1) * uiBPP
 		);
 	}
+#else
+	for (y = 60; y < 150; ++y) {	
+		Mem_Set(
+			(pbyVRAM   + y * uiPitch + uiLX_in),
+            1,
+			(uiRX_in - uiLX_in + 1) * uiBPP
+		);
+	}
+#endif
 	
 	//CPUExt_DispPrint("[BitBlt][Complete]\r\n");
 	
@@ -314,7 +328,13 @@ void CPUExt_DispBitBlt(
 
 void CPUExt_DispChar(const CPU_CHAR chAscii_in)
 {
+	CPU_SR_ALLOC();
+
+	CPU_CRITICAL_ENTER();
+	
 	cpu_disp_SetCode(chAscii_in);
+	
+	CPU_CRITICAL_EXIT();
 }
 
 void CPUExt_DispMouse(const CPU_INT32S iOffsetX_in, const CPU_INT32S iOffsetY_in)

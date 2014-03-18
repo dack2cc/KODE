@@ -47,6 +47,7 @@ typedef struct _DRV_MICE_CONTROL {
 	OS_TCB           stTcb;
 	DRV_MICE_QUEUE   stQueue;
 	DRV_MICE_ANALYZE stAnalyze;
+	CPU_FNCT_PTR     pfnHandle;
 } DRV_MICE_CONTROL;
 
 DRV_PRIVATE  DRV_MICE_CONTROL  drv_mice_stCtl;
@@ -69,6 +70,7 @@ void drv_mice_Init(void)
 {
 	OS_ERR  err = OS_ERR_NONE;
 	
+	drv_mice_stCtl.pfnHandle = 0;
 	drv_mice_stCtl.stAnalyze.uiType  = 0;
 	drv_mice_stCtl.stAnalyze.uiPhase = 0;
 	
@@ -104,6 +106,11 @@ void drv_mice_Init(void)
 	}
 	
 	return;
+}
+
+void drv_mice_RegisterHandler(CPU_FNCT_PTR pfnMice_in)
+{
+	drv_mice_stCtl.pfnHandle = pfnMice_in;
 }
 
 
@@ -163,6 +170,13 @@ DRV_PRIVATE  void drv_mice_Handler(void* pstEvent_in)
 
 DRV_PRIVATE  void drv_mice_Analyze(const CPU_INT08U uiScanCode_in)
 {
+	DRV_MICE_EVENT  stEvent;
+	CPU_FNCT_PTR    pfnHandle = drv_mice_stCtl.pfnHandle;
+	
+	if (0 == pfnHandle) {
+		return;
+	}
+	
 	drv_mice_stCtl.stAnalyze.auiCode[drv_mice_stCtl.stAnalyze.uiPhase] = uiScanCode_in;
 	drv_mice_stCtl.stAnalyze.uiPhase++;
 	
@@ -194,8 +208,14 @@ DRV_PRIVATE  void drv_mice_Analyze(const CPU_INT08U uiScanCode_in)
 		drv_mice_stCtl.stAnalyze.iY = -(drv_mice_stCtl.stAnalyze.iY);
 		
 		if ((0 != drv_mice_stCtl.stAnalyze.iY) 
-		||  (0 != drv_mice_stCtl.stAnalyze.iX)) {
-			CPUExt_DispMouse(drv_mice_stCtl.stAnalyze.iX, drv_mice_stCtl.stAnalyze.iY);
+		||  (0 != drv_mice_stCtl.stAnalyze.iX)
+		||  (0 != drv_mice_stCtl.stAnalyze.uiBtn)) {
+			stEvent.iOffsetX = drv_mice_stCtl.stAnalyze.iX;
+			stEvent.iOffsetY = drv_mice_stCtl.stAnalyze.iY;
+			stEvent.uiButton = drv_mice_stCtl.stAnalyze.uiBtn;
+			
+			pfnHandle((void *)(&stEvent));
+			//CPUExt_DispMouse(drv_mice_stCtl.stAnalyze.iX, drv_mice_stCtl.stAnalyze.iY);
 		}
 		//drv_disp_Printf("[code][%d, %d, %d] \r\n", drv_mice_stCtl.stAnalyze.uiBtn, drv_mice_stCtl.stAnalyze.iX, drv_mice_stCtl.stAnalyze.iY);
 	}

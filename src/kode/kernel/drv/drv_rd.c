@@ -65,7 +65,7 @@ void drv_rd_Setup(void)
 		return;
 	}
 	
-	CPUExt_DispPrint("[RamDisk ][Loading...] \r\n");	
+	drv_disp_Printf("[RamDisk ][Loading...] \r\n");	
 	while (uiBlkCnt > 0) {
 		if ((uiCpSize + CPU_EXT_HD_BLOCK_SIZE) > drv_rd_stCtl.uiSize) {\
 			CPUExt_CorePanic("[drv_rd_Setup][buffer overflow]");
