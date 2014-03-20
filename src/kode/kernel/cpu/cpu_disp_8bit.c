@@ -20,6 +20,8 @@
 #define CPU_DISP_HEIGHT     (*((CPU_INT16U *)0x90012))
 #define CPU_DISP_MEM_ADR    CPU_DISP_VRAM
 #define CPU_DISP_PAGE_SIZE  (1024 * 64)
+#define CPU_DISP_LOG_BUF    (1024 * 4)
+
 
 #define CPU_DISP_DESK_BAR_H (24)
 #define CPU_DISP_DESK_BG    (2)
@@ -119,7 +121,9 @@ typedef struct _CPU_DISP_CONTROL {
 	
 	CPU_INT16U  uiMouseX;
 	CPU_INT16U  uiMouseY;
-	
+
+	CPU_CHAR    aszLog[CPU_DISP_LOG_BUF];
+	CPU_INT32U  uiLogCnt;
 } CPU_DISP_CONTROL;
 
 CPU_PRIVATE CPU_DISP_CONTROL cpu_disp_stCtl;
@@ -127,6 +131,8 @@ CPU_PRIVATE CPU_DISP_CONTROL cpu_disp_stCtl;
 /******************************************************************************
     Private Interface
 ******************************************************************************/
+
+CPU_PRIVATE void cpu_disp_SaveChar(const CPU_CHAR chAscii_in);
 
 CPU_PRIVATE void cpu_disp_SetPalette(const CPU_INT32U iStart_in, const CPU_INT32U iEnd_in, const CPU_INT08U * pbyRGB_in);
 CPU_PRIVATE void cpu_disp_Logo(void);
@@ -159,6 +165,8 @@ CPU_PRIVATE void cpu_disp_MouseMove(const CPU_INT16U uiX_in, const CPU_INT16U ui
 
 void cpu_disp_Init(void)
 {
+	Mem_Clr(&(cpu_disp_stCtl), sizeof(cpu_disp_stCtl));
+	
 	cpu_disp_stCtl.uiScrMode   = CPU_DISP_MODE;
 	cpu_disp_stCtl.uiScrW      = CPU_DISP_WIDTH;
 	cpu_disp_stCtl.uiScrH      = CPU_DISP_HEIGHT;
@@ -205,7 +213,7 @@ CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
 	
 	pbyChar = (CPU_CHAR *)pszStr_in;
 	while ('\0' != (*pbyChar)) {
-		//cpu_disp_SetCode((*pbyChar));
+		cpu_disp_SaveChar((*pbyChar));
 		++pbyChar;
 		++iCharCnt;
 	}
@@ -304,10 +312,40 @@ void CPUExt_DispChar(const CPU_CHAR chAscii_in)
 
 	CPU_CRITICAL_ENTER();
 	
-	//cpu_disp_SetCode(chAscii_in);
+	cpu_disp_SaveChar(chAscii_in);
 	
 	CPU_CRITICAL_EXIT();
 }
+
+void CPUExt_DispLog(CPU_CHAR ** ppszBuf_out, CPU_INT32U * puiCnt_out)
+{
+	if (0 != ppszBuf_out) {
+		(*ppszBuf_out) = cpu_disp_stCtl.aszLog;
+	}
+	if (0 != puiCnt_out) {
+		(*puiCnt_out) = cpu_disp_stCtl.uiLogCnt;
+	}
+}
+
+CPU_PRIVATE void cpu_disp_SaveChar(const CPU_CHAR chAscii_in)
+{
+	CPU_INT32U i = 0;
+	
+	if ('\0' == chAscii_in) {
+		return;
+	}
+	
+	if (cpu_disp_stCtl.uiLogCnt == CPU_DISP_LOG_BUF) {
+		for (i = 0; i < CPU_DISP_LOG_BUF - 1; ++i) {
+			cpu_disp_stCtl.aszLog[i] = cpu_disp_stCtl.aszLog[i + 1];
+		}
+		cpu_disp_stCtl.uiLogCnt--;
+	}
+	
+	cpu_disp_stCtl.aszLog[cpu_disp_stCtl.uiLogCnt] = chAscii_in;
+	cpu_disp_stCtl.uiLogCnt++;
+}
+
 
 void CPUExt_DispMouse(const CPU_INT32S iOffsetX_in, const CPU_INT32S iOffsetY_in)
 {

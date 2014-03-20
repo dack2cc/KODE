@@ -15,7 +15,6 @@
 
 #if   (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_TEXT)
 #include <cpu_disp_text.h>
-#define CPU_DISP_VRAM  (0)
 #elif (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_8BIT)
 #include <cpu_disp_8bit.h>
 #else  /* CPU_EXT_DISP_MODE */

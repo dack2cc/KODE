@@ -62,7 +62,7 @@ GUI_PRIVATE  GUI_MICE_CONTROL  gui_mice_stCtl;
     Private Interface
 ******************************************************************************/
 
-GUI_PRIVATE void gui_mice_Handler(void * psEvt_in);
+
 
 /******************************************************************************
     Function Definition
@@ -100,14 +100,10 @@ void gui_mice_Init(void)
 	
 	drv_gfx_SetColor(gui_mice_stCtl.hSheet, GUI_MICE_COLOR);
 	drv_gfx_DrawData(gui_mice_stCtl.hSheet, &stData);
-	
-	drv_mice_RegisterHandler(gui_mice_Handler);
 }
 
-GUI_PRIVATE void gui_mice_Handler(void * psEvt_in)
-{
-	DRV_MICE_EVENT * pstEvt = psEvt_in;
-	
+void gui_mice_Handler(const DRV_MICE_EVENT * pstEvt)
+{	
 	if (0 == pstEvt) {
 		return;
 	}
@@ -135,6 +131,5 @@ GUI_PRIVATE void gui_mice_Handler(void * psEvt_in)
 	}
 
 	drv_gfx_Move(gui_mice_stCtl.hSheet, &(gui_mice_stCtl.stPos));
-	drv_gfx_Refresh();
 }
 

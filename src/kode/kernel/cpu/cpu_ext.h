@@ -123,7 +123,7 @@ extern void        CPUExt_DispBitPerPixel(CPU_INT08U * puiBPP_out);
 extern void        CPUExt_DispBitBlt(const CPU_INT08U * pbySrcBuf_in, 
 	                                 const CPU_INT32U uiLX_in, const CPU_INT32U uiUY_in, 
 	                                 const CPU_INT32U uiRX_in, const CPU_INT32U uiDY_in);
-extern void        CPUExt_DispMouse(const CPU_INT32S iOffsetX_in, const CPU_INT32S iOffsetY_in);
+extern void        CPUExt_DispLog(CPU_CHAR ** ppszBuf_out, CPU_INT32U * puiCnt_out);
 
 /*
     Input
