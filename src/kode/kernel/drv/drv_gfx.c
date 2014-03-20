@@ -64,12 +64,6 @@ DRV_PRIVATE  DRV_GFX_PALETTE  drv_gfx_stGlobalPalette = {
 	DRV_GFX_PALETTE_MAX,
 };
 
-typedef union _DRV_GFX_COLOR_VAL {
-	CPU_INT08U  _8bit;
-	CPU_INT32U  _24bit;
-	CPU_INT32U  _32bit;
-} DRV_GFX_COLOR_VAL;
-
 typedef struct _DRV_GFX_REGION {
 	CPU_INT32S   x0;
 	CPU_INT32S   y0;

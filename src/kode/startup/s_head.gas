@@ -125,6 +125,11 @@ pg3:
 
 .org 0x5000
 /*
+pg_vram:
+
+.org 0x6000
+*/
+/*
  * tmp_floppy_area is used by the floppy-driver when DMA cannot
  * reach to a buffer-block. It needs to be aligned, so that it isn't
  * on a 64kB border.
@@ -204,6 +209,17 @@ setup_paging:
 	movl $pg1+7,_g_s_head_p32BitPageDir+4		/*  --------- " " --------- */
 	movl $pg2+7,_g_s_head_p32BitPageDir+8		/*  --------- " " --------- */
 	movl $pg3+7,_g_s_head_p32BitPageDir+12		/*  --------- " " --------- */
+	
+	/* the vbe video ram is at the 0xe0000000 */
+/*	movl $pg_vram+7,_g_s_head_p32BitPageDir+0x380*4
+	movl $pg_vram+4092,%edi
+	movl $0xe03ff007,%eax
+	std
+1:	stosl
+    subl $0x1000,%eax
+    cmp $0xe0000007, %eax
+    jge 1b
+*/	
 	movl $pg3+4092,%edi
 	movl $0xfff007,%eax		/*  16Mb - 4096 + 7 (r/w user,p) */
 	std
@@ -233,7 +249,7 @@ gdt_descr:
 _g_s_head_p64BitIDT:	.fill 256,8,0		# idt is uninitialized
 
 _g_s_head_p64BitGDT:	.quad 0x0000000000000000	/* NULL descriptor */
-	.quad 0x00c09a0000000fff	/* 16Mb */
-	.quad 0x00c0920000000fff	/* 16Mb */
+	.quad 0x00cf9a000000ffff	/* 4GB */
+	.quad 0x00cf92000000ffff	/* 4GB */
 	.quad 0x0000000000000000	/* TEMPORARY - don't use */
 	.fill 252,8,0			/* space for LDT's and TSS's etc */

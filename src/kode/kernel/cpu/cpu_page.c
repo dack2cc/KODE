@@ -16,7 +16,7 @@ extern int end;
     Private Define
 ******************************************************************************/
 
-#define CPU_PAGE_MEM_SIZE_MAX    (12*1024*1024)  /* 12MB */
+#define CPU_PAGE_MEM_SIZE_MAX    (8*1024*1024)  /* 8MB */
 #define CPU_PAGE_LOW_ADDR_PHY    (0x100000)      /* 1MB  */
 #define CPU_PAGE_VALID_MEM_SIZE  (CPU_PAGE_MEM_SIZE_MAX - CPU_PAGE_LOW_ADDR_PHY)
 #define CPU_PAGE_VALID_NR        (CPU_PAGE_VALID_MEM_SIZE >> 12)
@@ -45,6 +45,7 @@ typedef struct _CPU_PAGE_CONTROL {
 	CPU_ADDR  adrPhyBufEnd;
 	CPU_ADDR  adrPhyRamdiskStart;
 	CPU_ADDR  adrPhyRamdiskEnd;
+	CPU_ADDR  adrPhyVRAM;
 } CPU_PAGE_CONTROL;
 
 CPU_PRIVATE  CPU_PAGE_CONTROL  cpu_page_stCtl;
@@ -61,19 +62,23 @@ CPU_PRIVATE  CPU_PAGE_CONTROL  cpu_page_stCtl;
 CPU_PRIVATE void      cpu_page_OutOfMemory(void);
 CPU_PRIVATE void      cpu_page_UnlockWriteProtected(CPU_INT32U*  puiPgTbItm_inout);
 CPU_PRIVATE void      cpu_page_GetEmptyPageForLinerarAddr(const CPU_ADDR addrLinerar_in);
+CPU_PRIVATE void      cpu_page_GetEmptyPageForVRAM(void);
 CPU_PRIVATE CPU_ADDR  cpu_page_GetFreePageFast(void);
 
 /******************************************************************************
     Function Definition
 ******************************************************************************/
 
-void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in)
+void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in, const CPU_ADDR adrPhyVRAM_in)
 {
 	CPU_INT32S  i = 0;
 	CPU_INT32S  iValidPageCnt  = 0;
 	CPU_ADDR    adrPhyMemStart = 0;
 	
 	//drv_disp_Printf("[Memory][%d MB]\r\n", X86_MEM_EXT_SIZE_IN_KB/1024);
+	
+	/* save the vram address */
+	cpu_page_stCtl.adrPhyVRAM = adrPhyVRAM_in & 0xfffff000;
 	
 	/* get the end of memory */
 	cpu_page_stCtl.adrPhyExtEnd  = CPU_PAGE_LOW_ADDR_PHY + (X86_MEM_EXT_SIZE_IN_KB * 1024);
@@ -526,14 +531,48 @@ __asm__("std ; repne ; scasb\n\t"
 return __res;
 }
 
-extern void cpu_page_ISR_LackMemoryPage(
+void cpu_page_ISR_LackMemoryPage(
 	CPU_DATA  uiErrorCode_in,
 	CPU_DATA  uiLinerarAddr_in
 )
 {
-	cpu_page_GetEmptyPageForLinerarAddr(uiLinerarAddr_in);
+	if ((uiLinerarAddr_in >= cpu_page_stCtl.adrPhyVRAM) 
+	&&  (uiLinerarAddr_in < cpu_page_stCtl.adrPhyVRAM + 1024 * 4096)) {
+		cpu_page_GetEmptyPageForVRAM();
+	}
+	else {
+	    cpu_page_GetEmptyPageForLinerarAddr(uiLinerarAddr_in);
+	}
 	
 	return;
 }
 
+CPU_PRIVATE void cpu_page_GetEmptyPageForVRAM(void)
+{
+	CPU_ADDR    addrPhysicalPage = 0;
+	CPU_INT32U  uiPgTbDrIdx = 0;
+	CPU_INT32U* puiPgTbDrItm = 0;
+	CPU_INT32U* puiPgTbItm = 0;
+	CPU_INT32U  i = 0;
+
+	uiPgTbDrIdx = (cpu_page_stCtl.adrPhyVRAM >> 22);
+	puiPgTbDrItm = &(X86_MEM_PAGE_TABLE_DIR[uiPgTbDrIdx]);
+    if (_is_valid_page_table_item(*puiPgTbDrItm)) {
+    	CPUExt_CorePanic("[cpu_page_GetEmptyPageForVRAM][vram address is valid]");
+    	return;
+    }
+	
+	CPUExt_PageGetFree(&addrPhysicalPage);
+	if (0 == addrPhysicalPage) {
+		cpu_page_OutOfMemory();
+	}
+	
+	(*puiPgTbDrItm) = addrPhysicalPage;	
+	(*puiPgTbDrItm) |= 7;
+	
+	puiPgTbItm = (CPU_INT32U *)addrPhysicalPage;
+	for (i = 0; i < 1024; ++i) {
+		puiPgTbItm[i] = ((cpu_page_stCtl.adrPhyVRAM + (i << 12)) |  7);
+	}
+}
 

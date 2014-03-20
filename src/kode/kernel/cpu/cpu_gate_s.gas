@@ -3,12 +3,12 @@
     Public
 ******************************************************************************/
 
-.global _cpu_gate_ISRKernelFnct
-.global _cpu_gate_ISRMemPageFault
-.global _cpu_gate_ISRTimeTick
-.global _cpu_gate_ISRKeyboard
-.global _cpu_gate_ISRHardDisk
-.global _cpu_gate_ISRMouse
+.globl _cpu_gate_ISRKernelFnct
+.globl _cpu_gate_ISRMemPageFault
+.globl _cpu_gate_ISRTimeTick
+.globl _cpu_gate_ISRKeyboard
+.globl _cpu_gate_ISRHardDisk
+.globl _cpu_gate_ISRMouse
 
 /******************************************************************************
     Constant

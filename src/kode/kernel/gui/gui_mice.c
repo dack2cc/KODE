@@ -95,8 +95,8 @@ void gui_mice_Init(void)
 	stData.w    = stSheet.w;
 	stData.h    = stSheet.h;
 	stData.bpp  = 1;
-	//stData.data = gui_mice_abyArrow;
-	stData.data = gui_mice_abyCat;
+	stData.data = gui_mice_abyArrow;
+	//stData.data = gui_mice_abyCat;
 	
 	drv_gfx_SetColor(gui_mice_stCtl.hSheet, GUI_MICE_COLOR);
 	drv_gfx_DrawData(gui_mice_stCtl.hSheet, &stData);
@@ -116,8 +116,8 @@ GUI_PRIVATE void gui_mice_Handler(void * psEvt_in)
 	if (gui_mice_stCtl.stPos.x < 0) {
 		gui_mice_stCtl.stPos.x = 0;
 	}
-	else if (gui_mice_stCtl.stPos.x > gui_mice_stCtl.stLayer.w - GUI_MICE_W) {
-		gui_mice_stCtl.stPos.x = gui_mice_stCtl.stLayer.w - GUI_MICE_W;
+	else if (gui_mice_stCtl.stPos.x > gui_mice_stCtl.stLayer.w - 1) {
+		gui_mice_stCtl.stPos.x = gui_mice_stCtl.stLayer.w - 1;
 	}
 	else {
 		// EMPTY
@@ -127,8 +127,8 @@ GUI_PRIVATE void gui_mice_Handler(void * psEvt_in)
 	if (gui_mice_stCtl.stPos.y < 0) {
 		gui_mice_stCtl.stPos.y = 0;
 	}
-	else if (gui_mice_stCtl.stPos.y > gui_mice_stCtl.stLayer.h - GUI_MICE_H) {
-		gui_mice_stCtl.stPos.y = gui_mice_stCtl.stLayer.h - GUI_MICE_H;
+	else if (gui_mice_stCtl.stPos.y > gui_mice_stCtl.stLayer.h - 1) {
+		gui_mice_stCtl.stPos.y = gui_mice_stCtl.stLayer.h - 1;
 	}
 	else {
 		// EMPTY

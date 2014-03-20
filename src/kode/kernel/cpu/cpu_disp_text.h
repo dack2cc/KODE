@@ -13,6 +13,8 @@
 
 #if (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_TEXT)
 
+#define CPU_DISP_VRAM  (0)
+
 void cpu_disp_Init(void);
 
 #endif /* CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_TEXT */

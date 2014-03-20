@@ -15,10 +15,11 @@
     Private Definition
 ******************************************************************************/
 
-#define CPU_DISP_MODE      (*((CPU_INT08U *)0x9000E))
-#define CPU_DISP_WIDTH     (*((CPU_INT16U *)0x90010))
-#define CPU_DISP_HEIGHT    (*((CPU_INT16U *)0x90012))
-#define CPU_DISP_MEM_ADR   ((*(CPU_INT32U *)0x90014))
+#define CPU_DISP_MODE       (*((CPU_INT08U *)0x9000E))
+#define CPU_DISP_WIDTH      (*((CPU_INT16U *)0x90010))
+#define CPU_DISP_HEIGHT     (*((CPU_INT16U *)0x90012))
+#define CPU_DISP_MEM_ADR    CPU_DISP_VRAM
+#define CPU_DISP_PAGE_SIZE  (1024 * 64)
 
 #define CPU_DISP_DESK_BAR_H (24)
 #define CPU_DISP_DESK_BG    (2)
@@ -93,24 +94,6 @@ CPU_PRIVATE const CPU_INT08U cpu_disp_auiColorTbl[CPU_EXT_COLOR_MAX * 3] =
 	0xAA, 0xAA, 0xAA, /* 17 : light white */
 };
 
-typedef struct _CPU_EXT_DISP_LAYER {
-	CPU_INT08U * pbyBuf;
-    CPU_INT16U   uiX;
-	CPU_INT16U   uiY;
-	CPU_INT16U   uiW;
-	CPU_INT16U   uiH;
-	CPU_INT16U   uiZ;
-	CPU_INT16U   uiType;
-} CPU_EXT_DISP_LAYER;
-
-typedef struct _CPU_DISP_LAYER {
-	CPU_EXT_DISP_LAYER       stLayer;
-	struct _CPU_DISP_LAYER * pstPrev;
-	struct _CPU_DISP_LAYER * pstNext;
-} CPU_DISP_LAYER;
-
-#define CPU_DISP_LAYER_MAX  (256)
-
 typedef struct _CPU_DISP_CONTROL {
 	CPU_INT08U  uiScrMode;
 	CPU_INT16U  uiScrW;
@@ -137,12 +120,9 @@ typedef struct _CPU_DISP_CONTROL {
 	CPU_INT16U  uiMouseX;
 	CPU_INT16U  uiMouseY;
 	
-	CPU_DISP_LAYER * pstLayerFree;
-	CPU_DISP_LAYER * pstLayerAct;
 } CPU_DISP_CONTROL;
 
 CPU_PRIVATE CPU_DISP_CONTROL cpu_disp_stCtl;
-CPU_PRIVATE CPU_DISP_LAYER   cpu_disp_astLayer[CPU_DISP_LAYER_MAX];
 
 /******************************************************************************
     Private Interface
@@ -178,13 +158,7 @@ CPU_PRIVATE void cpu_disp_MouseMove(const CPU_INT16U uiX_in, const CPU_INT16U ui
 ******************************************************************************/
 
 void cpu_disp_Init(void)
-{	
-	CPU_INT32U i = 0;
-	
-	for (i = 0; i < CPU_DISP_LAYER_MAX; ++i) {
-	//	cpu_disp_astLayer[i].
-	}
-	
+{
 	cpu_disp_stCtl.uiScrMode   = CPU_DISP_MODE;
 	cpu_disp_stCtl.uiScrW      = CPU_DISP_WIDTH;
 	cpu_disp_stCtl.uiScrH      = CPU_DISP_HEIGHT;
@@ -214,9 +188,7 @@ void cpu_disp_Init(void)
 	//cpu_disp_stCtl.uiMouseX = cpu_disp_stCtl.uiScrW;
 	//cpu_disp_stCtl.uiMouseY = cpu_disp_stCtl.uiScrH;
 	//cpu_disp_MouseMove(CPU_DISP_MOUSE_X, CPU_DISP_MOUSE_Y);
-	
 }
-
 
 CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
 {
@@ -233,7 +205,7 @@ CPU_INT32U  CPUExt_DispPrint(const CPU_CHAR* pszStr_in)
 	
 	pbyChar = (CPU_CHAR *)pszStr_in;
 	while ('\0' != (*pbyChar)) {
-		cpu_disp_SetCode((*pbyChar));
+		//cpu_disp_SetCode((*pbyChar));
 		++pbyChar;
 		++iCharCnt;
 	}
@@ -332,7 +304,7 @@ void CPUExt_DispChar(const CPU_CHAR chAscii_in)
 
 	CPU_CRITICAL_ENTER();
 	
-	cpu_disp_SetCode(chAscii_in);
+	//cpu_disp_SetCode(chAscii_in);
 	
 	CPU_CRITICAL_EXIT();
 }
@@ -391,8 +363,6 @@ CPU_PRIVATE void cpu_disp_Logo(void)
 	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 3*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'o' * cpu_disp_stCtl.uiFontPitch);
 	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 4*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'd' * cpu_disp_stCtl.uiFontPitch);
 	cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 5*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'e' * cpu_disp_stCtl.uiFontPitch);
-	//cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 6*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'T' * cpu_disp_stCtl.uiFontPitch);
-	//cpu_disp_PutFont8x16(CPU_EXT_COLOR_FFFFFF, CPU_DISP_LOGO_X + 7*8, CPU_DISP_LOGO_Y, cpu_disp_stCtl.pbyFont + 'O' * cpu_disp_stCtl.uiFontPitch);
 }
 
 CPU_PRIVATE void cpu_disp_Time(void)
@@ -416,29 +386,6 @@ CPU_PRIVATE void cpu_disp_Desktop(void)
 	cpu_disp_FillBox(CPU_EXT_COLOR_AAAAAA, 0, CPU_DISP_DESK_BAR_H - 1, uiWidth - 1, CPU_DISP_DESK_BAR_H - 1);
 	cpu_disp_FillBox(CPU_EXT_COLOR_FFFFFF, 0, CPU_DISP_DESK_BAR_H - 2, uiWidth - 1, CPU_DISP_DESK_BAR_H - 2);
 	cpu_disp_FillBox(CPU_EXT_COLOR_AAAAAA, 0, 0, uiWidth - 1, CPU_DISP_DESK_BAR_H - 3);
-	
-	/* 
-	cpu_disp_FillBox(CPU_EXT_COLOR_FFFFFF, 3, uiHeight - 24, 59, uiHeight - 24);
-	cpu_disp_FillBox(CPU_EXT_COLOR_FFFFFF, 2, uiHeight - 24, 2, uiHeight - 4);
-	cpu_disp_FillBox(CPU_EXT_COLOR_848484, 3, uiHeight - 4, 59, uiHeight - 4);
-	cpu_disp_FillBox(CPU_EXT_COLOR_848484, 59, uiHeight - 23, 59, uiHeight - 5);
-	cpu_disp_FillBox(CPU_EXT_COLOR_000000, 2, uiHeight - 3, 59, uiHeight - 3);
-	cpu_disp_FillBox(CPU_EXT_COLOR_000000, 60, uiHeight - 24, 60, uiHeight - 3);
-	*/
-
-	/*
-	cpu_disp_FillBox(CPU_EXT_COLOR_848484, uiWidth - 47, 20, uiWidth - 4, 20);
-	cpu_disp_FillBox(CPU_EXT_COLOR_848484, uiWidth - 47, 4, uiWidth - 47, 20);
-	cpu_disp_FillBox(CPU_EXT_COLOR_FFFFFF, uiWidth - 47, 3, uiWidth - 4, 3);
-	cpu_disp_FillBox(CPU_EXT_COLOR_FFFFFF, uiWidth - 3, 3, uiWidth - 3, 20);
-	*/
-	
-	/*
-	cpu_disp_FillBox(CPU_EXT_COLOR_848484, uiWidth - 47, uiHeight - 24, uiWidth - 4, uiHeight - 24);
-	cpu_disp_FillBox(CPU_EXT_COLOR_848484, uiWidth - 47, uiHeight - 23, uiWidth - 47, uiHeight - 4);
-	cpu_disp_FillBox(CPU_EXT_COLOR_FFFFFF, uiWidth - 47, uiHeight - 3, uiWidth - 4, uiHeight - 3);
-	cpu_disp_FillBox(CPU_EXT_COLOR_FFFFFF, uiWidth - 3, uiHeight - 24, uiWidth - 3, uiHeight - 3);
-	*/
 }
 
 CPU_PRIVATE void cpu_disp_FillBox(

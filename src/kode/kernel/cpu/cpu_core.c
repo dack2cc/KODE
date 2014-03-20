@@ -15,6 +15,7 @@
 
 #if   (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_TEXT)
 #include <cpu_disp_text.h>
+#define CPU_DISP_VRAM  (0)
 #elif (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_8BIT)
 #include <cpu_disp_8bit.h>
 #else  /* CPU_EXT_DISP_MODE */
@@ -40,7 +41,7 @@ void CPU_Init(void)
 	cpu_disp_Init();
 	cpu_hd_Init();
 	cpu_ps2_Init();
-	cpu_page_Init(CPU_EXT_RAM_DISK_SIZE);
+	cpu_page_Init(CPU_EXT_RAM_DISK_SIZE, CPU_DISP_VRAM);
 	cpu_gate_Init();
 	cpu_task_Init();
 	cpu_time_Init();

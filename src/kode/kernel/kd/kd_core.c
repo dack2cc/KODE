@@ -27,8 +27,8 @@
     Private Define
 ******************************************************************************/
 
-#define KD_PRIVATE  static
-//#define KD_PRIVATE 
+//#define KD_PRIVATE  static
+#define KD_PRIVATE 
 
 KD_PRIVATE const KDuint32  kd_core_VenderVal   = CPU_TYPE_CREATE('K','K','D','X');
 KD_PRIVATE const KDchar*   kd_core_VenderStr   = "kokoDo";
@@ -109,6 +109,15 @@ kdextInit(void)
 	OSInit(&err);
 	/* <= we are in Task 0 of Ring 3 */
 	
+	{
+		CPU_ADDR adrStart = 0;
+		CPU_ADDR adrEnd   = 0;
+
+		CPUExt_PageGetExtendSpace(&adrStart, &adrEnd);
+		lib_pool_Init(adrStart, adrEnd);
+		//drv_disp_Printf("[ExtendMem][0x%X : %d KB] \r\n", adrStart, (adrEnd - adrStart)/1024);
+	}
+	
 	return;
 }
 
@@ -120,14 +129,7 @@ KD_PRIVATE void kd_core_Run(void)
 }
 
 KD_PRIVATE void  kd_core_Setup(void)
-{
-	CPU_ADDR adrStart = 0;
-	CPU_ADDR adrEnd   = 0;
-
-	CPUExt_PageGetExtendSpace(&adrStart, &adrEnd);
-	lib_pool_Init(adrStart, adrEnd);
-	drv_disp_Printf("[ExtendMem][0x%X : %d KB] \r\n", adrStart, (adrEnd - adrStart)/1024);
-	
+{	
 	drv_gfx_Init();
 	drv_disp_Init();
 	drv_mice_Init();

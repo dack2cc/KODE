@@ -13,6 +13,11 @@
 %define C_SEG_SETUP   0x9020
 %define C_SEG_SYSTEM  0x1000
 
+%define C_INF_CURSOR  0
+%define C_INF_MEMSIZE 2
+
+%define C_VBE_MODE    0x103
+
 ; **************************************
 ; CODE
 ; **************************************
@@ -32,7 +37,7 @@ L_START:
 	mov ah, 0x03
 	xor bh, bh
 	int 0x10
-	mov [0], dx
+	mov [C_INF_CURSOR], dx
 	
 	; get memory size (extended mem, kB)
 	; interrupt 0x15 & operation ah = 0x88
@@ -41,7 +46,7 @@ L_START:
 	; - failed  : the error code and CF is set.
 	mov ah, 0x88
 	int 0x15
-	mov [2], ax
+	mov [C_INF_MEMSIZE], ax
 	
 	; get video card data
 	mov ah, 0x0F
@@ -57,6 +62,56 @@ L_START:
 	mov [10], bx
 	mov [12], cx
 	
+	;jmp L_320_200
+	
+	; enter the vesa display mode
+	; check vbe exist
+	mov ax, 0x9000
+	mov es, ax
+	mov di, 30
+	mov ax, 0x4f00
+	int 0x10
+	cmp ax, 0x004f
+	jne L_320_200
+	
+	; check vbe version
+	mov ax, [es:di + 4]
+	cmp ax, 0x0200
+	jb L_320_200
+	
+	; get display mode
+	mov cx, C_VBE_MODE
+	mov ax, 0x4f01
+	int 0x10
+	cmp ax, 0x004f
+	jne L_320_200
+	
+	; check the display mode
+	mov al, 8
+	cmp [es:di + 0x19], al
+	jne L_320_200
+	mov al, 4
+	cmp [es:di + 0x1b], al
+	jne L_320_200
+	mov ax, [es:di + 0x00]
+	and ax, 0x0080
+	jz L_320_200
+	
+	; swith to the display mode
+	mov bx, C_VBE_MODE + 0x4000
+	mov ax, 0x4f02
+	int 0x10
+	mov al, 8
+	mov [14], al
+	mov ax, [es:di + 0x12]
+	mov [16], ax
+	mov ax, [es:di + 0x14]
+	mov [18], ax
+	mov eax, [es:di + 0x28]
+	mov [20], eax
+	jmp L_END_DISP
+	
+L_320_200:
 	; enter VGA 320x200 8bit color mode
 	mov al, 0x13
 	mov ah, 0x00
@@ -69,6 +124,7 @@ L_START:
 	mov [18], ax         
 	mov eax, 0x000a0000  ; video memory address
 	mov [20], eax
+L_END_DISP:
 	
 	; Get hd0 data
 	mov ax, 0x0000
@@ -126,7 +182,7 @@ L_DO_MOVE:
 	
 L_END_MOVE:
 	mov ax, C_SEG_SETUP
-	mov ds, ax
+	mov ds, ax	
 	lidt [L_IDT_48]
 	lgdt [L_GDT_48]
 	
