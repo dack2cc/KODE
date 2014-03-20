@@ -91,9 +91,13 @@ void cpu_page_Init(const CPU_INT32U  uiRamdiskSize_in, const CPU_ADDR adrPhyVRAM
 	}
 	cpu_page_stCtl.adrPhyExtStart = cpu_page_stCtl.adrPhyMemEnd;
 	
+#ifdef _OSX_
+    cpu_page_stCtl.adrPhyBufStart = 512 * 1024;
+#else // _OSX_
 	/* buffer space is after the kernel image */
 	cpu_page_stCtl.adrPhyBufStart = (CPU_ADDR)(&end);
-	
+#endif // _OSX_
+    
 	/* calculate the buffer memory end address */
 	for (i = 0; i < CPU_PAGE_BUFFER_INFO_MAX; ++i) {
 		if (cpu_page_stCtl.adrPhyMemEnd > cpu_page_astBufInf[i].uiMemSize) {
