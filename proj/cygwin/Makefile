@@ -157,9 +157,9 @@ run :
 # Sub Target
 # **************************************
 
--include cfg_example.mk
--include cfg_linux.mk
--include cfg_kode.mk
+-include ../cfg/cfg_example.mk
+-include ../cfg/cfg_linux.mk
+-include ../cfg/cfg_kode.mk
 
 DEBUG_DIR  += $(subst build,debug,$(BUILD_DIR))
 

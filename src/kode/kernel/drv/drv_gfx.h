@@ -111,6 +111,7 @@ extern void drv_gfx_Refresh(void);
 extern void drv_gfx_CreateSheet(const DRV_GFX_SHEET* pstSheet_in, DRV_GFX_HANDLE * phSheet_out);
 extern void drv_gfx_DeleteSheet(const DRV_GFX_HANDLE hSheet_in);
 
+extern void drv_gfx_GetSheet(const DRV_GFX_HANDLE hSheet_in, DRV_GFX_SHEET* pstSheet_out);
 extern void drv_gfx_SetFont(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_FONT * pstFont_in);
 extern void drv_gfx_SetVisible(const DRV_GFX_HANDLE hSheet_in, const CPU_INT08U uiIsVisible_in);
 extern void drv_gfx_SetZOrder(const DRV_GFX_HANDLE hSheet_in, const CPU_INT08U uiZOrder_in);
@@ -119,9 +120,6 @@ extern void drv_gfx_FillRect(const DRV_GFX_HANDLE hSheet_in, DRV_GFX_RECT * pstR
 extern void drv_gfx_DrawData(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_DATA * pstData_in);
 extern void drv_gfx_DrawStr(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstHeadPos_in, const CPU_CHAR * pszStr_in);
 extern void drv_gfx_Move(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstPos_in);
-
-//extern void drv_gfx_SetFont( const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_DATA * pstFont_in);
-//extern void drv_gfx_DrawChar(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstPos_in, const CPU_CHAR byChar_in);
 
 #endif // __DRV_GFX_H__
 

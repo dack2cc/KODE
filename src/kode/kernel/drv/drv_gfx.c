@@ -236,6 +236,17 @@ void drv_gfx_DeleteSheet(const DRV_GFX_HANDLE hSheet_in)
 	}
 }
 
+void drv_gfx_GetSheet(const DRV_GFX_HANDLE hSheet_in, DRV_GFX_SHEET* pstSheet_out)
+{
+	if (0 == pstSheet_out) {
+		return;
+	}
+	if (hSheet_in < DRV_GFX_SHEET_MAX) {
+		(*pstSheet_out) = (drv_gfx_astSheet[hSheet_in].stSht);
+	}	
+}
+
+
 void drv_gfx_SetFont(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_FONT * pstFont_in)
 {
 	if ((hSheet_in < DRV_GFX_SHEET_MAX) && (0 != pstFont_in)) {
@@ -421,7 +432,9 @@ void drv_gfx_DrawStr(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstPo
 void drv_gfx_Move(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstPos_in)
 {
 	DRV_GFX_SHEET_EXT * pstSheet = 0;
-	DRV_GFX_REGION  stRegion;
+	DRV_GFX_REGION  stRegLayer;
+	DRV_GFX_REGION  stRegSheet;
+	
 
 	if (hSheet_in < DRV_GFX_SHEET_MAX) {
 		pstSheet = drv_gfx_astSheet + hSheet_in;
@@ -431,10 +444,10 @@ void drv_gfx_Move(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstPos_i
 		return;
 	}
 	
-	stRegion.x0 = pstSheet->stSht.x;
-	stRegion.y0 = pstSheet->stSht.y;
-	stRegion.x1 = pstSheet->stSht.x + pstSheet->stSht.w - 1;
-	stRegion.y1 = pstSheet->stSht.y + pstSheet->stSht.h - 1;
+	stRegLayer.x0 = pstSheet->stSht.x;
+	stRegLayer.y0 = pstSheet->stSht.y;
+	stRegLayer.x1 = pstSheet->stSht.x + pstSheet->stSht.w - 1;
+	stRegLayer.y1 = pstSheet->stSht.y + pstSheet->stSht.h - 1;
 	
 	pstSheet = drv_gfx_stCtl.pstShtActv;
 	while (0 != pstSheet) {
@@ -442,7 +455,12 @@ void drv_gfx_Move(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstPos_i
 			break;
 		}
 		else {
-			drv_gfx_UpdateDirtyForSheet(pstSheet, &stRegion);
+			stRegSheet.x0 = stRegLayer.x0 - pstSheet->stSht.x;
+			stRegSheet.y0 = stRegLayer.y0 - pstSheet->stSht.y;
+			stRegSheet.x1 = stRegLayer.x1 - pstSheet->stSht.x;
+			stRegSheet.y1 = stRegLayer.y1 - pstSheet->stSht.y;
+			
+			drv_gfx_UpdateDirtyForSheet(pstSheet, &stRegSheet);
 		}
 		pstSheet = pstSheet->pstNext;
 	}
@@ -454,11 +472,11 @@ void drv_gfx_Move(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstPos_i
 	pstSheet->stSht.x = pstPos_in->x;
 	pstSheet->stSht.y = pstPos_in->y;
 	
-	stRegion.x0 = 0;
-	stRegion.y0 = 0;
-	stRegion.x1 = pstSheet->stSht.w - 1;
-	stRegion.y1 = pstSheet->stSht.h - 1;
-	drv_gfx_UpdateDirtyForSheet(pstSheet, &stRegion);
+	stRegSheet.x0 = 0;
+	stRegSheet.y0 = 0;
+	stRegSheet.x1 = pstSheet->stSht.w - 1;
+	stRegSheet.y1 = pstSheet->stSht.h - 1;
+	drv_gfx_UpdateDirtyForSheet(pstSheet, &stRegSheet);
 }
 
 
@@ -567,6 +585,12 @@ DRV_PRIVATE  void drv_gfx_UpdateDirtyForSheet(DRV_GFX_SHEET_EXT * pstSheet_in, D
 		return;
 	}
 	
+	if (pstRegion_in->x0 < 0) {
+		pstRegion_in->x0 = 0;
+	}
+	if (pstRegion_in->y0 < 0) {
+		pstRegion_in->y0 = 0;
+	}
 	if (pstRegion_in->x1 >= pstSheet_in->stSht.w) {
 		pstRegion_in->x1 = pstSheet_in->stSht.w - 1;
 	}
@@ -574,9 +598,7 @@ DRV_PRIVATE  void drv_gfx_UpdateDirtyForSheet(DRV_GFX_SHEET_EXT * pstSheet_in, D
 		pstRegion_in->y1 = pstSheet_in->stSht.h - 1;
 	}
 	
-	if ((pstRegion_in->x0 < 0) 
-	||  (pstRegion_in->x0 > pstRegion_in->x1) 
-	||  (pstRegion_in->y0 < 0) 
+	if ((pstRegion_in->x0 > pstRegion_in->x1) 
 	||  (pstRegion_in->y0 > pstRegion_in->y1)){
 		return;
 	}
@@ -630,9 +652,9 @@ DRV_PRIVATE  void drv_gfx_BitBlt(DRV_GFX_SHEET_EXT * pstSheet_in)
 	||  (pstSheet_in->stSht.x >= (drv_gfx_stCtl.uiWidth - pstSheet_in->stDirty.x0))
 	||  (pstSheet_in->stSht.y <= -(pstSheet_in->stDirty.y1))
 	||  (pstSheet_in->stSht.y >= (drv_gfx_stCtl.uiHeight - pstSheet_in->stDirty.y0))) {
-		drv_disp_Printf("[dirty][x0:%d,y0:%d,x1:%d,y1:%d]\r\n", pstSheet_in->stDirty.x0, pstSheet_in->stDirty.y0, pstSheet_in->stDirty.x1, pstSheet_in->stDirty.y1);
-		drv_disp_Printf("[sheet][x:%d,y:%d,w:%d,h:%d]\r\n", pstSheet_in->stSht.x, pstSheet_in->stSht.y, pstSheet_in->stSht.w, pstSheet_in->stSht.h);
-		CPUExt_CorePanic("[drv_gfx_BitBlt][Invaid calling]");
+		//drv_disp_Printf("[dirty][x0:%d,y0:%d,x1:%d,y1:%d]\r\n", pstSheet_in->stDirty.x0, pstSheet_in->stDirty.y0, pstSheet_in->stDirty.x1, pstSheet_in->stDirty.y1);
+		//drv_disp_Printf("[sheet][x:%d,y:%d,w:%d,h:%d]\r\n", pstSheet_in->stSht.x, pstSheet_in->stSht.y, pstSheet_in->stSht.w, pstSheet_in->stSht.h);
+		//CPUExt_CorePanic("[drv_gfx_BitBlt][Invaid calling]");
 		return;
 	}
 

@@ -4,6 +4,7 @@
 
 #include <gui.h>
 #include <gui_def.h>
+#include <gui_log.h>
 #include <drv_gfx.h>
 #include <drv_disp.h>
 #include <lib_mem.h>
@@ -34,7 +35,6 @@
 #define GUI_BG_NAME_Y          (GUI_BG_LOGO_Y)
 #define GUI_BG_NAME            "kode"
 #define GUI_BG_TIME_Y          (GUI_BG_LOGO_Y)
-#define GUI_BG_TIME            "23:55"
 
 
 GUI_PRIVATE CPU_INT08U gui_bg_abyLogo[] = {
@@ -57,13 +57,19 @@ GUI_PRIVATE CPU_INT08U gui_bg_abyLogo[] = {
 };
 #define GUI_BG_LOGO_MAX    (sizeof(gui_bg_abyLogo)/sizeof(CPU_INT08U))
 
+typedef struct _GUI_BG_TIME {
+	CPU_INT32U h;
+	CPU_INT32U m;
+	CPU_CHAR   buf[6];
+} GUI_BG_TIME;
 
 typedef struct _GUI_BG_CONTROL {
 	DRV_GFX_LAYER  stLayer;
 	DRV_GFX_HANDLE hSheet;
-} GUI_BT_CONTROL;
+	GUI_BG_TIME    stTime;
+} GUI_BG_CONTROL;
 
-GUI_PRIVATE  GUI_BT_CONTROL  gui_bg_stCtl;
+GUI_PRIVATE  GUI_BG_CONTROL  gui_bg_stCtl;
 
 /******************************************************************************
     Private Interface
@@ -84,6 +90,9 @@ void gui_bg_Init(void)
 	
 	Mem_Clr(&gui_bg_stCtl, sizeof(gui_bg_stCtl));
 	
+	gui_bg_stCtl.stTime.h = 23;
+	gui_bg_stCtl.stTime.m = 54;
+	
 	drv_gfx_GetLayerInfo(&(gui_bg_stCtl.stLayer));
 	
 	stSheet.x   = 0;
@@ -100,7 +109,47 @@ void gui_bg_Init(void)
 	gui_bg_Logo();
 	gui_bg_Name();
 	gui_bg_Time();
+	
+	{
+		DRV_GFX_POINT stPos;
+		stPos.x = GUI_BG_NAME_X;
+		stPos.y = GUI_BG_BAR_H + 1;
+	    gui_log_Open(&stPos);
+		gui_log_Update();
+	}
 }
+
+void gui_bg_Time()
+{
+	DRV_GFX_FONT stFont;
+	DRV_GFX_POINT stPos;
+	
+	gui_bg_stCtl.stTime.m++;
+	if (gui_bg_stCtl.stTime.m >= 60) {
+		gui_bg_stCtl.stTime.m = 0;
+		gui_bg_stCtl.stTime.h++;
+		if (gui_bg_stCtl.stTime.h >= 24) {
+			gui_bg_stCtl.stTime.h = 0;
+		}
+	}
+	
+	sprintf(gui_bg_stCtl.stTime.buf, "%2d:%2d", gui_bg_stCtl.stTime.h, gui_bg_stCtl.stTime.m);
+	
+	stFont.w    = 8;
+	stFont.h    = 16;
+	stFont.data = font_hankaku;
+	stFont.bpc  = 16;
+	stFont.bg   = GUI_BG_COLOR_TIME_BG;
+	
+	stPos.x = gui_bg_stCtl.stLayer.w - stFont.w * 5;
+	stPos.y = GUI_BG_TIME_Y;
+	
+	drv_gfx_SetFont( gui_bg_stCtl.hSheet, &stFont);
+	drv_gfx_SetColor(gui_bg_stCtl.hSheet, GUI_BG_COLOR_TIME);
+	drv_gfx_DrawStr(gui_bg_stCtl.hSheet, &stPos, gui_bg_stCtl.stTime.buf);
+	
+}
+
 
 GUI_PRIVATE void gui_bg_Desktop(void)
 {	
@@ -163,25 +212,4 @@ GUI_PRIVATE void gui_bg_Name(void)
 	drv_gfx_SetColor(gui_bg_stCtl.hSheet, GUI_BG_COLOR_NAME);
 	drv_gfx_DrawStr(gui_bg_stCtl.hSheet, &stPos, GUI_BG_NAME);
 }
-
-
-GUI_PRIVATE void gui_bg_Time(void)
-{
-	DRV_GFX_FONT stFont;
-	DRV_GFX_POINT stPos;
-	
-	stFont.w    = 8;
-	stFont.h    = 16;
-	stFont.data = font_hankaku;
-	stFont.bpc  = 16;
-	stFont.bg   = GUI_BG_COLOR_TIME_BG;
-	
-	stPos.x = gui_bg_stCtl.stLayer.w - stFont.w * 5;
-	stPos.y = GUI_BG_TIME_Y;
-	
-	drv_gfx_SetFont( gui_bg_stCtl.hSheet, &stFont);
-	drv_gfx_SetColor(gui_bg_stCtl.hSheet, GUI_BG_COLOR_TIME);
-	drv_gfx_DrawStr(gui_bg_stCtl.hSheet, &stPos, GUI_BG_TIME);
-}
-
 

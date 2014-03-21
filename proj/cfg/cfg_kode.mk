@@ -109,6 +109,8 @@ KODE_KERNEL_FONT_OBJ := $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERN
 KODE_KERNEL_GUI_DIR := gui
 KODE_KERNEL_GUI_SRC := gui_core.c \
                        gui_mice.c \
+                       gui_win.c \
+                       gui_log.c \
                        gui_bg.c
 KODE_KERNEL_GUI_OBJ := $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)/%.o, $(KODE_KERNEL_GUI_SRC))
 
