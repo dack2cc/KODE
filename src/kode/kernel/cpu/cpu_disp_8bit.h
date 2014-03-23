@@ -13,7 +13,7 @@
 
 #if (CPU_EXT_DISP_MODE == CPU_EXT_DISP_MODE_8BIT)
 
-#define CPU_DISP_VRAM   (*((CPU_INT32U *)0x90014))
+#define CPU_DISP_VRAM   (*((CPU_INT32U *)0x90016))
 
 extern void  cpu_disp_Init(void);
 

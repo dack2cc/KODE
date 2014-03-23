@@ -18,6 +18,7 @@
 #define CPU_DISP_MODE       (*((CPU_INT08U *)0x9000E))
 #define CPU_DISP_WIDTH      (*((CPU_INT16U *)0x90010))
 #define CPU_DISP_HEIGHT     (*((CPU_INT16U *)0x90012))
+#define CPU_DISP_PITCH      (*((CPU_INT16U *)0x90014))
 #define CPU_DISP_MEM_ADR    CPU_DISP_VRAM
 #define CPU_DISP_PAGE_SIZE  (1024 * 64)
 #define CPU_DISP_LOG_BUF    (1024 * 4)
@@ -171,7 +172,7 @@ void cpu_disp_Init(void)
 	cpu_disp_stCtl.uiScrW      = CPU_DISP_WIDTH;
 	cpu_disp_stCtl.uiScrH      = CPU_DISP_HEIGHT;
 	cpu_disp_stCtl.uiMemStart  = CPU_DISP_MEM_ADR;
-	cpu_disp_stCtl.uiMemPitch  = CPU_DISP_WIDTH;
+	cpu_disp_stCtl.uiMemPitch  = CPU_DISP_PITCH;
 	
 	cpu_disp_stCtl.pbyFont     = FONT_DATA;
 	cpu_disp_stCtl.uiFontPitch = FONT_PITCH;

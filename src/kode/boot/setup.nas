@@ -107,8 +107,10 @@ L_START:
 	mov [16], ax
 	mov ax, [es:di + 0x14]
 	mov [18], ax
+	mov ax, [es:di + 0x10]
+	mov [20], ax
 	mov eax, [es:di + 0x28]
-	mov [20], eax
+	mov [22], eax
 	jmp L_END_DISP
 	
 L_320_200:
