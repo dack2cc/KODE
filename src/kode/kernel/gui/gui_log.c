@@ -3,6 +3,10 @@
 ******************************************************************************/
 
 #include <gui_log.h>
+
+#if (CPU_EXT_DISP_MODE_TEXT != CPU_EXT_DISP_MODE)
+
+#include <gui_def.h>
 #include <gui_win.h>
 #include <drv_gfx.h>
 #include <drv_disp.h>
@@ -56,7 +60,7 @@ void gui_log_Open(const DRV_GFX_POINT * pstPos_in)
 	stSheet.y   = pstPos_in->y;
 	stSheet.w   = 16 * 21;
 	stSheet.h   = 16 * 21;
-	stSheet.z   = 0x02;
+	stSheet.z   = GUI_Z_ORDER_LOG;
 	stSheet.v   = 1;
 	stSheet.bpp = 8;
 
@@ -101,10 +105,11 @@ void gui_log_Update(void)
 	}
 	
 	if ('\0' != pszLog[uiLen - 1]) {
-		pszLog[uiLen - 1] = 0;
+		//pszLog[uiLen - 1] = 0;
 	}
 	
 	drv_gfx_DrawStr(gui_log_stCtl.hSheet, &(gui_log_stCtl.stStart), pszLog);
 }
 
+#endif // (CPU_EXT_DISP_MODE_TEXT == CPU_EXT_DISP_MODE)
 

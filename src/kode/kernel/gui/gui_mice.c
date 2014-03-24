@@ -3,6 +3,9 @@
 ******************************************************************************/
 
 #include <gui.h>
+
+#if (CPU_EXT_DISP_MODE_TEXT != CPU_EXT_DISP_MODE)
+
 #include <gui_def.h>
 #include <drv_gfx.h>
 #include <drv_mice.h>
@@ -84,7 +87,7 @@ void gui_mice_Init(void)
 	stSheet.y   = gui_mice_stCtl.stPos.y;
 	stSheet.w   = GUI_MICE_W;
 	stSheet.h   = GUI_MICE_H;
-	stSheet.z   = 0;
+	stSheet.z   = GUI_Z_ORDER_MOUSE;
 	stSheet.v   = 1;
 	stSheet.bpp = gui_mice_stCtl.stLayer.bpp;
 
@@ -132,4 +135,6 @@ void gui_mice_Handler(const DRV_MICE_EVENT * pstEvt)
 
 	drv_gfx_Move(gui_mice_stCtl.hSheet, &(gui_mice_stCtl.stPos));
 }
+
+#endif // (CPU_EXT_DISP_MODE_TEXT != CPU_EXT_DISP_MODE)
 

@@ -52,4 +52,3 @@ CPU_INT32S  drv_disp_Printf(const CPU_CHAR* fmt_in, ...)
 	return (i);
 }
 
-

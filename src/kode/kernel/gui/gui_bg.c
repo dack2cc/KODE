@@ -3,6 +3,9 @@
 ******************************************************************************/
 
 #include <gui.h>
+
+#if (CPU_EXT_DISP_MODE != CPU_EXT_DISP_MODE_TEXT)
+
 #include <gui_def.h>
 #include <gui_log.h>
 #include <drv_gfx.h>
@@ -10,6 +13,7 @@
 #include <lib_mem.h>
 #include <lib_pool.h>
 #include <font.h>
+#include <std/stdio.h>
 
 /******************************************************************************
     Private Define
@@ -99,7 +103,7 @@ void gui_bg_Init(void)
 	stSheet.y   = 0;
 	stSheet.w   = gui_bg_stCtl.stLayer.w;
 	stSheet.h   = gui_bg_stCtl.stLayer.h;
-	stSheet.z   = 0xFF;
+	stSheet.z   = GUI_Z_ORDER_BACKGROUND;
 	stSheet.v   = 1;
 	stSheet.bpp = gui_bg_stCtl.stLayer.bpp;
 	
@@ -121,7 +125,8 @@ void gui_bg_Init(void)
 
 void gui_bg_Time()
 {
-	DRV_GFX_FONT stFont;
+	DRV_GFX_RECT  stRect;
+	DRV_GFX_FONT  stFont;
 	DRV_GFX_POINT stPos;
 	
 	gui_bg_stCtl.stTime.m++;
@@ -132,7 +137,7 @@ void gui_bg_Time()
 			gui_bg_stCtl.stTime.h = 0;
 		}
 	}
-	
+		
 	sprintf(gui_bg_stCtl.stTime.buf, "%2d:%2d", gui_bg_stCtl.stTime.h, gui_bg_stCtl.stTime.m);
 	
 	stFont.w    = 8;
@@ -144,10 +149,17 @@ void gui_bg_Time()
 	stPos.x = gui_bg_stCtl.stLayer.w - stFont.w * 5;
 	stPos.y = GUI_BG_TIME_Y;
 	
+	stRect.x = stPos.x;
+	stRect.y = stPos.y;
+	stRect.w = stFont.w * 5;
+	stRect.h = stFont.h;
+	
+	drv_gfx_SetColor(gui_bg_stCtl.hSheet, GUI_BG_COLOR_BAR);
+	drv_gfx_FillRect(gui_bg_stCtl.hSheet, &stRect);	
+	
 	drv_gfx_SetFont( gui_bg_stCtl.hSheet, &stFont);
 	drv_gfx_SetColor(gui_bg_stCtl.hSheet, GUI_BG_COLOR_TIME);
-	drv_gfx_DrawStr(gui_bg_stCtl.hSheet, &stPos, gui_bg_stCtl.stTime.buf);
-	
+	drv_gfx_DrawStr(gui_bg_stCtl.hSheet, &stPos, gui_bg_stCtl.stTime.buf);	
 }
 
 
@@ -212,4 +224,6 @@ GUI_PRIVATE void gui_bg_Name(void)
 	drv_gfx_SetColor(gui_bg_stCtl.hSheet, GUI_BG_COLOR_NAME);
 	drv_gfx_DrawStr(gui_bg_stCtl.hSheet, &stPos, GUI_BG_NAME);
 }
+
+#endif // (CPU_EXT_DISP_MODE != CPU_EXT_DISP_MODE_TEXT)
 

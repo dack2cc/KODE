@@ -4,6 +4,9 @@
 ******************************************************************************/
 
 #include <drv_gfx.h>
+
+#if (CPU_EXT_DISP_MODE_TEXT != CPU_EXT_DISP_MODE)
+
 #include <drv_disp.h>
 #include <cpu_ext.h>
 #include <lib_mem.h>
@@ -109,6 +112,7 @@ DRV_PRIVATE  DRV_GFX_SHEET_EXT * drv_gfx_SheetGetFree();
 DRV_PRIVATE  void drv_gfx_SheetInsertActive(DRV_GFX_SHEET_EXT * pstSheet_in);
 DRV_PRIVATE  void drv_gfx_SheetRelease(DRV_GFX_SHEET_EXT * pstSheet_in);
 
+DRV_PRIVATE  void drv_gfx_MapDirty(void);
 DRV_PRIVATE  void drv_gfx_UpdateDirtyForScreen(DRV_GFX_REGION * pstRegion_in);
 DRV_PRIVATE  void drv_gfx_UpdateDirtyForSheet(DRV_GFX_SHEET_EXT * pstSheet_in, DRV_GFX_REGION * pstRegion_in);
 DRV_PRIVATE  void drv_gfx_BitBlt(DRV_GFX_SHEET_EXT * pstSheet_in);
@@ -183,6 +187,8 @@ void drv_gfx_Refresh(void)
 	if (0 == pstSheetExt) {
 		return;
 	}
+	
+	drv_gfx_MapDirty();
 	
 	while (0 != pstSheetExt) {
 		if (0 != pstSheetExt->stSht.v) {
@@ -368,28 +374,6 @@ void drv_gfx_FillRect(const DRV_GFX_HANDLE hSheet_in, DRV_GFX_RECT * pstRect_in)
 	stRegion.x1 = pstRect_in->x + pstRect_in->w - 1;
 	stRegion.y1 = pstRect_in->y + pstRect_in->h - 1;
 	drv_gfx_UpdateDirtyForSheet(pstSheet, &stRegion);
-	
-	/*
-	if ((pstSheet->stDirty.x0 > pstRect_in->x) 
-	||  (pstSheet->stDirty.x0 < 0)) {
-		pstSheet->stDirty.x0 = pstRect_in->x;
-	}
-	if ((pstSheet->stDirty.x1 < pstRect_in->x + pstRect_in->w - 1) 
-	||  (pstSheet->stDirty.x1 < 0)) {
-		pstSheet->stDirty.x1 = pstRect_in->x + pstRect_in->w - 1;
-	}
-	if ((pstSheet->stDirty.y0 > pstRect_in->y) 
-	||  (pstSheet->stDirty.y0 < 0)) {
-		pstSheet->stDirty.y0 = pstRect_in->y;
-	}
-	if ((pstSheet->stDirty.y1 < pstRect_in->y + pstRect_in->h - 1) 
-	||  (pstSheet->stDirty.y1 < 0)) {
-		pstSheet->stDirty.y1 = pstRect_in->y + pstRect_in->h - 1;
-	}
-	*/
-	//drv_disp_Printf("[rect.x:%d,y:%d,w:%d,h:%d,c:%d]\r\n", pstRect_in->x, pstRect_in->y, pstRect_in->w, pstRect_in->h, pstSheet->uiColor);
-	//drv_disp_Printf("[dir.x0:%d,y0:%d,x1:%d,y1:%d]\r\n", pstSheet->stDirty.x0, pstSheet->stDirty.y0, pstSheet->stDirty.x1, pstSheet->stDirty.y1);
-	//drv_disp_Printf("FillRect Success\r\n");
 }
 
 void drv_gfx_DrawData(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_DATA * pstData_in)
@@ -451,23 +435,17 @@ void drv_gfx_Move(const DRV_GFX_HANDLE hSheet_in, const DRV_GFX_POINT * pstPos_i
 	
 	pstSheet = drv_gfx_stCtl.pstShtActv;
 	while (0 != pstSheet) {
-		if (pstSheet == drv_gfx_astSheet + hSheet_in) {
-			break;
-		}
-		else {
-			stRegSheet.x0 = stRegLayer.x0 - pstSheet->stSht.x;
-			stRegSheet.y0 = stRegLayer.y0 - pstSheet->stSht.y;
-			stRegSheet.x1 = stRegLayer.x1 - pstSheet->stSht.x;
-			stRegSheet.y1 = stRegLayer.y1 - pstSheet->stSht.y;
-			
-			drv_gfx_UpdateDirtyForSheet(pstSheet, &stRegSheet);
-		}
+		stRegSheet.x0 = stRegLayer.x0 - pstSheet->stSht.x;
+		stRegSheet.y0 = stRegLayer.y0 - pstSheet->stSht.y;
+		stRegSheet.x1 = stRegLayer.x1 - pstSheet->stSht.x;
+		stRegSheet.y1 = stRegLayer.y1 - pstSheet->stSht.y;
+		
+		drv_gfx_UpdateDirtyForSheet(pstSheet, &stRegSheet);
+
 		pstSheet = pstSheet->pstNext;
 	}
-	if (0 == pstSheet) {
-		CPUExt_CorePanic("[drv_gfx_Move][sheet does not exist.]");
-		return;
-	}
+
+	pstSheet = drv_gfx_astSheet + hSheet_in;
 	
 	pstSheet->stSht.x = pstPos_in->x;
 	pstSheet->stSht.y = pstPos_in->y;
@@ -539,6 +517,39 @@ DRV_PRIVATE  void drv_gfx_SheetRelease(DRV_GFX_SHEET_EXT * pstSheet_in)
 	pstSheet_in->pstNext = drv_gfx_stCtl.pstShtFree;
 	drv_gfx_stCtl.pstShtFree = pstSheet_in;
 }
+
+DRV_PRIVATE  void drv_gfx_MapDirty(void)
+{
+	DRV_GFX_SHEET_EXT * pstSheet = 0;
+	DRV_GFX_REGION      stRegion;
+	
+	if (0 == drv_gfx_stCtl.pstShtActv) {
+		return;
+	}
+	
+	pstSheet = drv_gfx_stCtl.pstShtActv;
+	while (0 != pstSheet->pstNext) {
+		stRegion.x0 = pstSheet->stSht.x + pstSheet->stDirty.x0 - pstSheet->pstNext->stSht.x;
+		stRegion.y0 = pstSheet->stSht.y + pstSheet->stDirty.y0 - pstSheet->pstNext->stSht.y;
+		stRegion.x1 = pstSheet->stSht.x + pstSheet->stDirty.x1 - pstSheet->pstNext->stSht.x;
+		stRegion.y1 = pstSheet->stSht.y + pstSheet->stDirty.y1 - pstSheet->pstNext->stSht.y;
+		
+		drv_gfx_UpdateDirtyForSheet(pstSheet->pstNext, &(stRegion));
+		
+		if ((pstSheet->stDirty.x0 + pstSheet->stSht.x >= pstSheet->pstNext->stDirty.x0 + pstSheet->pstNext->stSht.x) 
+		&&  (pstSheet->stDirty.y0 + pstSheet->stSht.y >= pstSheet->pstNext->stDirty.y0 + pstSheet->pstNext->stSht.y) 
+		&&  (pstSheet->stDirty.x1 + pstSheet->stSht.x <= pstSheet->pstNext->stDirty.x1 + pstSheet->pstNext->stSht.x) 
+		&&  (pstSheet->stDirty.y1 + pstSheet->stSht.y <= pstSheet->pstNext->stDirty.y1 + pstSheet->pstNext->stSht.y)) {
+			pstSheet->stDirty.x0 = -1;
+			pstSheet->stDirty.y0 = -1;
+			pstSheet->stDirty.x1 = -1;
+			pstSheet->stDirty.y1 = -1;
+		}
+		
+		pstSheet = pstSheet->pstNext;
+	}
+}
+
 
 DRV_PRIVATE  void drv_gfx_UpdateDirtyForScreen(DRV_GFX_REGION * pstRegion_in)
 {
@@ -869,4 +880,12 @@ DRV_PRIVATE  void drv_gfx_DispScrollUp(DRV_GFX_SHEET_EXT * pstSheet_in)
 	// TBD
 }
 
+#else  // (CPU_EXT_DISP_MODE_TEXT != CPU_EXT_DISP_MODE)
+
+void drv_gfx_Init(void)
+{
+	return;
+}
+
+#endif // (CPU_EXT_DISP_MODE_TEXT != CPU_EXT_DISP_MODE)
 

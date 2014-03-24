@@ -3,6 +3,9 @@
 ******************************************************************************/
 
 #include <gui.h>
+
+#if (CPU_EXT_DISP_MODE != CPU_EXT_DISP_MODE_TEXT)
+
 #include <gui_bg.h>
 #include <gui_log.h>
 #include <gui_mice.h>
@@ -101,9 +104,9 @@ void gui_Init(void)
         /* opt         */ (OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
         /* p_err       */ &err
     );
-	
 	if (OS_ERR_NONE != err) {
-		drv_disp_Printf("[gui_Init][Failed]\r\n");
+		drv_disp_Printf("[gui_Init][Task init Failed]\r\n");
+		//return;
 	}
 }
 
@@ -121,7 +124,7 @@ GUI_PRIVATE  void gui_core_TaskMain(void* pParam_in)
 	drv_gfx_Refresh();
 
 	drv_mice_RegisterHandler(gui_core_HandleMice);
-	
+
 	OSTmrCreate(
 		/* p_tmr          */ &(gui_core_stCtl.stTmr),
 		/* p_name         */ _GUI_CORE_TIMER_NAME,
@@ -133,8 +136,12 @@ GUI_PRIVATE  void gui_core_TaskMain(void* pParam_in)
 		/* p_err          */ &err
 	);
 	//if (OS_ERR_NONE != err) {
-	//	return;
-	//}
+	//	drv_disp_Printf("[gui_core_TaskMain][Timer init failed]\r\n");
+	//}	
+	OSTmrStart(
+		/* p_tmr */ &(gui_core_stCtl.stTmr),
+		/* p_err */ &err
+	);
 	
 	for (;;) {
 		pMsg = OSTaskQPend(
@@ -173,7 +180,7 @@ GUI_PRIVATE  void gui_core_Dispatch(const GUI_CORE_EVENT * pstEvt_in)
 		break;
 	case CPU_CORE_EVT_TIMER:
 		gui_log_Update();
-		//gui_bg_Time();
+		gui_bg_Time();
 		break;
 	default:
 		// EMPTY
@@ -238,4 +245,13 @@ GUI_PRIVATE  void gui_core_HandleTimer(void *p_tmr, void *p_arg)
 		/* p_err    */ &err
 	);
 }
+
+#else  // (CPU_EXT_DISP_MODE != CPU_EXT_DISP_MODE_TEXT)
+
+void gui_Init(void)
+{
+	return;
+}
+
+#endif // (CPU_EXT_DISP_MODE != CPU_EXT_DISP_MODE_TEXT)
 

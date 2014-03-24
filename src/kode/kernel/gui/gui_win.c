@@ -3,6 +3,9 @@
 ******************************************************************************/
 
 #include <gui_win.h>
+
+#if (CPU_EXT_DISP_MODE_TEXT != CPU_EXT_DISP_MODE)
+
 #include <gui_def.h>
 #include <drv_gfx.h>
 #include <drv_disp.h>
@@ -195,4 +198,5 @@ void gui_win_Background(const CPU_INT08U uiStyle_in, DRV_GFX_COLOR * pColor_out)
 	(*pColor_out) = pstStyle->bg_color;
 }
 
+#endif // (CPU_EXT_DISP_MODE_TEXT != CPU_EXT_DISP_MODE)
 

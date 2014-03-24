@@ -330,16 +330,15 @@ void CPUExt_DispLog(CPU_CHAR ** ppszBuf_out, CPU_INT32U * puiCnt_out)
 
 CPU_PRIVATE void cpu_disp_SaveChar(const CPU_CHAR chAscii_in)
 {
-	CPU_INT32U i = 0;
+	//CPU_INT32U i = 0;
 	
-	if ('\0' == chAscii_in) {
+	if (cpu_disp_stCtl.uiLogCnt >= CPU_DISP_LOG_BUF) {
+		cpu_disp_stCtl.aszLog[cpu_disp_stCtl.uiLogCnt - 1] = 0;
 		return;
 	}
 	
-	if (cpu_disp_stCtl.uiLogCnt == CPU_DISP_LOG_BUF) {
-		for (i = 0; i < CPU_DISP_LOG_BUF - 1; ++i) {
-			cpu_disp_stCtl.aszLog[i] = cpu_disp_stCtl.aszLog[i + 1];
-		}
+	if ((cpu_disp_stCtl.uiLogCnt > 0) 
+	&&  (0 == cpu_disp_stCtl.aszLog[cpu_disp_stCtl.uiLogCnt - 1])) {
 		cpu_disp_stCtl.uiLogCnt--;
 	}
 	

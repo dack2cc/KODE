@@ -5,6 +5,11 @@
     Public Definition
 ******************************************************************************/
 
+#define GUI_Z_ORDER_MOUSE        (0x10)
+#define GUI_Z_ORDER_LOG          (0x11)
+#define GUI_Z_ORDER_BACKGROUND   (0xFF)
+
+
 /*********************************************************************
 *
 *       Defines for constants
