@@ -153,10 +153,14 @@ enum {
 	CPU_TASK_ARG_KERNEL_EN,     /* DEF_ENABLED or DEF_DISABLE */
 	CPU_TASK_ARG_KERNEL_STACK,  /* physical address           */
 	CPU_TASK_ARG_EXT_DATA,      /* physical address           */
+	CPU_TASK_ARG_THREAD_EN,     /* DEF_ENABLED or DEF_DISABLE */
+	CPU_TASK_ARG_THREAD_STACK,  /* linerar  address           */
 	CPU_TASK_ARG_MAX
 };
 extern CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out);
 extern void     CPUExt_TaskDelete(const CPU_INT32U  uiTaskID_in);
+extern void     CPUExt_TaskGetCurrent(CPU_INT32U * puiTaskID_out);
+extern void     CPUExt_TaskGetLinearSpace(const CPU_INT32U  uiTaskID_in, CPU_ADDR * pLnrAdrStart_out, CPU_ADDR * pLnrAdrEnd_out);
 extern void     CPUExt_TaskSwitch(const CPU_INT32U  uiTaskID_in);
 extern void     CPUExt_TaskSwitchToRing3(void);
 

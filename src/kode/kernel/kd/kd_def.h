@@ -13,17 +13,17 @@
 
 enum {
 	KD_KERNEL_FNCT_INVALID = -1,
+	/* extension */
 	__KF_kdextRun,
 	__KF_kdextSetup,
+	__KF_kdextProcessCreate,
+	__KF_kdextProcessExit,
+	/* error */
 	__KF_kdGetError,
 	__KF_kdSetError,
 	/* Assertions and logging */
 	__KF_kdLogMessage,
 	__KF_kdHandleAssertion,
-	/* Versioning and attribute queries */
-	__KF_kdQueryAttribi,
-	__KF_kdQueryAttribcv,
-	__KF_kdQueryIndexedAttribcv,
 	/* Threads and synchronization */
 	__KF_kdThreadAttrCreate,
 	__KF_kdThreadAttrFree,
@@ -47,6 +47,8 @@ enum {
 	__KF_kdThreadSemFree,
 	__KF_kdThreadSemWait,
 	__KF_kdThreadSemPost,
+	/* Events */
+	__KF_kdWaitEvent,
 	/* Time functions */
 	__KF_kdGetTimeUST,
 	__KF_kdTime,

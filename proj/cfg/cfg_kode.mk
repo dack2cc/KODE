@@ -97,8 +97,10 @@ KODE_KERNEL_KD_DIR := kd
 KODE_KERNEL_KD_SRC_S := 
 KODE_KERNEL_KD_SRC_C := kd_core.c \
                         kd_thread.c \
+                        kd_event.c \
                         kd_time.c \
-                        kd_file.c 
+                        kd_file.c \
+                        kd_proc.c
 KODE_KERNEL_KD_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)/%.o, $(KODE_KERNEL_KD_SRC_S)) \
                       $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_KD_DIR)/%.o, $(KODE_KERNEL_KD_SRC_C))
 
@@ -119,7 +121,8 @@ KODE_SYSTEM_DIR := system
 KODE_SYSTEM_LIB_DIR := lib
 
 KODE_SYSTEM_LIB_KD_DIR := kd
-KODE_SYSTEM_LIB_KD_SRC := kd_syscall.c
+KODE_SYSTEM_LIB_KD_SRC := kd_syscall.c \
+                          kd_lib.c
 KODE_SYSTEM_LIB_KD_OBJ := $(patsubst %.c, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_SYSTEM_DIR)/$(KODE_SYSTEM_LIB_DIR)/$(KODE_SYSTEM_LIB_KD_DIR)/%.o, $(KODE_SYSTEM_LIB_KD_SRC))
 
 KODE_SYSTEM_LIB_STD_DIR := std

@@ -63,7 +63,7 @@ L_START:
 	mov [12], cx
 	
 	;jmp L_320_200
-	;jmp L_END_DISP
+	jmp L_END_DISP
 	
 	; enter the vesa display mode
 	; check vbe exist

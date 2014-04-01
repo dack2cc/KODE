@@ -28,15 +28,20 @@ struct _STACK_START {
     Internal Definition
 ******************************************************************************/
 
-#define MAGIC_ALICE    (0xABCDEF)
-#define MAGIC_JERRY    (0xFEDCBA)
 
+void* s_process_setup(void* param_in);
 void  s_logo(void);
 void  s_time(void);
-void* s_thread_init(void* param_in);
+
+#define MAGIC_SETUP    (0x5E749)
+#define MAGIC_ALICE    (0xA61CE)
+#define MAGIC_JERRY    (0x7E229)
+
+KDint32  s_thread_magic = MAGIC_SETUP;
 
 void* s_thread_alice(void* param_in);
 void* s_thread_jerry(void* param_in);
+
 
 /******************************************************************************
     Function Definition
@@ -44,26 +49,37 @@ void* s_thread_jerry(void* param_in);
 
 void s_main(void)
 {	
-	KDThreadAttr*  pstAttr = KD_NULL;
-	
 	kdextInit();
+	//s_process_setup(0);
+	kdextProcessCreate(s_process_setup, 0);
+	kdextRun();
+}
+
+void* s_process_setup(void* param_in)
+{
+	const KDEvent *  pstEvt  = KD_NULL;
+	KDThreadAttr  *  pstAttr = KD_NULL;
+
+	s_logo();
+	s_time();
+	
+	kdextSetup();
+	kdFopen("/", "rw");
 
 	pstAttr = kdThreadAttrCreate();
-	kdThreadCreate(pstAttr, s_thread_init, (void *)0);
+	kdThreadCreate(pstAttr, s_thread_alice, (void *)(&s_thread_magic));
 	kdThreadAttrFree(pstAttr);
 	
-	pstAttr = kdThreadAttrCreate();
-	kdThreadCreate(pstAttr, s_thread_alice, (void *)MAGIC_ALICE);
-	kdThreadAttrFree(pstAttr);
+	s_thread_magic = MAGIC_ALICE;
+	printf("[setup][Magic 0x%X]\r\n", &pstAttr);
 	
 	//kdHandleAssertion(0, __FILE__, __LINE__);
 	
-	kdextRun();
-	
-	while (1) ;
-	
-	return;
+	for (;;) {
+		pstEvt = kdWaitEvent(0);
+	}
 }
+
 
 void s_logo(void)
 {
@@ -87,47 +103,37 @@ void s_time(void)
 	printf("[Tick:%d][Time:%d][%d] \r\n", (int)ust, (int)time, (int)timep);
 }
 
-void* s_thread_init(void* param_in)
-{
-	s_logo();
-	s_time();
-	
-	kdextSetup();
-	kdFopen("/", "rw");
-	
-	//for (;;);
-	
-	return ((void *)0);
-}
-
 void* s_thread_alice(void* param_in)
 {
-	KDThreadAttr*  pstAttr  = KD_NULL;
-	KDThread*      pstJerry = KD_NULL;
+	const KDEvent*  pstEvt   = KD_NULL;
+	KDThreadAttr*   pstAttr  = KD_NULL;
+	KDThread*       pstJerry = KD_NULL;
 	
-	if (MAGIC_ALICE == (KDint32)param_in) {
-	    kdLogMessage("[alice] Hello (^-^)/ \r\n");
-	}
+	printf("[alice][Magic 0x%X]\r\n", &pstAttr);
+	printf("[alice][Hello 0x%X]\r\n", *((KDint32 *)param_in));
 	
 	pstAttr  = kdThreadAttrCreate();
-	pstJerry = kdThreadCreate(pstAttr, s_thread_jerry, (void *)MAGIC_JERRY);
+	pstJerry = kdThreadCreate(pstAttr, s_thread_jerry, param_in);
 	kdThreadAttrFree(pstAttr);
+
+	*((KDint32 *)param_in) = MAGIC_JERRY;
 	
 	kdThreadJoin(pstJerry, 0);
-	kdLogMessage("[alice] Goodbye (-_-)/ \r\n");
+	printf("[alice][Down  0x%X] \r\n", *((KDint32 *)param_in));
 	
-	for (;;);
+	for (;;) {
+		pstEvt = kdWaitEvent(0);
+	}
 	
 	return ((void *)0);
 }
 
 void* s_thread_jerry(void* param_in)
 {
-	if (MAGIC_JERRY == (KDint32)param_in) {
-	    kdLogMessage("[jerry] This is Jerry going down (=_=) \r\n");
-	}
+	CPU_DATA magic  = 0;
 	
-	//for (;;);
+	printf("[jerry][Magic 0x%X]\r\n", &magic);
+	printf("[jerry][Wake  0x%X]\r\n", *((KDint32 *)param_in));
 	
 	return ((void *)0);
 }

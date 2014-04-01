@@ -24,12 +24,14 @@ struct KDThreadAttr {
 };
 
 #define _KD_THREAD_KERNEL_STACK_SIZE    (3 * 1024)
-#define _KD_THREAD_USER_STACK_SIZE      (64 * 1024 * 1024)
+#define _KD_THREAD_USER_STACK_MIN       (4 * 1024)
+#define _KD_THREAD_USER_STACK_MAX       (1 * 1024 * 1024)
 
 struct KDThread {
 	OS_TCB    stTCB;
 	OS_MUTEX  stMutex;
 	KDint     iDetachState;
+	void *    pStackAddr;
 };
 
 /******************************************************************************
@@ -82,7 +84,7 @@ KDThreadAttr * kd_thread_AttrCreate(void)
 	pstAttr = (KDThreadAttr *)lib_pool_Malloc(sizeof(KDThreadAttr));
 	if (KD_NULL != pstAttr) {
 		pstAttr->iDetachState = KD_THREAD_CREATE_JOINABLE;
-		pstAttr->iStackSize   = 0;
+		pstAttr->iStackSize   = _KD_THREAD_USER_STACK_MAX;
 	}
 	else {
 		kd_core_SetError(KD_ENOMEM);
@@ -207,7 +209,8 @@ KDint  kd_thread_AttrSetStackSize(KDThreadAttr * pstAttr_inout, KDsize iStackSiz
 		return (-1);
 	}
 	
-	if (iStackSize_in > _KD_THREAD_USER_STACK_SIZE) {
+	if ((iStackSize_in < _KD_THREAD_USER_STACK_MIN) 
+	||  (iStackSize_in > _KD_THREAD_USER_STACK_MAX)) {
 		kd_core_SetError(KD_EINVAL);
 		return (-1);
 	}
@@ -258,22 +261,33 @@ KDThread * kd_thread_Create(
 )
 {
 	CPU_ADDR   addrPhyPage = 0;
+	CPU_INT32U uiStackSize = 0;
 	KDThread*  pstThread   = KD_NULL;
 	void*      pExtData    = KD_NULL;
 	CPU_DATA*  pExtArg     = KD_NULL;
+	CPU_DATA   mem_ctl     = 0;
 	OS_ERR     os_err      = OS_ERR_NONE;
 	
 	CPUExt_PageGetFree((&addrPhyPage));
 	if (0 == addrPhyPage) {
 		kd_core_SetError(KD_EAGAIN);
-		return (KD_NULL);		
+		return (KD_NULL);
 	}
+	
+	uiStackSize = _KD_THREAD_USER_STACK_MAX;
+	if (0 != pstAttr_in) {
+		uiStackSize = pstAttr_in->iStackSize;
+	}
+	
+	mem_ctl   = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_MEM_CTL, &os_err);
 	pstThread = (KDThread *)addrPhyPage;
 	pExtData  = (void *)((CPU_INT32U)addrPhyPage + sizeof(KDThread));
 	pExtArg   = (CPU_DATA *)pExtData;
 	
-	pExtArg[OS_TCB_EXT_EFLAG] = eflag_in;
-	pExtArg[OS_TCB_EXT_RET_POINT] = (CPU_DATA)(&kdThreadExit);
+	pExtArg[OS_TCB_EXT_EFLAG]      = eflag_in;
+	pExtArg[OS_TCB_EXT_RET_POINT]  = (CPU_DATA)(&kdThreadExit);
+	pExtArg[OS_TCB_EXT_IS_PROCESS] = 1; //0;
+	pExtArg[OS_TCB_EXT_USER_STACK] = 0; //(CPU_DATA)((CPU_INT08U *)(lib_pool_Get((LIB_POOL_CONTROL *)mem_ctl, uiStackSize)) +  uiStackSize - 8);
 	
 	OSTaskCreate(
 		/* p_tcb       */   &(pstThread->stTCB),

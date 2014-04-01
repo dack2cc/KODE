@@ -12,6 +12,10 @@ KD_API void  KD_APIENTRY  kdextInit(void);
 KD_API void  KD_APIENTRY  kdextRun(void);
 KD_API void  KD_APIENTRY  kdextSetup(void);
 
+typedef struct KDExtProcess KDExtProcess;
+KD_API KDExtProcess *   KD_APIENTRY kdextProcessCreate(void *(*start_routine)(void *), void *arg);
+KD_API KD_NORETURN void KD_APIENTRY kdextProcessExit(void * retval);
+
 #ifdef __cplusplus
 }
 #endif

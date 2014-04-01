@@ -22,23 +22,49 @@
     Function Definition
 ******************************************************************************/
 
+/*
+   extension
+*/
 CPU_EXT_DEFINE_KERNEL_FNCT_0(void,  kdextRun);
 CPU_EXT_DEFINE_KERNEL_FNCT_0(void,  kdextSetup);
+CPU_EXT_DEFINE_KERNEL_FNCT_1(void,  kdextProcessExit, void *, retval);
+
+KDExtProcess * KD_APIENTRY kdextProcessCreate(void *(*start_routine)(void *), void *arg)
+{
+	CPU_DATA  __res = 0;
+	
+	__asm__ volatile ( \
+		"int $0x80" \
+		: "=a" (__res) \
+		: "0" (__KF_kdextProcessCreate), \
+		  "b" ((CPU_DATA)(0)), \
+		  "c" ((CPU_DATA)(start_routine)), \
+		  "d" ((CPU_DATA)(arg)) \
+	);
+	
+	return ((KDExtProcess *)(__res));
+}
+
+
+/*
+    Error
+*/
 CPU_EXT_DEFINE_KERNEL_FNCT_0(KDint, kdGetError);
 CPU_EXT_DEFINE_KERNEL_FNCT_1(void,  kdSetError, KDint, error);
 
-/* Assertions and logging */
+
+/* 
+    Assertions and logging 
+*/
 #ifndef KD_NDEBUG
 CPU_EXT_DEFINE_KERNEL_FNCT_1(void,  kdLogMessage, const KDchar *, string);
 #endif /* KD_NDEBUG */
 CPU_EXT_DEFINE_KERNEL_FNCT_3(void,  kdHandleAssertion, const KDchar *, condition, const KDchar *, filename, KDint, linenumber);
 
-/* Versioning and attribute queries */
-CPU_EXT_DEFINE_KERNEL_FNCT_2(KDint, kdQueryAttribi, KDint, attribute, KDint *, value);
-CPU_EXT_DEFINE_KERNEL_FNCT_1(const KDchar *, kdQueryAttribcv, KDint, attribute);
-CPU_EXT_DEFINE_KERNEL_FNCT_2(const KDchar *, kdQueryIndexedAttribcv, KDint, attribute, KDint, index);
 
-/* Threads and synchronization */
+/* 
+    Threads and synchronization 
+*/
 CPU_EXT_DEFINE_KERNEL_FNCT_2(KDint, kdextThreadAttrSetPriority, KDThreadAttr *, attr, KDint, priority);
 CPU_EXT_DEFINE_KERNEL_FNCT_0(KDThreadAttr *, kdThreadAttrCreate);
 CPU_EXT_DEFINE_KERNEL_FNCT_1(KDint, kdThreadAttrFree, KDThreadAttr *, attr);
@@ -77,7 +103,16 @@ KDThread * kdThreadCreate(const KDThreadAttr *attr, void *(*start_routine)(void 
 	return ((KDThread *)(__res));
 }
 
-/* Time functions */
+
+/* 
+    Threads and synchronization 
+*/
+CPU_EXT_DEFINE_KERNEL_FNCT_1(const KDEvent *, kdWaitEvent, KDust, timeout);
+
+
+/* 
+    Time functions 
+*/
 CPU_EXT_DEFINE_KERNEL_FNCT_0(KDust, kdGetTimeUST);
 
 KDtime kdTime(KDtime * timep)
@@ -94,7 +129,10 @@ KDtime kdTime(KDtime * timep)
 	return ((KDtime)(__res));
 }
 
-/* File system */
+
+/* 
+    File system 
+*/
 CPU_EXT_DEFINE_KERNEL_FNCT_2(KDFile *, kdFopen, const KDchar *, pathname, const KDchar *, mode);
 
 

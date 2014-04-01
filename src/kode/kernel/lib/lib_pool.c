@@ -4,7 +4,6 @@
 ******************************************************************************/
 
 #include <lib_pool.h>
-//#include <cpu_boot.h>
 #include <cpu_ext.h>
 #include <os.h>
 
@@ -51,22 +50,10 @@ LIB_PRIVATE _LIB_POOL_DESC* lib_pool_pstDescFree = (_LIB_POOL_DESC*)0;
     Memory Manager above the Page Size
 */
 
-#define _LIB_POOL_FREE_MAX  (4096)
+#define _LIB_POOL_FREE_MAX  (1024)
 
-typedef struct _LIB_POOL_FREE {
-	CPU_ADDR   adrPhy;
-	CPU_SIZE_T size;
-} _LIB_POOL_FREE;
-
-typedef struct _LIB_POOL_CONTROL {
-	CPU_INT32U      uiLostSize;
-	CPU_INT32U      uiLostCnt;
-	CPU_INT32U      uiFreeMax;
-	CPU_INT32U      uiFreeCnt;
-	_LIB_POOL_FREE  astFree[_LIB_POOL_FREE_MAX];
-} _LIB_POOL_CONTROL;
-
-LIB_PRIVATE  _LIB_POOL_CONTROL  lib_pool_stCtl;
+LIB_PRIVATE  LIB_POOL_FREE     lib_pool_astFree[_LIB_POOL_FREE_MAX];
+LIB_PRIVATE  LIB_POOL_CONTROL  lib_pool_stCtl;
 
 /******************************************************************************
     Private Interface
@@ -76,9 +63,6 @@ LIB_PRIVATE  void* lib_pool_MallocSEPage(CPU_SIZE_T size_in);
 LIB_PRIVATE  void  lib_pool_FreeSEPage(void* pAddr_in, CPU_SIZE_T  size_in);
 LIB_PRIVATE  void  lib_pool_GetFreeDesc(void);
 
-LIB_PRIVATE  void* lib_pool_MallocLTPage(CPU_SIZE_T size_in);
-LIB_PRIVATE  void  lib_pool_FreeLTPage(void* pAddr_in, CPU_SIZE_T  size_in);
-
 /******************************************************************************
     Function Definition
 ******************************************************************************/
@@ -87,13 +71,14 @@ void  lib_pool_Init(const CPU_ADDR addrStart_in, const CPU_ADDR addrEnd_in)
 {
 	lib_pool_stCtl.uiLostSize = 0;
 	lib_pool_stCtl.uiLostCnt  = 0;
-	lib_pool_stCtl.uiFreeMax  = 0;
+	lib_pool_stCtl.uiFreeMax  = _LIB_POOL_FREE_MAX;
 	lib_pool_stCtl.uiFreeCnt  = 0;
+	lib_pool_stCtl.pstFree    = lib_pool_astFree;
 	
 	if ((addrEnd_in > addrStart_in) 
 	&& ((addrEnd_in - addrStart_in) > _LIB_POOL_PAGE_SIZE)) {
-		lib_pool_stCtl.astFree[0].adrPhy = addrStart_in;
-		lib_pool_stCtl.astFree[0].size   = addrEnd_in - addrStart_in;
+		lib_pool_stCtl.pstFree[0].addr = addrStart_in;
+		lib_pool_stCtl.pstFree[0].size = addrEnd_in - addrStart_in + 1;
 		lib_pool_stCtl.uiFreeCnt = 1;
 	}
 }
@@ -101,7 +86,7 @@ void  lib_pool_Init(const CPU_ADDR addrStart_in, const CPU_ADDR addrEnd_in)
 void* lib_pool_Malloc(CPU_SIZE_T  size_in)
 {	
 	if (size_in > _LIB_POOL_PAGE_SIZE) {
-		return (lib_pool_MallocLTPage(size_in));
+		return (lib_pool_Get(&lib_pool_stCtl, size_in));
 	}
 	else {
 		return (lib_pool_MallocSEPage(size_in));
@@ -111,7 +96,7 @@ void* lib_pool_Malloc(CPU_SIZE_T  size_in)
 void  lib_pool_Free(void* pAddr_in, CPU_SIZE_T  size_in)
 {
 	if (size_in > _LIB_POOL_PAGE_SIZE) {
-		return (lib_pool_FreeLTPage(pAddr_in, size_in));
+		return (lib_pool_Put(&lib_pool_stCtl, pAddr_in, size_in));
 	}
 	else {
 		return (lib_pool_FreeSEPage(pAddr_in, size_in));
@@ -279,65 +264,71 @@ LIB_PRIVATE  void  lib_pool_GetFreeDesc(void)
 	return;
 }
 
-LIB_PRIVATE  void* lib_pool_MallocLTPage(CPU_SIZE_T size_in)
+//LIB_PRIVATE  void* lib_pool_MallocLTPage(CPU_SIZE_T size_in)
+void* lib_pool_Get(LIB_POOL_CONTROL * pstCtl_inout, CPU_SIZE_T size_in)
 {
 	CPU_SR_ALLOC();
 
-	CPU_INT32U i = 0;
-	CPU_ADDR adrPhy = 0;
+	CPU_INT32U i    = 0;
+	CPU_ADDR   addr = 0;
+	
+	if ((0 == pstCtl_inout) || (0 == size_in)) {
+		return ((void *)0);
+	}
 	
 	CPU_INT_DIS();
 	
 	//drv_disp_Printf("[freeCnt][%d]\r\n", lib_pool_stCtl.uiFreeCnt);	
 	
-	for (i = 0; i < lib_pool_stCtl.uiFreeCnt; ++i) {
-	    //drv_disp_Printf("[free(%d)Siz][%dKB]\r\n", i, lib_pool_stCtl.astFree[0].size / 1024);
-	    //drv_disp_Printf("[free(%d)Adr][0x%X]\r\n", i, lib_pool_stCtl.astFree[0].adrPhy);
-		if (lib_pool_stCtl.astFree[i].size >= size_in) {
-			adrPhy = lib_pool_stCtl.astFree[i].adrPhy;
-			lib_pool_stCtl.astFree[i].adrPhy += size_in;
-			lib_pool_stCtl.astFree[i].size   -= size_in;
-			if (0 == lib_pool_stCtl.astFree[i].size) {
-				(lib_pool_stCtl.uiFreeCnt)--;
-				for (; (i + 1) < lib_pool_stCtl.uiFreeCnt; ++i) {
-					lib_pool_stCtl.astFree[i] = lib_pool_stCtl.astFree[i+1];
+	for (i = 0; i < pstCtl_inout->uiFreeCnt; ++i) {
+	    //drv_disp_Printf("[free(%d)Siz][%dKB]\r\n", i, pstCtl_inout->pstFree[0].size / 1024);
+	    //drv_disp_Printf("[free(%d)Adr][0x%X]\r\n", i, pstCtl_inout->pstFree[0].addr);
+		if (pstCtl_inout->pstFree[i].size >= size_in) {
+			addr = pstCtl_inout->pstFree[i].addr;
+			pstCtl_inout->pstFree[i].addr += size_in;
+			pstCtl_inout->pstFree[i].size -= size_in;
+			if (0 == pstCtl_inout->pstFree[i].size) {
+				(pstCtl_inout->uiFreeCnt)--;
+				for (; (i + 1) < pstCtl_inout->uiFreeCnt; ++i) {
+					pstCtl_inout->pstFree[i] = pstCtl_inout->pstFree[i+1];
 				}
 			}
 			CPU_INT_EN();
-			return ((void *)adrPhy);
+			return ((void *)addr);
 		}
 	}
 	
 	CPU_INT_EN();
+	
 	return ((void *)0);
 }
 
-LIB_PRIVATE  void  lib_pool_FreeLTPage(void* pAddr_in, CPU_SIZE_T  size_in)
+//LIB_PRIVATE  void  lib_pool_FreeLTPage(void* pAddr_in, CPU_SIZE_T  size_in)
+void  lib_pool_Put(LIB_POOL_CONTROL * pstCtl_inout, void* addr_in, CPU_SIZE_T size_in)
 {
 	CPU_SR_ALLOC();
 	
-	CPU_INT32U i = 0;
-	CPU_INT32U j = 0;
-	CPU_ADDR adrPhy = (CPU_ADDR)pAddr_in;
+	CPU_INT32U i    = 0;
+	CPU_INT32U j    = 0;
+	CPU_ADDR   addr = (CPU_ADDR)addr_in;
 
 	CPU_INT_DIS();
 
-	
-	for (i = 0; i < lib_pool_stCtl.uiFreeCnt; ++i) {
-		if (lib_pool_stCtl.astFree[i].adrPhy > adrPhy) {
+	for (i = 0; i < pstCtl_inout->uiFreeCnt; ++i) {
+		if (pstCtl_inout->pstFree[i].addr > addr) {
 			break;
 		}
 	}
 	
 	if (i > 0) {
-		if ((lib_pool_stCtl.astFree[i - 1].adrPhy + lib_pool_stCtl.astFree[i - 1].size) == adrPhy) {
-			lib_pool_stCtl.astFree[i - 1].size += size_in;
-			if (i < lib_pool_stCtl.uiFreeCnt) {
-				if ((adrPhy + size_in) == lib_pool_stCtl.astFree[i].adrPhy) {
-					lib_pool_stCtl.astFree[i - 1].size += lib_pool_stCtl.astFree[i].size;
-					(lib_pool_stCtl.uiFreeCnt)--;
-					for (; (i + 1) < lib_pool_stCtl.uiFreeCnt; ++i) {
-						lib_pool_stCtl.astFree[i] = lib_pool_stCtl.astFree[i + 1];
+		if ((pstCtl_inout->pstFree[i - 1].addr + pstCtl_inout->pstFree[i - 1].size) == addr) {
+			pstCtl_inout->pstFree[i - 1].size += size_in;
+			if (i < pstCtl_inout->uiFreeCnt) {
+				if ((addr + size_in) == pstCtl_inout->pstFree[i].addr) {
+					pstCtl_inout->pstFree[i - 1].size += pstCtl_inout->pstFree[i].size;
+					(pstCtl_inout->uiFreeCnt)--;
+					for (; (i + 1) < pstCtl_inout->uiFreeCnt; ++i) {
+						pstCtl_inout->pstFree[i] = pstCtl_inout->pstFree[i + 1];
 					}
 				}
 			}
@@ -346,33 +337,49 @@ LIB_PRIVATE  void  lib_pool_FreeLTPage(void* pAddr_in, CPU_SIZE_T  size_in)
 		}
 	}
 	
-	if (i < lib_pool_stCtl.uiFreeCnt) {
-		if ((adrPhy + size_in) == lib_pool_stCtl.astFree[i].adrPhy) {
-			lib_pool_stCtl.astFree[i].adrPhy = adrPhy;
-			lib_pool_stCtl.astFree[i].size += size_in;
+	if (i < pstCtl_inout->uiFreeCnt) {
+		if ((addr + size_in) == pstCtl_inout->pstFree[i].addr) {
+			pstCtl_inout->pstFree[i].addr  = addr;
+			pstCtl_inout->pstFree[i].size += size_in;
 			CPU_INT_EN();
 			return;
 		}
 	}
 	
-	if (lib_pool_stCtl.uiFreeCnt < _LIB_POOL_FREE_MAX) {
-		for (j = lib_pool_stCtl.uiFreeCnt; j > i; --j) {
-			lib_pool_stCtl.astFree[j] = lib_pool_stCtl.astFree[j - 1];
+	if (pstCtl_inout->uiFreeCnt < pstCtl_inout->uiFreeMax) {
+		for (j = pstCtl_inout->uiFreeCnt; j > i; --j) {
+			pstCtl_inout->pstFree[j] = pstCtl_inout->pstFree[j - 1];
 		}
-		(lib_pool_stCtl.uiFreeCnt)++;
-		if (lib_pool_stCtl.uiFreeMax < lib_pool_stCtl.uiFreeCnt) {
-			lib_pool_stCtl.uiFreeMax = lib_pool_stCtl.uiFreeCnt;
-		}
-		lib_pool_stCtl.astFree[i].adrPhy = adrPhy;
-		lib_pool_stCtl.astFree[i].size  = size_in;
+		(pstCtl_inout->uiFreeCnt)++;
+		
+		pstCtl_inout->pstFree[i].addr = addr;
+		pstCtl_inout->pstFree[i].size = size_in;
 		CPU_INT_EN();
 		return;
 	}
 	
-	lib_pool_stCtl.uiLostSize += size_in;
-	(lib_pool_stCtl.uiLostCnt)++;
+	pstCtl_inout->uiLostSize += size_in;
+	(pstCtl_inout->uiLostCnt)++;
 	CPU_INT_EN();
 	return;
+}
+
+void  lib_pool_Setup(LIB_POOL_CONTROL * pstCtl_out, CPU_SIZE_T sizeCtl_in, CPU_ADDR addrFree_in, CPU_SIZE_T sizeFree_in)
+{
+	if ((0 == pstCtl_out) 
+	||  (sizeCtl_in  <= sizeof(LIB_POOL_CONTROL)) 
+	||  (sizeFree_in <= 0)) {
+		return;
+	}
+	
+	pstCtl_out->uiLostSize = 0;
+	pstCtl_out->uiLostCnt  = 0;
+	pstCtl_out->uiFreeCnt  = 1;
+	pstCtl_out->uiFreeMax  = (sizeCtl_in - sizeof(LIB_POOL_CONTROL)) / sizeof(LIB_POOL_FREE);
+	pstCtl_out->pstFree    = (LIB_POOL_FREE *)((CPU_INT32U)pstCtl_out + sizeof(LIB_POOL_CONTROL));
+	
+	pstCtl_out->pstFree[0].addr = addrFree_in;
+	pstCtl_out->pstFree[0].size = sizeFree_in;
 }
 
 

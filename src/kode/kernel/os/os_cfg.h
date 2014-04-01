@@ -38,16 +38,20 @@ enum {
 	OS_TCB_EXT_INVALID = -1,
 	OS_TCB_EXT_EFLAG,
 	OS_TCB_EXT_RET_POINT,
+	OS_TCB_EXT_USER_STACK,
+	OS_TCB_EXT_IS_PROCESS,
 	OS_TCB_EXT_MAX
 };
 
 #define OS_FILE_OPEN_PER_TASK   (20u)
 
 #define OS_TCB_REG_ERR_CODE     (0u)
-#define OS_TCB_REG_KERNEL_EN    (1u)
-#define OS_TCB_REG_TASK_ID      (2u)
-#define OS_TCB_REG_FILE_FLAG    (3u)
-#define OS_TCB_REG_FILE_START   (4u)
+#define OS_TCB_REG_MEM_CTL      (1u)    /* memory control */
+#define OS_TCB_REG_PID          (2u)    /* process id     */
+#define OS_TCB_REG_TID          (3u)    /* thread  id     */
+#define OS_TCB_REG_PGRP         (4u)
+#define OS_TCB_REG_FILE_FLAG    (5u)
+#define OS_TCB_REG_FILE_START   (6u)
 #define OS_TCB_REG_MAX          (OS_TCB_REG_FILE_START + OS_FILE_OPEN_PER_TASK)
 
 

@@ -185,21 +185,24 @@ CPU_PRIVATE  CPU_X86_TASK_STACK  cpu_task_stTask0KernelStack = {
 };
 
 
-#define  CPU_TASK_MAX    (64)
+#define  CPU_TASK_MAX    (46)
 CPU_PRIVATE  CPU_X86_TASK*  cpu_task_apstAllTask[CPU_TASK_MAX] = {&(cpu_task_stTask0KernelStack.task), };
 CPU_PRIVATE  CPU_X86_TASK*  cpu_task_pstCurrentTask = &(cpu_task_stTask0KernelStack.task);
 
 #define  CPU_TASK_LINERAR_ADDR_RANGE    (64*1024*1024)  /* 64MB */
                                                         /* 64MB x 64 = 4GB */
+                                                        /* 64MB x 46 = 3GB */
 
 /******************************************************************************
     Private Interface
 ******************************************************************************/
 
+CPU_PRIVATE CPU_ERR   cpu_task_CreateThread( const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out);
 CPU_PRIVATE  void     cpu_task_SwitchToTask0(void);
-CPU_PRIVATE  CPU_ERR  cpu_task_GetTaskSpace(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in);
+CPU_PRIVATE  CPU_ERR  cpu_task_SaveTaskSpace(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in);
 CPU_PRIVATE  CPU_ERR  cpu_task_MakeTSS(CPU_ADDR  addrKernelStack_in, CPU_FNCT_PTR  pfnRoutine_in, CPU_DATA  eflags_in, CPU_DATA isKernel_in, CPU_X86_TASK* pstTask_out);
-CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(const CPU_ADDR addrLnrStart_in, CPU_X86_TASK* pstTask_out);
+CPU_PRIVATE  CPU_ERR  cpu_task_CopyCurrentLDT(const CPU_ADDR addrLnrStart_in, CPU_X86_TASK* pstTask_out);
+CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(CPU_X86_TASK* pstTask_out);
 CPU_PRIVATE  CPU_ERR  cpu_task_BuildStack(const CPU_ADDR addrLnrStart_in, const CPU_DATA isKernel_in, void * pParam_in, CPU_FNCT_PTR pfnReturnPoint_in, CPU_X86_TASK* pstTask_inout);
 
 /******************************************************************************
@@ -243,7 +246,12 @@ CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_ou
 		return (CPU_ERR_BAD_PARAM);
 	}
 	
-	ret = cpu_task_GetTaskSpace(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
+	if ((DEF_ENABLED == pArgList_in[CPU_TASK_ARG_THREAD_EN])
+	&&  (DEF_ENABLED != pArgList_in[CPU_TASK_ARG_KERNEL_EN])) {
+		return (cpu_task_CreateThread(pArgList_in, puiTaskID_out));
+	}
+	
+	ret = cpu_task_SaveTaskSpace(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
 
 	addrLnrStart = uiTaskIndex * CPU_TASK_LINERAR_ADDR_RANGE;
 	pstTask = (CPU_X86_TASK *)pArgList_in[CPU_TASK_ARG_EXT_DATA];
@@ -260,7 +268,7 @@ CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_ou
 	}
 	
 	if (CPU_ERR_NONE == ret) {
-	    ret = cpu_task_CloneCurrentLDT(addrLnrStart, pstTask);		
+	    ret = cpu_task_CopyCurrentLDT(addrLnrStart, pstTask);		
 	}
 	
 	if (CPU_ERR_NONE == ret) {
@@ -294,6 +302,48 @@ CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_ou
 	return (CPU_ERR_NONE);
 }
 
+CPU_PRIVATE CPU_ERR  cpu_task_CreateThread( const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out)
+{
+	CPU_INT32U     uiTaskIndex = 0;
+	CPU_X86_TASK*  pstTask = 0;
+	CPU_ERR        ret = CPU_ERR_NONE;
+	
+	if ((0 == pArgList_in) 
+	||  (0 == puiTaskID_out)) {
+		return (CPU_ERR_BAD_PARAM);
+	}
+	
+	ret = cpu_task_SaveTaskSpace(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
+
+	pstTask = (CPU_X86_TASK *)pArgList_in[CPU_TASK_ARG_EXT_DATA];
+	pstTask->index = uiTaskIndex;
+
+	if (CPU_ERR_NONE == ret) {
+		ret = cpu_task_MakeTSS(
+			pArgList_in[CPU_TASK_ARG_KERNEL_STACK], 
+			(CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_ROUTINE], 
+			pArgList_in[CPU_TASK_ARG_EFLAG], 
+			pArgList_in[CPU_TASK_ARG_KERNEL_EN],
+			pstTask
+		);
+	}
+
+	if (CPU_ERR_NONE == ret) {
+	    ret = cpu_task_CloneCurrentLDT(pstTask);		
+	}
+	
+	if (CPU_ERR_NONE == ret) {
+		pstTask->tss.esp = pArgList_in[CPU_TASK_ARG_THREAD_STACK];
+	}
+
+	_set_tss_desc(X86_GDT + X86_GDT_TSS_0 + (uiTaskIndex << 1), &(pstTask->tss));
+	_set_ldt_desc(X86_GDT + X86_GDT_LDT_0 + (uiTaskIndex << 1), &(pstTask->ldt));
+	
+	(*puiTaskID_out) = uiTaskIndex;
+
+	return (CPU_ERR_NONE);
+}
+
 
 void  CPUExt_TaskDelete(const CPU_INT32U  uiTaskID_in)
 {
@@ -311,6 +361,15 @@ void  CPUExt_TaskDelete(const CPU_INT32U  uiTaskID_in)
 	}
 	
 	return;
+}
+
+void CPUExt_TaskGetCurrent(CPU_INT32U * puiTaskID_out)
+{
+	if ((0 == cpu_task_pstCurrentTask) || (0 == puiTaskID_out)) {
+		return;
+	}
+	
+	(*puiTaskID_out) = cpu_task_pstCurrentTask->index;
 }
 
 
@@ -380,7 +439,7 @@ void CPUExt_TaskSwitchToRing3(void)
 }
 
 
-CPU_PRIVATE  CPU_ERR  cpu_task_GetTaskSpace(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in)
+CPU_PRIVATE  CPU_ERR  cpu_task_SaveTaskSpace(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in)
 {
 	CPU_INT32U  uiIndex = 0;
 	
@@ -451,7 +510,7 @@ CPU_PRIVATE  CPU_ERR  cpu_task_MakeTSS(
 	    pstTask_out->tss.gs = 0x10;
 	} 
 	else {
-	    pstTask_out->tss.es = 0x17;
+		pstTask_out->tss.es = 0x17;
 	    pstTask_out->tss.cs = 0x0f;
 	    pstTask_out->tss.ss = 0x17;
 	    pstTask_out->tss.ds = 0x17;
@@ -462,7 +521,7 @@ CPU_PRIVATE  CPU_ERR  cpu_task_MakeTSS(
 	return (CPU_ERR_NONE);
 }
 
-CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(
+CPU_PRIVATE  CPU_ERR  cpu_task_CopyCurrentLDT(
 	const CPU_ADDR  addrLnrStart_in, 
 	CPU_X86_TASK*   pstTask_out
 )
@@ -480,7 +539,7 @@ CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(
 	pstTask_out->ldt[X86_LDT_NULL].hi = 0;
 	pstTask_out->ldt[X86_LDT_NULL].lo = 0;
 	pstTask_out->ldt[X86_LDT_CODE].hi = 0x0fff;
-	pstTask_out->ldt[X86_LDT_CODE].lo = 0xc0fa00;		
+	pstTask_out->ldt[X86_LDT_CODE].lo = 0xc0fa00;
 	pstTask_out->ldt[X86_LDT_DATA].hi = 0x3fff;
 	pstTask_out->ldt[X86_LDT_DATA].lo = 0xc0f200;
 	
@@ -508,6 +567,46 @@ CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(
 		return (ret);
 	}
 	
+	return (CPU_ERR_NONE);
+}
+
+
+CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(CPU_X86_TASK* pstTask_out)
+{
+	CPU_INT32U  uiDataLimit = 0;
+	CPU_INT32U  uiCodeLimit = 0;
+	CPU_ADDR    addrLinerarData = 0;
+	CPU_ADDR    addrLinerarCode = 0;
+
+	if (0 == pstTask_out) {
+		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad Parameter");
+	}
+	
+	pstTask_out->ldt[X86_LDT_NULL].hi = 0;
+	pstTask_out->ldt[X86_LDT_NULL].lo = 0;
+	pstTask_out->ldt[X86_LDT_CODE].hi = 0x0fff;
+	pstTask_out->ldt[X86_LDT_CODE].lo = 0xc0fa00;		
+	pstTask_out->ldt[X86_LDT_DATA].hi = 0x3fff;
+	pstTask_out->ldt[X86_LDT_DATA].lo = 0xc0f200;
+	
+	uiCodeLimit = _get_ldt_limit_code();
+	uiDataLimit = _get_ldt_limit_data();
+	if (uiDataLimit < uiCodeLimit) {
+		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad data limit");
+	}
+	
+	addrLinerarCode = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_CODE]);
+	addrLinerarData = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_DATA]);
+	if (addrLinerarCode != addrLinerarData) {
+		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Separated I&D is NOT supported");
+	}
+	
+	_set_ldt_base( pstTask_out->ldt[X86_LDT_CODE], addrLinerarCode);
+	//_set_ldt_limit(pstTask_out->ldt[X86_LDT_CODE], ((uiCodeLimit - 1)));
+	
+	_set_ldt_base( pstTask_out->ldt[X86_LDT_DATA], addrLinerarData);
+	//_set_ldt_limit(pstTask_out->ldt[X86_LDT_DATA], ((CPU_TASK_LINERAR_ADDR_RANGE - 1)));
+
 	return (CPU_ERR_NONE);
 }
 
@@ -566,6 +665,16 @@ CPU_PRIVATE  CPU_ERR  cpu_task_BuildStack(
 	}
 	
 	return (ret);
+}
+
+void CPUExt_TaskGetLinearSpace(const CPU_INT32U  uiTaskID_in, CPU_ADDR * pLnrAdrStart_out, CPU_ADDR * pLnrAdrEnd_out)
+{
+	if (0 != pLnrAdrStart_out) {
+		(*pLnrAdrStart_out) = uiTaskID_in * CPU_TASK_LINERAR_ADDR_RANGE + 16 * 1024 * 1024;
+	}
+	if (0 != pLnrAdrEnd_out) {
+		(*pLnrAdrEnd_out) = (uiTaskID_in + 1) * CPU_TASK_LINERAR_ADDR_RANGE - 1024 * 1024;
+	}
 }
 
 
