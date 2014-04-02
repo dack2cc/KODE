@@ -46,6 +46,8 @@ KDExtProcess * kd_proc_Create(
 	void*          pExtData    = KD_NULL;
 	CPU_DATA*      pExtArg     = KD_NULL;
 	OS_ERR         os_err      = OS_ERR_NONE;
+	OS_ERR         os_reg_err  = OS_ERR_NONE;
+	OS_ERR         os_int_err  = OS_ERR_NONE;
 	
 	CPUExt_PageGetFree((&addrPhyPage));
 	if (0 == addrPhyPage) {
@@ -76,9 +78,11 @@ KDExtProcess * kd_proc_Create(
 		/* opt         */   0, 
 		/* p_err       */   &os_err
 	);
-	
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(os_err);
+    os_reg_err = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_ERR_CODE, &os_int_err);
+	if ((OS_ERR_NONE != os_err) 
+	||  (OS_ERR_NONE != os_reg_err) 
+	||  (OS_ERR_NONE != os_int_err)) {
+		kd_core_SetError(KD_EFBIG);
 		CPUExt_PageRelease(addrPhyPage);
 		addrPhyPage = 0;
 		return (KD_NULL);

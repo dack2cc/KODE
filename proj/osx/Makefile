@@ -41,7 +41,7 @@ DEV_HDISK  := HDISK
 # Networking Assembly Build
 # **************************************
 
-BOOT_DIR := ../../src/kode/boot
+BOOT_DIR := ../../src/kode/lnx/boot
 BOOT_SRC := boot.nas \
             setup.nas
 

@@ -42,6 +42,7 @@ KD_PRIVATE KDchar    kd_core_aszMsgBuf[KD_MSG_BUF_MAX];
 KD_PRIVATE void  kd_core_Run(void);
 KD_PRIVATE void  kd_core_Setup(void);
 KD_PRIVATE KDint kd_core_GetError(void);
+KD_PRIVATE void  kd_core_Assert(const KDchar* pszCondition_in, const KDchar* pszFilename_in, KDint iLineNumber_in);
 
 /******************************************************************************
     Function Definition
@@ -158,7 +159,7 @@ void  kd_core_LogMessage(const KDchar* pszString_in)
 	drv_disp_Printf(kd_core_aszMsgBuf);
 }
 
-void kd_core_Assert(const KDchar *condition, const KDchar *filename, KDint linenumber)
+KD_PRIVATE void kd_core_Assert(const KDchar *condition, const KDchar *filename, KDint linenumber)
 {
 	drv_disp_Printf("[");
 	kd_core_LogMessage(condition);

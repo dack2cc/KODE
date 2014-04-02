@@ -46,13 +46,13 @@ enum {
 #define OS_FILE_OPEN_PER_TASK   (20u)
 
 #define OS_TCB_REG_ERR_CODE     (0u)
-#define OS_TCB_REG_MEM_CTL      (1u)    /* memory control */
-#define OS_TCB_REG_PID          (2u)    /* process id     */
-#define OS_TCB_REG_TID          (3u)    /* thread  id     */
-#define OS_TCB_REG_PGRP         (4u)
-#define OS_TCB_REG_FILE_FLAG    (5u)
-#define OS_TCB_REG_FILE_START   (6u)
-#define OS_TCB_REG_MAX          (OS_TCB_REG_FILE_START + OS_FILE_OPEN_PER_TASK)
+#define OS_TCB_REG_MEM_CTL      (1u)    /* memory control   */
+#define OS_TCB_REG_P_ID         (2u)    /* process id       */
+#define OS_TCB_REG_T_MASK       (3u)    /* thread mask      */
+#define OS_TCB_REG_T_ID         (4u)    /* thread  id       */
+#define OS_TCB_REG_F_MASK       (5u)    /* file mask        */
+#define OS_TCB_REG_F_HEAD       (6u)    /* file handle head */
+#define OS_TCB_REG_MAX          (OS_TCB_REG_F_HEAD + OS_FILE_OPEN_PER_TASK)
 
 
 #define OS_TASK_USER_PRIO_START       10u

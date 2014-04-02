@@ -7,13 +7,15 @@
 #include <fs.h>
 #include <os.h>
 #include <lib_str.h>
+#include <drv_disp.h>
+#include <cpu_ext.h>
 
 /******************************************************************************
     Private Define
 ******************************************************************************/
 
-#define KD_PRIVATE  static
-//#define KD_PRIVATE 
+//#define KD_PRIVATE  static
+#define KD_PRIVATE 
 
 /******************************************************************************
     Private Interface
@@ -96,26 +98,26 @@ KDFile *  kd_file_Open(const KDchar * pszName_in, const KDchar * pszFlag_in)
 	CPU_INT32U i = 0;
 	OS_ERR  err = OS_ERR_NONE;
 	OS_REG  hFile = 0;
-	OS_REG  uiOpenFlag = 0;
+	OS_REG  uiOpenMask = 0;
 	FS_FILE * pFile = 0;
 	
 	if (0 == OSTCBCurPtr) {
 		kd_core_SetError(KD_EBADF);
-		kd_core_Assert("[kd_file_Open][no task]", __FILE__, __LINE__);
+		CPUExt_CorePanic("[kd_file_Open][no task]");
 		return ((KDFile *)0);
 	}
 	if ((0 == pszName_in) 
 	||  (0 == pszFlag_in)) {
 		kd_core_SetError(KD_EINVAL);
-		kd_core_Assert("[kd_file_Open][no file]", __FILE__, __LINE__);
+		drv_disp_Printf("[kd_file_Open][no file]\r\n");
 		return ((KDFile *)0);
 	}
 	
 	for (i = 0; i < OS_FILE_OPEN_PER_TASK; ++i) {
-		hFile = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_FILE_START + i, &err);
+		hFile = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_F_HEAD + i, &err);
 		if (OS_ERR_NONE != err) {
 			kd_core_SetError(KD_EIO);
-		    kd_core_Assert("[kd_file_Open][access error]", __FILE__, __LINE__);
+		    CPUExt_CorePanic("[kd_file_Open][file handle]");
 			return ((KDFile *)0);
 		}
 		if (0 == hFile) {
@@ -124,22 +126,22 @@ KDFile *  kd_file_Open(const KDchar * pszName_in, const KDchar * pszFlag_in)
 	}
 	if (i >= OS_FILE_OPEN_PER_TASK) {
 		kd_core_SetError(KD_EMFILE);
-		kd_core_Assert("[kd_file_Open][files full]", __FILE__, __LINE__);
+		drv_disp_Printf("[kd_file_Open][files full]\r\n");
 		return ((KDFile *)0);
 	}
 	
-	uiOpenFlag = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_FILE_FLAG, &err);
+	uiOpenMask = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_F_MASK, &err);
 	if (OS_ERR_NONE != err) {
 		kd_core_SetError(KD_EIO);
-		kd_core_Assert("[kd_file_Open][access error]", __FILE__, __LINE__);
+		CPUExt_CorePanic("[kd_file_Open][file mask]");
 		return ((KDFile *)0);
 	}
-	uiOpenFlag &= ~(1<<i);
+	uiOpenMask &= ~(1<<i);
 
 	pFile = FS_GetFreeFileHandler();
 	if (0 == pFile) {
 		kd_core_SetError(KD_EMFILE);
-		kd_core_Assert("[kd_file_Open][files full]", __FILE__, __LINE__);
+		drv_disp_Printf("[kd_file_Open][files full] \r\n");
 		return ((KDFile *)0);
 	}
 	

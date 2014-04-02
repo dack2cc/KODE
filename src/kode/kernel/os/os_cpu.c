@@ -28,7 +28,7 @@ void  OSStartHighRdy(void)
 	CPU_INT32U  uiTaskId = 0;
 	OS_ERR      os_err = OS_ERR_NONE;
 	
-	uiTaskId = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_TID, &os_err);
+	uiTaskId = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_T_ID, &os_err);
 	CPUExt_TaskSwitch(uiTaskId);
 }
 
@@ -39,7 +39,7 @@ void  OSIntCtxSw(void)
 	
 	OSPrioCur   = OSPrioHighRdy;
 	OSTCBCurPtr = OSTCBHighRdyPtr;
-	uiTaskId = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_TID, &os_err);
+	uiTaskId = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_T_ID, &os_err);
 	CPUExt_TaskSwitch(uiTaskId);
 }
 
@@ -83,6 +83,7 @@ void OSTaskCreateHook(OS_TCB *p_tcb)
 	CPU_DATA    aiArgList[CPU_TASK_ARG_MAX];
 	CPU_DATA    pid         = 0;
 	CPU_DATA    mem_ctl     = 0;
+	CPU_DATA    t_mask      = 0;
 	CPU_SR      cpu_sr      = 0;
 	CPU_DATA *  pExtData    = 0;
 	CPU_INT32U  uiTaskId    = 0;
@@ -115,10 +116,12 @@ void OSTaskCreateHook(OS_TCB *p_tcb)
 		aiArgList[CPU_TASK_ARG_KERNEL_STACK] = (CPU_INT32U)(p_tcb->ExtPtr) + X86_MEM_PAGE_SIZE - 4;
 		aiArgList[CPU_TASK_ARG_EXT_DATA]     = (CPU_DATA)(p_tcb->ExtPtr);
 		aiArgList[CPU_TASK_ARG_THREAD_EN]    = (CPU_DATA)(DEF_DISABLED);
-		aiArgList[CPU_TASK_ARG_THREAD_STACK] = (CPU_DATA)(0);
+		aiArgList[CPU_TASK_ARG_THREAD_INDEX] = (CPU_DATA)(0);
+		aiArgList[CPU_TASK_ARG_PROCESS_ID]   = (CPU_DATA)(0);
 		
-		pid     = 0;
+		pid     = (CPU_DATA)(OSTCBCurPtr);
 		mem_ctl = 0;
+		t_mask  = 0;
 	}
 	
 	/* user space task */
@@ -133,35 +136,63 @@ void OSTaskCreateHook(OS_TCB *p_tcb)
 		aiArgList[CPU_TASK_ARG_EXT_DATA]     = (CPU_DATA)(p_tcb->ExtPtr);
 		
 		if ((pExtData[OS_TCB_EXT_IS_PROCESS])) {
-			aiArgList[CPU_TASK_ARG_THREAD_EN]    = (CPU_DATA)(DEF_DISABLED);
-			aiArgList[CPU_TASK_ARG_THREAD_STACK] = (CPU_DATA)(0);
-			
-			pid = (CPU_DATA)(OSTCBCurPtr);
+			pid = (CPU_DATA)(p_tcb);
 			CPUExt_PageGetFree((CPU_ADDR *)(&mem_ctl));
+			t_mask = 0x03;
+
+			aiArgList[CPU_TASK_ARG_THREAD_EN]    = (CPU_DATA)(DEF_DISABLED);
+			aiArgList[CPU_TASK_ARG_THREAD_INDEX] = (CPU_DATA)(0);
+			aiArgList[CPU_TASK_ARG_PROCESS_ID]   = (CPU_DATA)(0);
 		}
 		
 		/* user space thread */
 		else {
-			aiArgList[CPU_TASK_ARG_THREAD_EN]    = (CPU_DATA)(DEF_ENABLED);
-			aiArgList[CPU_TASK_ARG_THREAD_STACK] = (CPU_DATA)(pExtData[OS_TCB_EXT_USER_STACK]);
+			pid      = OSTaskRegGet(OSTCBCurPtr,   OS_TCB_REG_P_ID,    &os_err);
+			mem_ctl  = OSTaskRegGet(OSTCBCurPtr,   OS_TCB_REG_MEM_CTL, &os_err);
+			uiTaskId = OSTaskRegGet((OS_TCB *)pid, OS_TCB_REG_T_ID,    &os_err);
 			
-			pid     = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_PID, &os_err);
-			mem_ctl = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_MEM_CTL, &os_err);
+			t_mask   = OSTaskRegGet((OS_TCB *)pid, OS_TCB_REG_T_MASK,  &os_err);
+			for (i = 0; i < 32; ++i) {
+				if (0 == ((1 << i) & t_mask)) {
+					break;
+				}
+			}
+			t_mask |= (1 << i);
+			OSTaskRegSet((OS_TCB *)pid, OS_TCB_REG_T_MASK, t_mask, &os_err);			
+			t_mask  = (1 << i);
+			
+			aiArgList[CPU_TASK_ARG_THREAD_EN]    = (CPU_DATA)(DEF_ENABLED);
+			aiArgList[CPU_TASK_ARG_THREAD_INDEX] = (CPU_DATA)(i);
+			aiArgList[CPU_TASK_ARG_PROCESS_ID]   = (CPU_DATA)(uiTaskId);
 		}
 	}
 	
 	cpu_err = CPUExt_TaskCreate(aiArgList, &uiTaskId);
+	if (CPU_ERR_NONE != cpu_err) {
+	    OSTaskRegSet(OSTCBCurPtr, OS_TCB_REG_ERR_CODE,  OS_ERR_FATAL_RETURN,  &os_err);
+		if (DEF_ENABLED == aiArgList[CPU_TASK_ARG_KERNEL_EN]) {
+			CPUExt_PageRelease((CPU_ADDR)(p_tcb->ExtPtr));
+		}
+		else if ((pExtData[OS_TCB_EXT_IS_PROCESS])) {
+			CPUExt_PageRelease((CPU_ADDR)mem_ctl);
+		}
+		else {
+			// EMPTY
+		}
+		return;
+	}
 	
 	CPUExt_TaskGetLinearSpace(uiTaskId, &adrLnrStart, &adrLnrEnd);
 	lib_pool_Setup((LIB_POOL_CONTROL *)mem_ctl, CPU_EXT_PAGE_SIZE, adrLnrStart, (adrLnrEnd - adrLnrStart + 1));
 	
-	OSTaskRegSet(p_tcb, OS_TCB_REG_ERR_CODE, cpu_err, &os_err);
-	OSTaskRegSet(p_tcb, OS_TCB_REG_MEM_CTL,  mem_ctl, &os_err);
-	OSTaskRegSet(p_tcb, OS_TCB_REG_PID, pid,      &os_err);
-	OSTaskRegSet(p_tcb, OS_TCB_REG_TID, uiTaskId, &os_err);
-	OSTaskRegSet(p_tcb, OS_TCB_REG_FILE_FLAG, 0,  &os_err);
+	OSTaskRegSet(p_tcb, OS_TCB_REG_ERR_CODE,  cpu_err,  &os_err);
+	OSTaskRegSet(p_tcb, OS_TCB_REG_MEM_CTL,   mem_ctl,  &os_err);
+	OSTaskRegSet(p_tcb, OS_TCB_REG_P_ID,      pid,      &os_err);
+	OSTaskRegSet(p_tcb, OS_TCB_REG_T_ID,      uiTaskId, &os_err);
+	OSTaskRegSet(p_tcb, OS_TCB_REG_T_MASK,    t_mask,   &os_err);
+	OSTaskRegSet(p_tcb, OS_TCB_REG_F_MASK,    0,        &os_err);
 	for (i = 0; i < OS_FILE_OPEN_PER_TASK; ++i) {
-		OSTaskRegSet(p_tcb, (OS_TCB_REG_FILE_START + i), 0, &os_err);
+		OSTaskRegSet(p_tcb, (OS_TCB_REG_F_HEAD + i), 0, &os_err);
 	}
 }
 

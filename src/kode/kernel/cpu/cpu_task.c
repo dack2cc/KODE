@@ -192,6 +192,7 @@ CPU_PRIVATE  CPU_X86_TASK*  cpu_task_pstCurrentTask = &(cpu_task_stTask0KernelSt
 #define  CPU_TASK_LINERAR_ADDR_RANGE    (64*1024*1024)  /* 64MB */
                                                         /* 64MB x 64 = 4GB */
                                                         /* 64MB x 46 = 3GB */
+#define  CPU_TASK_USER_STACK_SIZE       (1024 * 1024)   /* 1MB  */
 
 /******************************************************************************
     Private Interface
@@ -199,11 +200,12 @@ CPU_PRIVATE  CPU_X86_TASK*  cpu_task_pstCurrentTask = &(cpu_task_stTask0KernelSt
 
 CPU_PRIVATE CPU_ERR   cpu_task_CreateThread( const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out);
 CPU_PRIVATE  void     cpu_task_SwitchToTask0(void);
-CPU_PRIVATE  CPU_ERR  cpu_task_SaveTaskSpace(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in);
+CPU_PRIVATE  CPU_ERR  cpu_task_SaveTCB(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in);
 CPU_PRIVATE  CPU_ERR  cpu_task_MakeTSS(CPU_ADDR  addrKernelStack_in, CPU_FNCT_PTR  pfnRoutine_in, CPU_DATA  eflags_in, CPU_DATA isKernel_in, CPU_X86_TASK* pstTask_out);
-CPU_PRIVATE  CPU_ERR  cpu_task_CopyCurrentLDT(const CPU_ADDR addrLnrStart_in, CPU_X86_TASK* pstTask_out);
-CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(CPU_X86_TASK* pstTask_out);
-CPU_PRIVATE  CPU_ERR  cpu_task_BuildStack(const CPU_ADDR addrLnrStart_in, const CPU_DATA isKernel_in, void * pParam_in, CPU_FNCT_PTR pfnReturnPoint_in, CPU_X86_TASK* pstTask_inout);
+CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(const CPU_ADDR addrLnrStart_in, CPU_X86_TASK* pstTask_out);
+CPU_PRIVATE  CPU_ERR  cpu_task_InheritCurrentLDT(CPU_X86_TASK* pstTask_out);
+CPU_PRIVATE  CPU_ERR  cpu_task_BuildStack(const CPU_ADDR addrLnrEnd_in,  const CPU_DATA isKernel_in, void * pParam_in, CPU_FNCT_PTR pfnReturnPoint_in, CPU_X86_TASK* pstTask_inout);
+CPU_PRIVATE  CPU_ERR  cpu_task_MakeStack(const CPU_ADDR addrLnrStart_in, const CPU_INT32U uiThreadIdx_in, void * pParam_in, CPU_FNCT_PTR pfnReturnPoint_in, CPU_X86_TASK* pstTask_inout);
 
 /******************************************************************************
     Function Definition
@@ -251,7 +253,10 @@ CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_ou
 		return (cpu_task_CreateThread(pArgList_in, puiTaskID_out));
 	}
 	
-	ret = cpu_task_SaveTaskSpace(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
+	ret = cpu_task_SaveTCB(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
+	if (CPU_ERR_NONE != ret) {
+		return (ret);
+	}
 
 	addrLnrStart = uiTaskIndex * CPU_TASK_LINERAR_ADDR_RANGE;
 	pstTask = (CPU_X86_TASK *)pArgList_in[CPU_TASK_ARG_EXT_DATA];
@@ -268,7 +273,7 @@ CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_ou
 	}
 	
 	if (CPU_ERR_NONE == ret) {
-	    ret = cpu_task_CopyCurrentLDT(addrLnrStart, pstTask);		
+	    ret = cpu_task_CloneCurrentLDT(addrLnrStart, pstTask);		
 	}
 	
 	if (CPU_ERR_NONE == ret) {
@@ -305,16 +310,22 @@ CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_ou
 CPU_PRIVATE CPU_ERR  cpu_task_CreateThread( const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out)
 {
 	CPU_INT32U     uiTaskIndex = 0;
+	CPU_ADDR       addrLnrStart = 0;
 	CPU_X86_TASK*  pstTask = 0;
 	CPU_ERR        ret = CPU_ERR_NONE;
 	
 	if ((0 == pArgList_in) 
-	||  (0 == puiTaskID_out)) {
+	||  (0 == puiTaskID_out)
+	||  (DEF_ENABLED != pArgList_in[CPU_TASK_ARG_THREAD_EN])) {
 		return (CPU_ERR_BAD_PARAM);
 	}
 	
-	ret = cpu_task_SaveTaskSpace(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
+	ret = cpu_task_SaveTCB(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
+	if (CPU_ERR_NONE != ret) {
+		return (ret);
+	}
 
+	addrLnrStart = pArgList_in[CPU_TASK_ARG_PROCESS_ID] * CPU_TASK_LINERAR_ADDR_RANGE;
 	pstTask = (CPU_X86_TASK *)pArgList_in[CPU_TASK_ARG_EXT_DATA];
 	pstTask->index = uiTaskIndex;
 
@@ -329,11 +340,25 @@ CPU_PRIVATE CPU_ERR  cpu_task_CreateThread( const CPU_DATA* pArgList_in, CPU_INT
 	}
 
 	if (CPU_ERR_NONE == ret) {
-	    ret = cpu_task_CloneCurrentLDT(pstTask);		
+	    ret = cpu_task_InheritCurrentLDT(pstTask);		
 	}
 	
 	if (CPU_ERR_NONE == ret) {
-		pstTask->tss.esp = pArgList_in[CPU_TASK_ARG_THREAD_STACK];
+		/* get a new memory page for user stack */
+		ret = cpu_task_MakeStack(
+			addrLnrStart,
+			pArgList_in[CPU_TASK_ARG_THREAD_INDEX],
+			(void *)pArgList_in[CPU_TASK_ARG_PARAMETER],
+			(CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_RET_POINT],
+			pstTask
+		);
+	}
+
+	/* release the resource while failed */
+	if (CPU_ERR_NONE != ret) {
+		cpu_task_apstAllTask[uiTaskIndex] = 0;
+		(*puiTaskID_out) = 0;
+		return (CPU_ERR_FATAL);
 	}
 
 	_set_tss_desc(X86_GDT + X86_GDT_TSS_0 + (uiTaskIndex << 1), &(pstTask->tss));
@@ -439,7 +464,7 @@ void CPUExt_TaskSwitchToRing3(void)
 }
 
 
-CPU_PRIVATE  CPU_ERR  cpu_task_SaveTaskSpace(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in)
+CPU_PRIVATE  CPU_ERR  cpu_task_SaveTCB(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in)
 {
 	CPU_INT32U  uiIndex = 0;
 	
@@ -521,7 +546,7 @@ CPU_PRIVATE  CPU_ERR  cpu_task_MakeTSS(
 	return (CPU_ERR_NONE);
 }
 
-CPU_PRIVATE  CPU_ERR  cpu_task_CopyCurrentLDT(
+CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(
 	const CPU_ADDR  addrLnrStart_in, 
 	CPU_X86_TASK*   pstTask_out
 )
@@ -571,7 +596,7 @@ CPU_PRIVATE  CPU_ERR  cpu_task_CopyCurrentLDT(
 }
 
 
-CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(CPU_X86_TASK* pstTask_out)
+CPU_PRIVATE  CPU_ERR  cpu_task_InheritCurrentLDT(CPU_X86_TASK* pstTask_out)
 {
 	CPU_INT32U  uiDataLimit = 0;
 	CPU_INT32U  uiCodeLimit = 0;
@@ -667,13 +692,57 @@ CPU_PRIVATE  CPU_ERR  cpu_task_BuildStack(
 	return (ret);
 }
 
+CPU_PRIVATE  CPU_ERR  cpu_task_MakeStack(
+	const CPU_ADDR    addrLnrStart_in,
+	const CPU_INT32U  uiThreadIdx_in, 
+	void *            pParam_in, 
+	CPU_FNCT_PTR      pfnReturnPoint_in, 
+	CPU_X86_TASK *    pstTask_inout
+)
+{
+	CPU_ADDR     addrPhyMemPage = 0;
+	CPU_ADDR     addrLnrStack = 0;
+	CPU_INT32U*  puiStackTop = 0;
+	CPU_ERR      ret = CPU_ERR_NONE;
+	
+	if (0 == pstTask_inout) {
+		CPUExt_CorePanic("[PANIC][cpu_task_BuildUserStack]NULL Pointer");
+	}
+	
+	/* get the memroy page for the stack */
+    CPUExt_PageGetFree(&addrPhyMemPage);
+    if (0 == addrPhyMemPage) {
+	    return (CPU_ERR_NO_MEMORY);
+    }
+	puiStackTop = (CPU_INT32U *)((CPU_INT32U)addrPhyMemPage + X86_MEM_PAGE_SIZE - sizeof(CPU_DATA));
+	
+	/* build the stack */
+	(*puiStackTop) = 0;
+	--puiStackTop;
+	(*puiStackTop) = (CPU_STK)pParam_in;
+	--puiStackTop;
+	(*puiStackTop) = (CPU_STK)pfnReturnPoint_in;
+	
+	/* the stack for the user space task */
+    addrLnrStack = addrLnrStart_in + (CPU_TASK_LINERAR_ADDR_RANGE - 1) - uiThreadIdx_in * CPU_TASK_USER_STACK_SIZE;
+    ret = cpu_page_PutPageToLinerarAddr(addrPhyMemPage, addrLnrStack);
+    if (CPU_ERR_NONE != ret) {
+	    CPUExt_PageRelease(addrPhyMemPage);
+    	return (ret);
+    }
+	pstTask_inout->tss.esp = CPU_TASK_LINERAR_ADDR_RANGE - uiThreadIdx_in * CPU_TASK_USER_STACK_SIZE - (3 * 4);
+	
+	return (ret);
+}
+
+
 void CPUExt_TaskGetLinearSpace(const CPU_INT32U  uiTaskID_in, CPU_ADDR * pLnrAdrStart_out, CPU_ADDR * pLnrAdrEnd_out)
 {
 	if (0 != pLnrAdrStart_out) {
-		(*pLnrAdrStart_out) = uiTaskID_in * CPU_TASK_LINERAR_ADDR_RANGE + 16 * 1024 * 1024;
+		(*pLnrAdrStart_out) = 16 * 1024 * 1024;
 	}
 	if (0 != pLnrAdrEnd_out) {
-		(*pLnrAdrEnd_out) = (uiTaskID_in + 1) * CPU_TASK_LINERAR_ADDR_RANGE - 1024 * 1024;
+		(*pLnrAdrEnd_out) = CPU_TASK_LINERAR_ADDR_RANGE - CPU_EXT_PAGE_SIZE;
 	}
 }
 

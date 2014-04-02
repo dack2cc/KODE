@@ -154,7 +154,8 @@ enum {
 	CPU_TASK_ARG_KERNEL_STACK,  /* physical address           */
 	CPU_TASK_ARG_EXT_DATA,      /* physical address           */
 	CPU_TASK_ARG_THREAD_EN,     /* DEF_ENABLED or DEF_DISABLE */
-	CPU_TASK_ARG_THREAD_STACK,  /* linerar  address           */
+	CPU_TASK_ARG_THREAD_INDEX,  /* thread index of process    */
+	CPU_TASK_ARG_PROCESS_ID,    /* process id which the thread belong to */
 	CPU_TASK_ARG_MAX
 };
 extern CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out);

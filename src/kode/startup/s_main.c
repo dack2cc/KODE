@@ -71,7 +71,7 @@ void* s_process_setup(void* param_in)
 	kdThreadAttrFree(pstAttr);
 	
 	s_thread_magic = MAGIC_ALICE;
-	printf("[setup][Magic 0x%X]\r\n", &pstAttr);
+	printf("[setup][Magic 0x%X]\r\n", &pstEvt);
 	
 	//kdHandleAssertion(0, __FILE__, __LINE__);
 	
@@ -109,7 +109,7 @@ void* s_thread_alice(void* param_in)
 	KDThreadAttr*   pstAttr  = KD_NULL;
 	KDThread*       pstJerry = KD_NULL;
 	
-	printf("[alice][Magic 0x%X]\r\n", &pstAttr);
+	printf("[alice][Magic 0x%X]\r\n", &pstJerry);
 	printf("[alice][Hello 0x%X]\r\n", *((KDint32 *)param_in));
 	
 	pstAttr  = kdThreadAttrCreate();

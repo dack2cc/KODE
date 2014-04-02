@@ -267,6 +267,8 @@ KDThread * kd_thread_Create(
 	CPU_DATA*  pExtArg     = KD_NULL;
 	CPU_DATA   mem_ctl     = 0;
 	OS_ERR     os_err      = OS_ERR_NONE;
+	OS_ERR     os_reg_err  = OS_ERR_NONE;
+	OS_ERR     os_int_err  = OS_ERR_NONE;
 	
 	CPUExt_PageGetFree((&addrPhyPage));
 	if (0 == addrPhyPage) {
@@ -286,8 +288,8 @@ KDThread * kd_thread_Create(
 	
 	pExtArg[OS_TCB_EXT_EFLAG]      = eflag_in;
 	pExtArg[OS_TCB_EXT_RET_POINT]  = (CPU_DATA)(&kdThreadExit);
-	pExtArg[OS_TCB_EXT_IS_PROCESS] = 1; //0;
-	pExtArg[OS_TCB_EXT_USER_STACK] = 0; //(CPU_DATA)((CPU_INT08U *)(lib_pool_Get((LIB_POOL_CONTROL *)mem_ctl, uiStackSize)) +  uiStackSize - 8);
+	pExtArg[OS_TCB_EXT_IS_PROCESS] = 0;
+	pExtArg[OS_TCB_EXT_USER_STACK] = 0; //(CPU_DATA)((CPU_INT08U *)(lib_pool_Get((LIB_POOL_CONTROL *)mem_ctl, uiStackSize)) +  uiStackSize - 4);
 	
 	OSTaskCreate(
 		/* p_tcb       */   &(pstThread->stTCB),
@@ -304,9 +306,11 @@ KDThread * kd_thread_Create(
 		/* opt         */   0, 
 		/* p_err       */   &os_err
 	);
-	
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(os_err);
+    os_reg_err = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_ERR_CODE, &os_int_err);
+	if ((OS_ERR_NONE != os_err) 
+	||  (OS_ERR_NONE != os_reg_err) 
+	||  (OS_ERR_NONE != os_int_err)) {
+		kd_core_SetError(KD_EFBIG);
 		CPUExt_PageRelease(addrPhyPage);
 		addrPhyPage = 0;
 		return (KD_NULL);
