@@ -8,16 +8,6 @@
 #include <cpu_boot.h>
 #include <std/stdio.h>
 
-/******************************************************************************
-    Public Interface
-******************************************************************************/
-
-static KDint32 m_aiTask0UserStack [ X86_MEM_PAGE_SIZE>>2 ] ;
-
-struct _STACK_START {
-	KDint32 * a;
-	KDint16 b;
-} g_s_main_stTask0UserStackStart = { &(m_aiTask0UserStack[ X86_MEM_PAGE_SIZE>>2 ]), 0x10 };
 
 /******************************************************************************
     External Reference

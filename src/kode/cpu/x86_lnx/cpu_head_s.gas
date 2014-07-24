@@ -12,7 +12,7 @@
  * the page directory.
  */
 .text
-.globl _g_s_head_p64BitIDT, _g_s_head_p64BitGDT, _g_s_head_p32BitPageDir, _tmp_floppy_area
+.globl startup_32, _g_s_head_p64BitIDT, _g_s_head_p64BitGDT, _g_s_head_p32BitPageDir, _tmp_floppy_area
 _g_s_head_p32BitPageDir:
 startup_32:
 	movl $0x10,%eax
@@ -20,7 +20,7 @@ startup_32:
 	mov %ax,%es
 	mov %ax,%fs
 	mov %ax,%gs
-	lss _g_s_main_stTask0UserStackStart,%esp
+	lss _cpu_head_stTask0UserStackStart,%esp
 	call setup_idt
 	call setup_gdt
 	movl $0x10,%eax		# reload all the segment registers
@@ -28,7 +28,7 @@ startup_32:
 	mov %ax,%es		# reloaded in 'setup_gdt'
 	mov %ax,%fs
 	mov %ax,%gs
-	lss _g_s_main_stTask0UserStackStart,%esp
+	lss _cpu_head_stTask0UserStackStart,%esp
 	xorl %eax,%eax
 1:	incl %eax		# check that A20 really IS enabled
 	movl %eax,0x000000	# loop forever if it isn't
