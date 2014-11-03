@@ -34,8 +34,10 @@ void die(char * str)
 
 void usage(void)
 {
-	die("Usage: build boot setup system [> image]");
+	die("Usage: mkimg [cfg] boot setup system [> image] \r\n cfg : FLOPPY \r\n cfg : HDISK");
 }
+
+#if 0
 
 void makePRT(unsigned char* pbyBuf_inout, int iReservedSector_in, int iSizeInSector_in)
 {
@@ -72,6 +74,8 @@ void makeMBR(unsigned char* pbyBuf_inout)
 	//makePRT(pbyBuf_inout + 446 + 16, SYSTEM_IMAGE_SECTS, RAMDISK_SECTS);
 	
 }
+
+#endif
 
 int main(int argc, char ** argv)
 {
