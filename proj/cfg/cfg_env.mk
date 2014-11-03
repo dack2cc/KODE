@@ -100,7 +100,8 @@ $(BUILD_ROOT)/%.bin : $(BOOT_DIR)/%.nas
 
 $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.gas
 	@echo "[Assemble][$<]"
-	@$(AS) $(ASFLAGS) $< -o $@
+	@$(CC) $(CFLAGS) -x assembler -c $< -o $@
+#	@$(AS) $(ASFLAGS) $< -o $@
 
 $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.c
 	@echo "[Compile ][$<]"
