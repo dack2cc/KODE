@@ -81,17 +81,17 @@ _IMAGE : $(MKIMG) $(BOOT_BIN) $(MKSRC)
 
 $(MKIMG) :
 	@echo "[Compile ][$(SRC_ROOT)/$(TOOLS_DIR)/$(MKIMG).c]"
-	@$(CC) $(CFLAGS) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKIMG).c -o $(BUILD_ROOT)/$(MKIMG)
+	@$(CC) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKIMG).c -o $(BUILD_ROOT)/$(MKIMG)
 	@chmod o+x $(BUILD_ROOT)/$(MKIMG)
 
 $(MKFS) :
 	@echo "[Compile ][$(SRC_ROOT)/$(TOOLS_DIR)/$(MKFS).c]"
-	@$(CC) $(CFLAGS) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKFS).c -o $(BUILD_ROOT)/$(MKFS)
+	@$(CC) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKFS).c -o $(BUILD_ROOT)/$(MKFS)
 	@chmod o+x $(BUILD_ROOT)/$(MKFS)
 	
 $(MKSRC) :
 	@echo "[Compile ][$(SRC_ROOT)/$(TOOLS_DIR)/$(MKSRC).c]"
-	@$(CC) $(CFLAGS) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKSRC).c -o $(BUILD_ROOT)/$(MKSRC)
+	@$(CC) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKSRC).c -o $(BUILD_ROOT)/$(MKSRC)
 	@chmod o+x $(BUILD_ROOT)/$(MKSRC)
 
 $(BUILD_ROOT)/%.bin : $(BOOT_DIR)/%.nas
@@ -100,7 +100,7 @@ $(BUILD_ROOT)/%.bin : $(BOOT_DIR)/%.nas
 
 $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.gas
 	@echo "[Assemble][$<]"
-	@$(AS) $(ASFLAGS) -c $< -o $@
+	@$(AS) $(ASFLAGS) $< -o $@
 
 $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.c
 	@echo "[Compile ][$<]"
