@@ -25,7 +25,6 @@
 #define HDISK_SPT           (16)
 #define HDISK_SECTS         (HDISK_CYL*HDISK_HEAD*HDISK_SPT) // cylinders * heads * sectors
 
-
 void die(char * str)
 {
 	fprintf(stderr,"%s\n",str);
@@ -34,48 +33,35 @@ void die(char * str)
 
 void usage(void)
 {
-	die("Usage: mkimg [cfg] boot setup system [> image] \r\n cfg : FLOPPY \r\n cfg : HDISK");
-}
-
-#if 0
-
-void makePRT(unsigned char* pbyBuf_inout, int iReservedSector_in, int iSizeInSector_in)
-{
-	int iHeadStart = 0;
-	int iHeadEnd = 0;
-	int iCylStart = 0;
-	//int iCylEnd = 0;
-	int iSecStart = 0;
-	
-	iSecStart = iReservedSector_in + 1;
-	iCylStart = iHeadStart / (HDISK_HEAD * HDISK_SPT);
-	
-	iHeadEnd = (iSizeInSector_in + (HDISK_SPT - 1)) / HDISK_SPT;
-	//iHeadStart
-
-	pbyBuf_inout[02] = 0x01;
-	pbyBuf_inout[03] = 0x01;
+	die("\
+Usage: mkimg cfg boot setup [system] [> image] \r\n\
+ cfg    : FLOPPY or HDISK \r\n\
+ system : can be ommited \r\n\
+"
+	);
 }
 
 void makeMBR(unsigned char* pbyBuf_inout)
 {
-	unsigned char * pbyMBR = pbyBuf_inout + 0x1BE;
+    static const unsigned char m_abyPRT[] = {
+	    0x80, 3, 1, 0, 0x83, 3, 16, 150
+    };
+
+	unsigned char * pbyPRT = pbyBuf_inout + 0x1BE;
+	int i = 0;
 	
 	if ((0 == pbyBuf_inout) 
 	|| ((*(unsigned short *)(pbyBuf_inout+510)) != 0xAA55)) {
 		die("[makeMBR][Boot block hasn't got boot flag (0xAA55)]");
 	}
 	
-	makePRT(pbyMBR, SYSTEM_IMAGE_SECTS, RAMDISK_SECTS);
-	pbyMBR[0] = 0x80;
-	
-	//makePRT(pbyBuf_inout + 446, 0, SYSTEM_IMAGE_SECTS);
-	//pbyBuf_inout[446] = 0x80;
-	//makePRT(pbyBuf_inout + 446 + 16, SYSTEM_IMAGE_SECTS, RAMDISK_SECTS);
-	
+	for (i = 0; i < (sizeof (m_abyPRT) / sizeof (unsigned char)); ++i) {
+		pbyPRT[i] = m_abyPRT[i];
+	}
+	(*((int *)(pbyPRT+i)))   = 1;
+	(*((int *)(pbyPRT+i+4))) = 19200;
 }
 
-#endif
 
 int main(int argc, char ** argv)
 {
@@ -120,7 +106,7 @@ int main(int argc, char ** argv)
 	for (i=0;i<sizeof buf; i++) buf[i]=0;
 	if ((id=open(argv[2],O_RDONLY,0))<0)
 		die("Unable to open 'boot'");
-	i=read(id,buf,sizeof buf);
+	i=read(id,buf,512);
 	fprintf(stderr,"Boot sector %d bytes.\n",i);
 	if (i!=512)
 		die("Boot block may not exceed 512 bytes");
@@ -128,7 +114,7 @@ int main(int argc, char ** argv)
 		die("Boot block hasn't got boot flag (0xAA55)");
 	buf[508] = (char) minor_root;
 	buf[509] = (char) major_root;
-	//makeMBR((unsigned char *)buf);
+	makeMBR((unsigned char *)buf);
 	i=write(1,buf,512);
 	if (i!=512)
 		die("Write call failed");
@@ -139,14 +125,17 @@ int main(int argc, char ** argv)
 	// copy the setup
 	if ((id=open(argv[3],O_RDONLY,0))<0)
 		die("Unable to open 'setup'");
-	for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c )
-		if (write(1,buf,c)!=c)
+	for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c ) {
+	    if (write(1,buf,c)!=c) {
 			die("Write call failed");
+	    }
+	}
 	close (id);
 	
 	if (i > SETUP_SECTS*512)
 		die("Setup exceeds " STRINGIFY(SETUP_SECTS)
 			" sectors - rewrite build/boot/setup");
+	
 	fprintf(stderr,"Setup is %d bytes.\n",i);
 	for (c=0 ; c<sizeof(buf) ; c++)
 		buf[c] = '\0';
