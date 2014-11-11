@@ -9,6 +9,8 @@
 
 -include ../cfg/cfg_env.mk
 
+CLANGFLAGS += -Qunused-arguments
+
 # **************************************
 # Sub Target
 # **************************************

@@ -15,6 +15,8 @@ BOOT_BSD_MAP := $(patsubst %.S, $(DEBUG_ROOT)/%.map, $(BOOT_BSD_SRC))
 
 BOOT_BSD_0   := $(BUILD_ROOT)/boot0.bin
 
+#FLAGSPLUS := -no-integrated-as
+
 # **************************************
 # Make Rule
 # **************************************
@@ -27,7 +29,7 @@ boot_bsd : _PREPARE $(MKIMG) $(BOOT_BSD_BIN) $(BOOT_BIN) $(MKSRC)
 
 $(BUILD_ROOT)/%.bin : $(BOOT_BSD_DIR)/%.S
 	@echo "[Compile ][$<]"
-	@$(CLANG) $(CLANGFLAGS) -no-integrated-as -m32 -c $< -o $@.o
+	@$(CLANG) $(CLANGFLAGS) $(FLAGSPLUS) -m32 -c $< -o $@.o
 	@$(CLANG) $(CLANGFLAGS) -e start -Ttext 0x600 -Wl,-N,-S,-M -nostdlib -o $@.tmp $@.o > $(BOOT_BSD_MAP)
 	@$(OBJCP) -j .text -S -O binary $@.tmp $@
 	@rm $@.*
