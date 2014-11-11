@@ -17,12 +17,14 @@ LDFLAGS    := -s -x -M -Ttext 0x00000 -m32
 LDFLAGS    := -m elf_i386 --format=elf32-i386 
 #--entry=startup_32 --format=elf32-i386
 OBJCPFLAGS := -O binary
+CLANG      := $(CC)
 
 # **************************************
 # Sub Target
 # **************************************
 
 -include ../cfg/cfg_boot.mk
+-include ../cfg/cfg_boot_bsd.mk
 -include ../cfg/cfg_kode.mk
 
 DEBUG_DIR  += $(subst build,debug,$(BUILD_DIR))
