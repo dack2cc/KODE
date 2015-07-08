@@ -34,7 +34,7 @@ OBJCPFLAGS := -O binary
 # Sub Target
 # **************************************
 
--include ../cfg/cfg_boot.mk
+-include ../cfg/cfg_boot_lnx.mk
 -include ../cfg/cfg_kode.mk
 
 DEBUG_DIR  += $(subst build,debug,$(BUILD_DIR))

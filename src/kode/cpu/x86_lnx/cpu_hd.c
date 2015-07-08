@@ -96,10 +96,10 @@ CPU_PRIVATE  CPU_HD_REQUEST  cpu_hd_astReqBuf[CPU_HD_REQUEST_MAX];
 ******************************************************************************/
 
 #define _CPU_HD_PORT_READ(port,buf,nr) \
-__asm__("cld;rep;insw"::"d" (port),"D" (buf),"c" (nr):/*"cx","di"*/)
+__asm__("cld;rep;insw"::"d" (port),"D" (buf),"c" (nr)/*"cx","di"*/)
 
 #define _CPU_HD_PORT_WRITE(port,buf,nr) \
-__asm__("cld;rep;outsw"::"d" (port),"S" (buf),"c" (nr):/*"cx","si"*/)
+__asm__("cld;rep;outsw"::"d" (port),"S" (buf),"c" (nr)/*"cx","si"*/)
 
 
 CPU_PRIVATE void cpu_hd_AddRequest(CPU_HD_REQUEST* pstRequest_in);

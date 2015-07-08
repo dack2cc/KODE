@@ -203,8 +203,8 @@ CPU_PRIVATE void cpu_disp_SetCode(const CPU_CHAR chCode_in)
 				::
 	    		"a" (chCode_in),
 	    		"m" (*((CPU_INT16S *)(cpu_disp_stCtl.uiPosMem)))
-				:
-	    		/* "ax" */
+
+	    		/* : "ax" */
 	    	);
 		
 	        cpu_disp_stCtl.uiPosMem += 2;
@@ -317,8 +317,8 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 					"c"((cpu_disp_stCtl.uiRowNum - 1)*(cpu_disp_stCtl.uiColNum>>1)),
 					"D"(cpu_disp_stCtl.pstDev->uiMemStart),
 					"S"(cpu_disp_stCtl.uiScrMemStart)
-					:
-					/* "cx", "di", "si" */
+					
+					/* : "cx", "di", "si" */
 				);
 				
 			    cpu_disp_stCtl.uiScrMemStart -= cpu_disp_stCtl.uiRowPitch;
@@ -336,8 +336,8 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 					"a"(_ERASE_CHAR),
 					"c"(cpu_disp_stCtl.uiColNum),
 					"D"(cpu_disp_stCtl.uiScrMemEnd - cpu_disp_stCtl.uiRowPitch)
-					: 
-					/* "cx", "di" */
+					 
+					/*: "cx", "di" */
 				);
 			}
 			cpu_disp_SetScreenMemoryStart();
@@ -358,8 +358,8 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 				"c" ((cpu_disp_stCtl.uiScrRowBottom-cpu_disp_stCtl.uiScrRowTop-1)*cpu_disp_stCtl.uiColNum>>1),
 				"D" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*cpu_disp_stCtl.uiScrRowTop),
 				"S" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*(cpu_disp_stCtl.uiScrRowTop+1))
-				:
-				/* "cx","di","si" */
+				
+				/*: "cx","di","si" */
 			);
 		}
 	}
@@ -379,8 +379,8 @@ CPU_PRIVATE void cpu_disp_ScrollUp(void)
 			"c" ((cpu_disp_stCtl.uiScrRowBottom-cpu_disp_stCtl.uiScrRowTop-1)*cpu_disp_stCtl.uiColNum>>1),
 			"D" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*cpu_disp_stCtl.uiScrRowTop),
 			"S" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*(cpu_disp_stCtl.uiScrRowTop+1))
-			:
-			/* "cx","di","si" */
+			
+			/*: "cx","di","si" */
 		);
 	}
 }
@@ -405,8 +405,8 @@ CPU_PRIVATE void cpu_disp_ScrollDown(void)
 			"c" ((cpu_disp_stCtl.uiScrRowBottom-cpu_disp_stCtl.uiScrRowTop-1)*cpu_disp_stCtl.uiColNum>>1),
 			"D" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*cpu_disp_stCtl.uiScrRowBottom-4),
 			"S" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*(cpu_disp_stCtl.uiScrRowBottom-1)-4)
-			:
-			/* "ax","cx","di","si" */
+			
+			/*: "ax","cx","di","si" */
 		);
 	}
 	else {
@@ -424,8 +424,8 @@ CPU_PRIVATE void cpu_disp_ScrollDown(void)
 			"c" ((cpu_disp_stCtl.uiScrRowBottom-cpu_disp_stCtl.uiScrRowTop-1)*cpu_disp_stCtl.uiColNum>>1),
 			"D" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*cpu_disp_stCtl.uiScrRowBottom-4),
 			"S" (cpu_disp_stCtl.uiScrMemStart+cpu_disp_stCtl.uiRowPitch*(cpu_disp_stCtl.uiScrRowBottom-1)-4)
-			:
-			/* "ax","cx","di","si" */
+			
+			/*: "ax","cx","di","si" */
 		);
 	}
 }
