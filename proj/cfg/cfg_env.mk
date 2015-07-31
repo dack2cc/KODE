@@ -105,12 +105,22 @@ $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.gas
 	@$(CC) $(CFLAGS) -x assembler -c $< -o $@
 #	@$(AS) $(ASFLAGS) $< -o $@
 
+#.S.o:	
+$(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.S
+	@echo "[Assemble][$<]"
+	@$(CC) $(CFLAGS) -x assembler -c $< -o $@
+#	@$(AS) $(ASFLAGS) $< -o $@
+
 $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.c
 	@echo "[Compile ][$<]"
 	@$(CC) $(CFLAGS) $(INC_DIR) -m32 -nostdinc -c $< -o $@
 
 $(DEBUG_ROOT)/%.s : $(SRC_ROOT)/%.gas
-#	@echo "[Generate][$@]"
+	@echo "[Generate][$@]"
+	@cp -fr $< $@
+
+$(DEBUG_ROOT)/%.s : $(SRC_ROOT)/%.S
+	@echo "[Generate][$@]"
 	@cp -fr $< $@
 
 $(DEBUG_ROOT)/%.s : $(SRC_ROOT)/%.c

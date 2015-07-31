@@ -26,8 +26,7 @@ KODE_CPU_SRC_C := cpu_head_c.c   cpu_gate_c.c \
                   cpu_core.c \
                   cpu_time.c 
 KODE_CPU_OBJ := $(patsubst %.gas, $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_CPU_DIR)/$(KODE_CPU_LNX_DIR)/%.o, $(KODE_CPU_SRC_S)) \
-                $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_CPU_DIR)/$(KODE_CPU_LNX_DIR)/%.o, $(KODE_CPU_SRC_C))
-
+                $(patsubst %.c,   $(BUILD_ROOT)/$(KODE_ROOT)/$(KODE_CPU_DIR)/$(KODE_CPU_LNX_DIR)/%.o, $(KODE_CPU_SRC_C)) 
 
 KODE_STARTUP_DIR := startup
 KODE_STARTUP_SRC_C := s_main.c
@@ -200,4 +199,11 @@ $(KODE_BIN) : $(KODE_OBJ) $(KODE_DBG)
 	@echo "[Build][$(BUILD_ROOT)/$@]"
 	@$(LD) $(LDFLAGS) $(KODE_OBJ) -o $(BUILD_ROOT)/$(KODE_TMP) > $(DEBUG_ROOT)/$(KODE_MAP)
 	@$(OBJCP) $(OBJCPFLAGS) $(BUILD_ROOT)/$(KODE_TMP) $(BUILD_ROOT)/$(KODE_BIN)
+
+kodext : _PREPARE $(KODE_OBJ) $(KODE_DBG)
+	ar cru $(BUILD_ROOT)/libkernel.a $(KODE_OBJ)
+	ld -melf_i386 -u _start -r -o $(BUILD_ROOT)/kernel.o $(BUILD_ROOT)/libkernel.a
+	ld -melf_i386 --defsym _START=0xC0100000 --defsym _START_MAP=0x100000 -T '..'/cfg/ldscript -o $(BUILD_ROOT)/kodext $(BUILD_ROOT)/kernel.o
+
+
 
