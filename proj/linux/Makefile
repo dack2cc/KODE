@@ -11,7 +11,7 @@
 
 ASFLAGS    := -march=i386+387 --32 --x32
 CFLAGS     := -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -fno-builtin \
-              -m32
+              -m32 -fleading-underscore -fno-stack-protector
 CXXFLAGS   := $(CFLAGS)
 LDFLAGS    := -s -x -M -Ttext 0x00000 -m32 
 LDFLAGS    := -m elf_i386 --format=elf32-i386 
