@@ -60,19 +60,20 @@ __asm__("movb %3,%%dh\n\t" \
 __base;})
 
 
-void __set_base(CPU_INT08U* addr, CPU_ADDR base) {
+void __set_base(CPU_INT08U* addr, CPU_ADDR base)
+{
 //#define __set_base(addr,base)
- __asm__ (\
- 	"movw %%dx,%0\n\t" \
-	"rorl $16,%%edx\n\t" \
-	"movb %%dl,%1\n\t" \
-	"movb %%dh,%2" \
-	: \
-	:"m" (*((addr)+2)), \
-	 "m" (*((addr)+4)), \
-	 "m" (*((addr)+7)), \
-	 "d" (base) \
-	);
+    __asm__ (\
+             "movw %%dx,%0\n\t" \
+             "rorl $16,%%edx\n\t" \
+             "movb %%dl,%1\n\t" \
+             "movb %%dh,%2" \
+             : \
+             :"m" (*((addr)+2)), \
+             "m" (*((addr)+4)), \
+             "m" (*((addr)+7)), \
+             "d" (base) \
+            );
 }
 
 
@@ -82,19 +83,20 @@ __asm__("lsll %1,%0\n\tincl %0":"=r" (__limit):"r" (segment)); \
 __limit;})
 
 
-void __set_limit(CPU_INT08U* addr, CPU_INT32U limit) {
+void __set_limit(CPU_INT08U* addr, CPU_INT32U limit)
+{
 //#define __set_limit(addr,limit)
-__asm__("movw %%dx,%0\n\t" \
-	"rorl $16,%%edx\n\t" \
-	"movb %1,%%dh\n\t" \
-	"andb $0xf0,%%dh\n\t" \
-	"orb %%dh,%%dl\n\t" \
-	"movb %%dl,%1" \
-	: \
-	:"m" (*(addr)), \
-	 "m" (*((addr)+6)), \
-	 "d" (limit) \
-	);
+    __asm__("movw %%dx,%0\n\t" \
+            "rorl $16,%%edx\n\t" \
+            "movb %1,%%dh\n\t" \
+            "andb $0xf0,%%dh\n\t" \
+            "orb %%dh,%%dl\n\t" \
+            "movb %%dl,%1" \
+            : \
+            :"m" (*(addr)), \
+            "m" (*((addr)+6)), \
+            "d" (limit) \
+           );
 }
 
 /* ====================================
@@ -102,86 +104,86 @@ __asm__("movw %%dx,%0\n\t" \
    ====================================  */
 
 typedef struct {
-	CPU_DATA	cwd;
-	CPU_DATA	swd;
-	CPU_DATA	twd;
-	CPU_DATA	fip;
-	CPU_DATA	fcs;
-	CPU_DATA	foo;
-	CPU_DATA	fos;
-	CPU_DATA	st_space[20];	/* 8*10 bytes for each FP-reg = 80 bytes */
+    CPU_DATA	cwd;
+    CPU_DATA	swd;
+    CPU_DATA	twd;
+    CPU_DATA	fip;
+    CPU_DATA	fcs;
+    CPU_DATA	foo;
+    CPU_DATA	fos;
+    CPU_DATA	st_space[20];	/* 8*10 bytes for each FP-reg = 80 bytes */
 } CPU_X86_I387;
 
 typedef struct {
-	CPU_DATA	back_link;	/* 16 high bits zero */
-	CPU_DATA	esp0;
-	CPU_DATA	ss0;		/* 16 high bits zero */
-	CPU_DATA	esp1;
-	CPU_DATA	ss1;		/* 16 high bits zero */
-	CPU_DATA	esp2;
-	CPU_DATA	ss2;		/* 16 high bits zero */
-	CPU_DATA	cr3;
-	CPU_DATA	eip;
-	CPU_DATA	eflags;
-	CPU_DATA	eax,ecx,edx,ebx;
-	CPU_DATA	esp;
-	CPU_DATA	ebp;
-	CPU_DATA	esi;
-	CPU_DATA	edi;
-	CPU_DATA	es;		/* 16 high bits zero */
-	CPU_DATA	cs;		/* 16 high bits zero */
-	CPU_DATA	ss;		/* 16 high bits zero */
-	CPU_DATA	ds;		/* 16 high bits zero */
-	CPU_DATA	fs;		/* 16 high bits zero */
-	CPU_DATA	gs;		/* 16 high bits zero */
-	CPU_DATA	ldt;		/* 16 high bits zero */
-	CPU_DATA	trace_bitmap;	/* bits: trace 0, bitmap 16-31 */
+    CPU_DATA	back_link;	/* 16 high bits zero */
+    CPU_DATA	esp0;
+    CPU_DATA	ss0;		/* 16 high bits zero */
+    CPU_DATA	esp1;
+    CPU_DATA	ss1;		/* 16 high bits zero */
+    CPU_DATA	esp2;
+    CPU_DATA	ss2;		/* 16 high bits zero */
+    CPU_DATA	cr3;
+    CPU_DATA	eip;
+    CPU_DATA	eflags;
+    CPU_DATA	eax, ecx, edx, ebx;
+    CPU_DATA	esp;
+    CPU_DATA	ebp;
+    CPU_DATA	esi;
+    CPU_DATA	edi;
+    CPU_DATA	es;		/* 16 high bits zero */
+    CPU_DATA	cs;		/* 16 high bits zero */
+    CPU_DATA	ss;		/* 16 high bits zero */
+    CPU_DATA	ds;		/* 16 high bits zero */
+    CPU_DATA	fs;		/* 16 high bits zero */
+    CPU_DATA	gs;		/* 16 high bits zero */
+    CPU_DATA	ldt;		/* 16 high bits zero */
+    CPU_DATA	trace_bitmap;	/* bits: trace 0, bitmap 16-31 */
 } CPU_X86_TSS;
 
 typedef struct {
-	X86_DESC      ldt[X86_LDT_MAX];
-	CPU_X86_TSS   tss;
-	CPU_X86_I387  i387;
-	
-	CPU_INT32U    index;
+    X86_DESC      ldt[X86_LDT_MAX];
+    CPU_X86_TSS   tss;
+    CPU_X86_I387  i387;
+
+    CPU_INT32U    index;
 } CPU_X86_TASK;
 
 typedef union {
-	CPU_X86_TASK  task;
-	CPU_INT08S    stack[X86_MEM_PAGE_SIZE];
+    CPU_X86_TASK  task;
+    CPU_INT08S    stack[X86_MEM_PAGE_SIZE];
 } CPU_X86_TASK_STACK;
 
-CPU_PRIVATE  CPU_X86_TASK_STACK  cpu_task_stTask0KernelStack = { 
-	/* task */
-	{
-	    /* ldt */
-	    { 
-		    {0,0},
-		    {0x9f,0xc0fa00},
-		    {0x9f,0xc0f200},
-	    },
-		
-	    /* tss */
-	    {
-		    0, /* back_link */ 
-	    	X86_MEM_PAGE_SIZE+(CPU_INT32U)(&cpu_task_stTask0KernelStack),  /* esp0 */
-	    	0x10, /* ss0 */
-	    	0, 0, 0, 0, /* esp1, ss1, eps2, ss2 */
-		    (CPU_INT32U)(&X86_MEM_PAGE_TABLE_DIR), /* cr3 */
-	        0,0, /* eip, eflags */
-	    	0,0,0,0, /* eax, ecx, edx, ebx */
-	    	0,0,0,0, /* esp, ebp, esi, edi */
-	        0x17,0x17,0x17,0x17,0x17,0x17, /* es, cs, ss, ds, fs, gs */
-	    	_calc_ldt(0), /* ldt */
-	    	0x80000000, /* trace_map */
-	    },
-		
-	    /* i387 */
-	    {},
-		
-	    /* index */
-	    0,
-	}
+CPU_PRIVATE  CPU_X86_TASK_STACK  cpu_task_stTask0KernelStack = {
+    /* task */
+    {
+        /* ldt */
+        {
+            {0, 0},
+            {0x9f, 0xc0fa00},
+            {0x9f, 0xc0f200},
+        },
+
+        /* tss */
+        {
+            0, /* back_link */
+            X86_MEM_PAGE_SIZE + (CPU_INT32U)(&cpu_task_stTask0KernelStack), /* esp0 */
+            0x10, /* ss0 */
+            0, 0, 0, 0, /* esp1, ss1, eps2, ss2 */
+            (CPU_INT32U)(&X86_MEM_PAGE_TABLE_DIR), /* cr3 */
+            0, 0, /* eip, eflags */
+            0, 0, 0, 0, /* eax, ecx, edx, ebx */
+            0, 0, 0, 0, /* esp, ebp, esi, edi */
+            0x17, 0x17, 0x17, 0x17, 0x17, 0x17, /* es, cs, ss, ds, fs, gs */
+            _calc_ldt(0), /* ldt */
+            0x80000000, /* trace_map */
+        },
+
+        /* i387 */
+        {},
+
+        /* index */
+        0,
+    }
 };
 
 
@@ -190,8 +192,8 @@ CPU_PRIVATE  CPU_X86_TASK*  cpu_task_apstAllTask[CPU_TASK_MAX] = {&(cpu_task_stT
 CPU_PRIVATE  CPU_X86_TASK*  cpu_task_pstCurrentTask = &(cpu_task_stTask0KernelStack.task);
 
 #define  CPU_TASK_LINERAR_ADDR_RANGE    (64*1024*1024)  /* 64MB */
-                                                        /* 64MB x 64 = 4GB */
-                                                        /* 64MB x 46 = 3GB */
+/* 64MB x 64 = 4GB */
+/* 64MB x 46 = 3GB */
 #define  CPU_TASK_USER_STACK_SIZE       (1024 * 1024)   /* 1MB  */
 
 /******************************************************************************
@@ -213,537 +215,555 @@ CPU_PRIVATE  CPU_ERR  cpu_task_MakeStack(const CPU_ADDR addrLnrStart_in, const C
 
 void cpu_task_Init(void)
 {
-	CPU_INT32U  i = 0;
-	X86_DESC*   pstDesc = 0;
-	
-	/* zero the gdt and pointer array of task control */
-	pstDesc = X86_GDT + X86_GDT_LDT_0 + 1;
-	for (i = 1; i < CPU_TASK_MAX; ++i) {
-		cpu_task_apstAllTask[i] = 0;
-		/* TSS */
-		pstDesc->hi = 0;
-		pstDesc->lo = 0;
-		pstDesc++;
-		/* LDT */
-		pstDesc->hi = 0;
-		pstDesc->lo = 0;
-		pstDesc++;
-	}
+    CPU_INT32U  i = 0;
+    X86_DESC*   pstDesc = 0;
 
-	cpu_task_SwitchToTask0();
-	
-	return;
+    /* zero the gdt and pointer array of task control */
+    pstDesc = X86_GDT + X86_GDT_LDT_0 + 1;
+
+    for (i = 1; i < CPU_TASK_MAX; ++i) {
+        cpu_task_apstAllTask[i] = 0;
+        /* TSS */
+        pstDesc->hi = 0;
+        pstDesc->lo = 0;
+        pstDesc++;
+        /* LDT */
+        pstDesc->hi = 0;
+        pstDesc->lo = 0;
+        pstDesc++;
+    }
+
+    cpu_task_SwitchToTask0();
+
+    return;
 }
 
 
 CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out)
 {
-	CPU_INT32U     uiTaskIndex = 0;
-	CPU_ADDR       addrLnrStart = 0;
-	CPU_X86_TASK*  pstTask = 0;
-	CPU_ERR        ret = CPU_ERR_NONE;
-	
-	if ((0 == pArgList_in) 
-	||  (0 == puiTaskID_out)) {
-		return (CPU_ERR_BAD_PARAM);
-	}
-	
-	if ((DEF_ENABLED == pArgList_in[CPU_TASK_ARG_THREAD_EN])
-	&&  (DEF_ENABLED != pArgList_in[CPU_TASK_ARG_KERNEL_EN])) {
-		return (cpu_task_CreateThread(pArgList_in, puiTaskID_out));
-	}
-	
-	ret = cpu_task_SaveTCB(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
-	if (CPU_ERR_NONE != ret) {
-		return (ret);
-	}
+    CPU_INT32U     uiTaskIndex = 0;
+    CPU_ADDR       addrLnrStart = 0;
+    CPU_X86_TASK*  pstTask = 0;
+    CPU_ERR        ret = CPU_ERR_NONE;
 
-	addrLnrStart = uiTaskIndex * CPU_TASK_LINERAR_ADDR_RANGE;
-	pstTask = (CPU_X86_TASK *)pArgList_in[CPU_TASK_ARG_EXT_DATA];
-	pstTask->index = uiTaskIndex;
-	
-	if (CPU_ERR_NONE == ret) {
-		ret = cpu_task_MakeTSS(
-			pArgList_in[CPU_TASK_ARG_KERNEL_STACK], 
-			(CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_ROUTINE], 
-			pArgList_in[CPU_TASK_ARG_EFLAG], 
-			pArgList_in[CPU_TASK_ARG_KERNEL_EN],
-			pstTask
-		);
-	}
-	
-	if (CPU_ERR_NONE == ret) {
-	    ret = cpu_task_CloneCurrentLDT(addrLnrStart, pstTask);		
-	}
-	
-	if (CPU_ERR_NONE == ret) {
-	    //pstTask->tss.esp = X86_MEM_PAGE_SIZE;
-		
-		/* get a new memory page for user stack */
-		ret = cpu_task_BuildStack(
-			addrLnrStart,
-			pArgList_in[CPU_TASK_ARG_KERNEL_EN],
-			(void *)pArgList_in[CPU_TASK_ARG_PARAMETER],
-			(CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_RET_POINT],
-			pstTask
-		);
-	}
-	
-	/* release the resource while failed */
-	if (CPU_ERR_NONE != ret) {
-		cpu_page_ReleasePageTable(addrLnrStart, CPU_TASK_LINERAR_ADDR_RANGE);
-		cpu_task_apstAllTask[uiTaskIndex] = 0;
-		(*puiTaskID_out) = 0;
-		return (CPU_ERR_FATAL);
-	}
-	
-	/* register the tss and ldt of the task into the gdt. */
-	_set_tss_desc(X86_GDT + X86_GDT_TSS_0 + (uiTaskIndex << 1), &(pstTask->tss));
-	_set_ldt_desc(X86_GDT + X86_GDT_LDT_0 + (uiTaskIndex << 1), &(pstTask->ldt));
-	
-	/* return the task id */
-	(*puiTaskID_out) = uiTaskIndex;
-	
-	return (CPU_ERR_NONE);
+    if ((0 == pArgList_in)
+            ||  (0 == puiTaskID_out)) {
+        return (CPU_ERR_BAD_PARAM);
+    }
+
+    if ((DEF_ENABLED == pArgList_in[CPU_TASK_ARG_THREAD_EN])
+            &&  (DEF_ENABLED != pArgList_in[CPU_TASK_ARG_KERNEL_EN])) {
+        return (cpu_task_CreateThread(pArgList_in, puiTaskID_out));
+    }
+
+    ret = cpu_task_SaveTCB(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
+
+    if (CPU_ERR_NONE != ret) {
+        return (ret);
+    }
+
+    addrLnrStart = uiTaskIndex * CPU_TASK_LINERAR_ADDR_RANGE;
+    pstTask = (CPU_X86_TASK *)pArgList_in[CPU_TASK_ARG_EXT_DATA];
+    pstTask->index = uiTaskIndex;
+
+    if (CPU_ERR_NONE == ret) {
+        ret = cpu_task_MakeTSS(
+                  pArgList_in[CPU_TASK_ARG_KERNEL_STACK],
+                  (CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_ROUTINE],
+                  pArgList_in[CPU_TASK_ARG_EFLAG],
+                  pArgList_in[CPU_TASK_ARG_KERNEL_EN],
+                  pstTask
+              );
+    }
+
+    if (CPU_ERR_NONE == ret) {
+        ret = cpu_task_CloneCurrentLDT(addrLnrStart, pstTask);
+    }
+
+    if (CPU_ERR_NONE == ret) {
+        //pstTask->tss.esp = X86_MEM_PAGE_SIZE;
+
+        /* get a new memory page for user stack */
+        ret = cpu_task_BuildStack(
+                  addrLnrStart,
+                  pArgList_in[CPU_TASK_ARG_KERNEL_EN],
+                  (void *)pArgList_in[CPU_TASK_ARG_PARAMETER],
+                  (CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_RET_POINT],
+                  pstTask
+              );
+    }
+
+    /* release the resource while failed */
+    if (CPU_ERR_NONE != ret) {
+        cpu_page_ReleasePageTable(addrLnrStart, CPU_TASK_LINERAR_ADDR_RANGE);
+        cpu_task_apstAllTask[uiTaskIndex] = 0;
+        (*puiTaskID_out) = 0;
+        return (CPU_ERR_FATAL);
+    }
+
+    /* register the tss and ldt of the task into the gdt. */
+    _set_tss_desc(X86_GDT + X86_GDT_TSS_0 + (uiTaskIndex << 1), &(pstTask->tss));
+    _set_ldt_desc(X86_GDT + X86_GDT_LDT_0 + (uiTaskIndex << 1), &(pstTask->ldt));
+
+    /* return the task id */
+    (*puiTaskID_out) = uiTaskIndex;
+
+    return (CPU_ERR_NONE);
 }
 
 CPU_PRIVATE CPU_ERR  cpu_task_CreateThread( const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out)
 {
-	CPU_INT32U     uiTaskIndex = 0;
-	CPU_ADDR       addrLnrStart = 0;
-	CPU_X86_TASK*  pstTask = 0;
-	CPU_ERR        ret = CPU_ERR_NONE;
-	
-	if ((0 == pArgList_in) 
-	||  (0 == puiTaskID_out)
-	||  (DEF_ENABLED != pArgList_in[CPU_TASK_ARG_THREAD_EN])) {
-		return (CPU_ERR_BAD_PARAM);
-	}
-	
-	ret = cpu_task_SaveTCB(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
-	if (CPU_ERR_NONE != ret) {
-		return (ret);
-	}
+    CPU_INT32U     uiTaskIndex = 0;
+    CPU_ADDR       addrLnrStart = 0;
+    CPU_X86_TASK*  pstTask = 0;
+    CPU_ERR        ret = CPU_ERR_NONE;
 
-	addrLnrStart = pArgList_in[CPU_TASK_ARG_PROCESS_ID] * CPU_TASK_LINERAR_ADDR_RANGE;
-	pstTask = (CPU_X86_TASK *)pArgList_in[CPU_TASK_ARG_EXT_DATA];
-	pstTask->index = uiTaskIndex;
+    if ((0 == pArgList_in)
+            ||  (0 == puiTaskID_out)
+            ||  (DEF_ENABLED != pArgList_in[CPU_TASK_ARG_THREAD_EN])) {
+        return (CPU_ERR_BAD_PARAM);
+    }
 
-	if (CPU_ERR_NONE == ret) {
-		ret = cpu_task_MakeTSS(
-			pArgList_in[CPU_TASK_ARG_KERNEL_STACK], 
-			(CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_ROUTINE], 
-			pArgList_in[CPU_TASK_ARG_EFLAG], 
-			pArgList_in[CPU_TASK_ARG_KERNEL_EN],
-			pstTask
-		);
-	}
+    ret = cpu_task_SaveTCB(&uiTaskIndex, pArgList_in[CPU_TASK_ARG_EXT_DATA]);
 
-	if (CPU_ERR_NONE == ret) {
-	    ret = cpu_task_InheritCurrentLDT(pstTask);		
-	}
-	
-	if (CPU_ERR_NONE == ret) {
-		/* get a new memory page for user stack */
-		ret = cpu_task_MakeStack(
-			addrLnrStart,
-			pArgList_in[CPU_TASK_ARG_THREAD_INDEX],
-			(void *)pArgList_in[CPU_TASK_ARG_PARAMETER],
-			(CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_RET_POINT],
-			pstTask
-		);
-	}
+    if (CPU_ERR_NONE != ret) {
+        return (ret);
+    }
 
-	/* release the resource while failed */
-	if (CPU_ERR_NONE != ret) {
-		cpu_task_apstAllTask[uiTaskIndex] = 0;
-		(*puiTaskID_out) = 0;
-		return (CPU_ERR_FATAL);
-	}
+    addrLnrStart = pArgList_in[CPU_TASK_ARG_PROCESS_ID] * CPU_TASK_LINERAR_ADDR_RANGE;
+    pstTask = (CPU_X86_TASK *)pArgList_in[CPU_TASK_ARG_EXT_DATA];
+    pstTask->index = uiTaskIndex;
 
-	_set_tss_desc(X86_GDT + X86_GDT_TSS_0 + (uiTaskIndex << 1), &(pstTask->tss));
-	_set_ldt_desc(X86_GDT + X86_GDT_LDT_0 + (uiTaskIndex << 1), &(pstTask->ldt));
-	
-	(*puiTaskID_out) = uiTaskIndex;
+    if (CPU_ERR_NONE == ret) {
+        ret = cpu_task_MakeTSS(
+                  pArgList_in[CPU_TASK_ARG_KERNEL_STACK],
+                  (CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_ROUTINE],
+                  pArgList_in[CPU_TASK_ARG_EFLAG],
+                  pArgList_in[CPU_TASK_ARG_KERNEL_EN],
+                  pstTask
+              );
+    }
 
-	return (CPU_ERR_NONE);
+    if (CPU_ERR_NONE == ret) {
+        ret = cpu_task_InheritCurrentLDT(pstTask);
+    }
+
+    if (CPU_ERR_NONE == ret) {
+        /* get a new memory page for user stack */
+        ret = cpu_task_MakeStack(
+                  addrLnrStart,
+                  pArgList_in[CPU_TASK_ARG_THREAD_INDEX],
+                  (void *)pArgList_in[CPU_TASK_ARG_PARAMETER],
+                  (CPU_FNCT_PTR)pArgList_in[CPU_TASK_ARG_RET_POINT],
+                  pstTask
+              );
+    }
+
+    /* release the resource while failed */
+    if (CPU_ERR_NONE != ret) {
+        cpu_task_apstAllTask[uiTaskIndex] = 0;
+        (*puiTaskID_out) = 0;
+        return (CPU_ERR_FATAL);
+    }
+
+    _set_tss_desc(X86_GDT + X86_GDT_TSS_0 + (uiTaskIndex << 1), &(pstTask->tss));
+    _set_ldt_desc(X86_GDT + X86_GDT_LDT_0 + (uiTaskIndex << 1), &(pstTask->ldt));
+
+    (*puiTaskID_out) = uiTaskIndex;
+
+    return (CPU_ERR_NONE);
 }
 
 
 void  CPUExt_TaskDelete(const CPU_INT32U  uiTaskID_in)
 {
-	CPU_X86_TASK*  pstTask = 0;
-	
-	if (uiTaskID_in >= CPU_TASK_MAX) {
-		CPUExt_CorePanic("[PANIC][cpu_task_KFDelete]Task ID is out of range");
-	}
-	
-	if (0 != cpu_task_apstAllTask[uiTaskID_in]) {
-		pstTask = cpu_task_apstAllTask[uiTaskID_in];
-		cpu_page_ReleasePageTable(_get_ldt_base(pstTask->ldt[X86_LDT_CODE]), CPU_TASK_LINERAR_ADDR_RANGE);
-		cpu_page_ReleasePageTable(_get_ldt_base(pstTask->ldt[X86_LDT_DATA]), CPU_TASK_LINERAR_ADDR_RANGE);
-		cpu_task_apstAllTask[uiTaskID_in] = 0;
-	}
-	
-	return;
+    CPU_X86_TASK*  pstTask = 0;
+
+    if (uiTaskID_in >= CPU_TASK_MAX) {
+        CPUExt_CorePanic("[PANIC][cpu_task_KFDelete]Task ID is out of range");
+    }
+
+    if (0 != cpu_task_apstAllTask[uiTaskID_in]) {
+        pstTask = cpu_task_apstAllTask[uiTaskID_in];
+        cpu_page_ReleasePageTable(_get_ldt_base(pstTask->ldt[X86_LDT_CODE]), CPU_TASK_LINERAR_ADDR_RANGE);
+        cpu_page_ReleasePageTable(_get_ldt_base(pstTask->ldt[X86_LDT_DATA]), CPU_TASK_LINERAR_ADDR_RANGE);
+        cpu_task_apstAllTask[uiTaskID_in] = 0;
+    }
+
+    return;
 }
 
 void CPUExt_TaskGetCurrent(CPU_INT32U * puiTaskID_out)
 {
-	if ((0 == cpu_task_pstCurrentTask) || (0 == puiTaskID_out)) {
-		return;
-	}
-	
-	(*puiTaskID_out) = cpu_task_pstCurrentTask->index;
+    if ((0 == cpu_task_pstCurrentTask) || (0 == puiTaskID_out)) {
+        return;
+    }
+
+    (*puiTaskID_out) = cpu_task_pstCurrentTask->index;
 }
 
 
 void CPUExt_TaskSwitch(const CPU_INT32U  uiTaskID_in)
 {
-	CPU_SR_ALLOC();
-	
-	CPU_CRITICAL_ENTER();
-	
-	{
-	struct {CPU_INT32S a,b;} __tmp;
-	__asm__( 
-		"cmpl %%ecx,  _cpu_task_pstCurrentTask \n\t"
-		"je 1f \n\t"
-		"xchgl %%ecx, _cpu_task_pstCurrentTask \n\t"
-		"movw %%dx, %1 \n\t"
-		"ljmp *%0 \n\t"
-		"1:"
-		: /* no output */
-		:"m" (*&__tmp.a),
-		 "m" (*&__tmp.b), 
-		 "d" (_calc_tss(uiTaskID_in)),
-		 "c" ((CPU_DATA)(cpu_task_apstAllTask[uiTaskID_in]))
-	);
-	}
-	
-	CPU_CRITICAL_EXIT();
-	
-	return;
+    CPU_SR_ALLOC();
+
+    CPU_CRITICAL_ENTER();
+
+    {
+        struct {
+            CPU_INT32S a, b;
+        } __tmp;
+        __asm__(
+            "cmpl %%ecx,  _cpu_task_pstCurrentTask \n\t"
+            "je 1f \n\t"
+            "xchgl %%ecx, _cpu_task_pstCurrentTask \n\t"
+            "movw %%dx, %1 \n\t"
+            "ljmp *%0 \n\t"
+            "1:"
+            : /* no output */
+            :"m" (*&__tmp.a),
+            "m" (*&__tmp.b),
+            "d" (_calc_tss(uiTaskID_in)),
+            "c" ((CPU_DATA)(cpu_task_apstAllTask[uiTaskID_in]))
+        );
+    }
+
+    CPU_CRITICAL_EXIT();
+
+    return;
 }
 
 
 CPU_PRIVATE  void cpu_task_SwitchToTask0(void)
-{	
-	/* register the tss and ldt of the task 0 into the gdt. */
-	_set_tss_desc(X86_GDT + X86_GDT_TSS_0, &(cpu_task_stTask0KernelStack.task.tss));
-	_set_ldt_desc(X86_GDT + X86_GDT_LDT_0, &(cpu_task_stTask0KernelStack.task.ldt));
+{
+    /* register the tss and ldt of the task 0 into the gdt. */
+    _set_tss_desc(X86_GDT + X86_GDT_TSS_0, &(cpu_task_stTask0KernelStack.task.tss));
+    _set_ldt_desc(X86_GDT + X86_GDT_LDT_0, &(cpu_task_stTask0KernelStack.task.ldt));
 
-	/* Clear NT, so that we won't have troubles with that later on */
-	__asm__("pushfl ; andl $0xffffbfff,(%esp) ; popfl");
-	
-	/* load the tss and ldt of task 0 */
-	__asm__("ltr %%ax"::"a" ((CPU_INT32U)(X86_GDT_TSS_0 << 3)));
-	__asm__("lldt %%ax"::"a" ((CPU_INT32U)(X86_GDT_LDT_0 << 3)));
-	
-	/* set current task to task 0 */
-	cpu_task_pstCurrentTask = cpu_task_apstAllTask[0];
+    /* Clear NT, so that we won't have troubles with that later on */
+    __asm__("pushfl ; andl $0xffffbfff,(%esp) ; popfl");
+
+    /* load the tss and ldt of task 0 */
+    __asm__("ltr %%ax"::"a" ((CPU_INT32U)(X86_GDT_TSS_0 << 3)));
+    __asm__("lldt %%ax"::"a" ((CPU_INT32U)(X86_GDT_LDT_0 << 3)));
+
+    /* set current task to task 0 */
+    cpu_task_pstCurrentTask = cpu_task_apstAllTask[0];
 }
 
 
 void CPUExt_TaskSwitchToRing3(void)
 {
-	/* go to the ring 3 */
-	__asm__ ("movl %%esp,%%eax\n\t" \
-	"pushl $0x17\n\t" \
-	"pushl %%eax\n\t" \
-	"pushfl\n\t" \
-	"pushl $0x0f\n\t" \
-	"pushl $1f\n\t" \
-	"iret\n" \
-	"1:\tmovl $0x17,%%eax\n\t" \
-	"movw %%ax,%%ds\n\t" \
-	"movw %%ax,%%es\n\t" \
-	"movw %%ax,%%fs\n\t" \
-	"movw %%ax,%%gs" \
-	:::"ax");
+    /* go to the ring 3 */
+    __asm__ ("movl %%esp,%%eax\n\t" \
+             "pushl $0x17\n\t" \
+             "pushl %%eax\n\t" \
+             "pushfl\n\t" \
+             "pushl $0x0f\n\t" \
+             "pushl $1f\n\t" \
+             "iret\n" \
+             "1:\tmovl $0x17,%%eax\n\t" \
+             "movw %%ax,%%ds\n\t" \
+             "movw %%ax,%%es\n\t" \
+             "movw %%ax,%%fs\n\t" \
+             "movw %%ax,%%gs" \
+             :::"ax");
 }
 
 
 CPU_PRIVATE  CPU_ERR  cpu_task_SaveTCB(CPU_INT32U* puiIndex_out, CPU_ADDR addrPhyMemPage_in)
 {
-	CPU_INT32U  uiIndex = 0;
-	
-	if ((0 == puiIndex_out) 
-	||  (0 == addrPhyMemPage_in)) {
-		CPUExt_CorePanic("[PANIC][cpu_task_GetTaskIndex]Bad Parameter");
-	}
-	
-	/* find free index for the task */
-	for (uiIndex = 0; uiIndex < CPU_TASK_MAX; ++uiIndex) {
-		if (0 == cpu_task_apstAllTask[uiIndex]) {
-			break;
-		}
-	}
-	if (uiIndex >= CPU_TASK_MAX) {
-		return (CPU_ERR_FATAL);
-	}
-	
-	cpu_task_apstAllTask[uiIndex] = (CPU_X86_TASK *)(addrPhyMemPage_in);
-	
-	/* return the index for the task */
-	(*puiIndex_out) = uiIndex;
-	
-	return (CPU_ERR_NONE);
+    CPU_INT32U  uiIndex = 0;
+
+    if ((0 == puiIndex_out)
+            ||  (0 == addrPhyMemPage_in)) {
+        CPUExt_CorePanic("[PANIC][cpu_task_GetTaskIndex]Bad Parameter");
+    }
+
+    /* find free index for the task */
+    for (uiIndex = 0; uiIndex < CPU_TASK_MAX; ++uiIndex) {
+        if (0 == cpu_task_apstAllTask[uiIndex]) {
+            break;
+        }
+    }
+
+    if (uiIndex >= CPU_TASK_MAX) {
+        return (CPU_ERR_FATAL);
+    }
+
+    cpu_task_apstAllTask[uiIndex] = (CPU_X86_TASK *)(addrPhyMemPage_in);
+
+    /* return the index for the task */
+    (*puiIndex_out) = uiIndex;
+
+    return (CPU_ERR_NONE);
 }
 
 CPU_PRIVATE  CPU_ERR  cpu_task_MakeTSS(
-    CPU_ADDR       addrKernelStack_in, 
-	CPU_FNCT_PTR   pfnRoutine_in, 
-	CPU_DATA       eflags_in, 
-	CPU_DATA       isKernel_in, 
-	CPU_X86_TASK*  pstTask_out
+    CPU_ADDR       addrKernelStack_in,
+    CPU_FNCT_PTR   pfnRoutine_in,
+    CPU_DATA       eflags_in,
+    CPU_DATA       isKernel_in,
+    CPU_X86_TASK*  pstTask_out
 )
 {
-	if ((0 == pfnRoutine_in) 
-	||  (0 == pstTask_out) 
-	||  (0 == addrKernelStack_in)) {
-		CPUExt_CorePanic("[PANIC][cpu_task_MakeTSS]Bad Parameter");
-	}
-	
-	pstTask_out->tss.back_link = 0;
-	pstTask_out->tss.esp0 = addrKernelStack_in;
-	pstTask_out->tss.ss0  = 0x10;
-	pstTask_out->tss.esp1 = 0;
-	pstTask_out->tss.ss1  = 0;
-	pstTask_out->tss.esp2 = 0;
-	pstTask_out->tss.ss2  = 0;
-	pstTask_out->tss.cr3 = (CPU_INT32U)(&X86_MEM_PAGE_TABLE_DIR);
-	pstTask_out->tss.eip = (CPU_INT32S)pfnRoutine_in;
-	pstTask_out->tss.eflags = eflags_in;
-	pstTask_out->tss.eax = 0;
-	pstTask_out->tss.ecx = 0;
-	pstTask_out->tss.edx = 0;
-	pstTask_out->tss.ebx = 0;
-	pstTask_out->tss.esp = 0;
-	pstTask_out->tss.ebp = 0;
-	pstTask_out->tss.esi = 0;
-	pstTask_out->tss.edi = 0;
-	pstTask_out->tss.ldt = _calc_ldt(pstTask_out->index);
-	pstTask_out->tss.trace_bitmap = 0x80000000;
+    if ((0 == pfnRoutine_in)
+            ||  (0 == pstTask_out)
+            ||  (0 == addrKernelStack_in)) {
+        CPUExt_CorePanic("[PANIC][cpu_task_MakeTSS]Bad Parameter");
+    }
 
-	if (DEF_ENABLED == isKernel_in) {
-	    pstTask_out->tss.es = 0x10;
-	    pstTask_out->tss.cs = 0x08;
-	    pstTask_out->tss.ss = 0x10;
-	    pstTask_out->tss.ds = 0x10;
-	    pstTask_out->tss.fs = 0x10;
-	    pstTask_out->tss.gs = 0x10;
-	} 
-	else {
-		pstTask_out->tss.es = 0x17;
-	    pstTask_out->tss.cs = 0x0f;
-	    pstTask_out->tss.ss = 0x17;
-	    pstTask_out->tss.ds = 0x17;
-	    pstTask_out->tss.fs = 0x17;
-	    pstTask_out->tss.gs = 0x17;
-	}
-	
-	return (CPU_ERR_NONE);
+    pstTask_out->tss.back_link = 0;
+    pstTask_out->tss.esp0 = addrKernelStack_in;
+    pstTask_out->tss.ss0  = 0x10;
+    pstTask_out->tss.esp1 = 0;
+    pstTask_out->tss.ss1  = 0;
+    pstTask_out->tss.esp2 = 0;
+    pstTask_out->tss.ss2  = 0;
+    pstTask_out->tss.cr3 = (CPU_INT32U)(&X86_MEM_PAGE_TABLE_DIR);
+    pstTask_out->tss.eip = (CPU_INT32S)pfnRoutine_in;
+    pstTask_out->tss.eflags = eflags_in;
+    pstTask_out->tss.eax = 0;
+    pstTask_out->tss.ecx = 0;
+    pstTask_out->tss.edx = 0;
+    pstTask_out->tss.ebx = 0;
+    pstTask_out->tss.esp = 0;
+    pstTask_out->tss.ebp = 0;
+    pstTask_out->tss.esi = 0;
+    pstTask_out->tss.edi = 0;
+    pstTask_out->tss.ldt = _calc_ldt(pstTask_out->index);
+    pstTask_out->tss.trace_bitmap = 0x80000000;
+
+    if (DEF_ENABLED == isKernel_in) {
+        pstTask_out->tss.es = 0x10;
+        pstTask_out->tss.cs = 0x08;
+        pstTask_out->tss.ss = 0x10;
+        pstTask_out->tss.ds = 0x10;
+        pstTask_out->tss.fs = 0x10;
+        pstTask_out->tss.gs = 0x10;
+    } else {
+        pstTask_out->tss.es = 0x17;
+        pstTask_out->tss.cs = 0x0f;
+        pstTask_out->tss.ss = 0x17;
+        pstTask_out->tss.ds = 0x17;
+        pstTask_out->tss.fs = 0x17;
+        pstTask_out->tss.gs = 0x17;
+    }
+
+    return (CPU_ERR_NONE);
 }
 
 CPU_PRIVATE  CPU_ERR  cpu_task_CloneCurrentLDT(
-	const CPU_ADDR  addrLnrStart_in, 
-	CPU_X86_TASK*   pstTask_out
+    const CPU_ADDR  addrLnrStart_in,
+    CPU_X86_TASK*   pstTask_out
 )
 {
-	CPU_INT32U  uiDataLimit = 0;
-	CPU_INT32U  uiCodeLimit = 0;
-	CPU_ADDR    addrLinerarData = 0;
-	CPU_ADDR    addrLinerarCode = 0;
-	CPU_ERR     ret = CPU_ERR_NONE;
+    CPU_INT32U  uiDataLimit = 0;
+    CPU_INT32U  uiCodeLimit = 0;
+    CPU_ADDR    addrLinerarData = 0;
+    CPU_ADDR    addrLinerarCode = 0;
+    CPU_ERR     ret = CPU_ERR_NONE;
 
-	if (0 == pstTask_out) {
-		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad Parameter");
-	}
-	
-	pstTask_out->ldt[X86_LDT_NULL].hi = 0;
-	pstTask_out->ldt[X86_LDT_NULL].lo = 0;
-	pstTask_out->ldt[X86_LDT_CODE].hi = 0x0fff;
-	pstTask_out->ldt[X86_LDT_CODE].lo = 0xc0fa00;
-	pstTask_out->ldt[X86_LDT_DATA].hi = 0x3fff;
-	pstTask_out->ldt[X86_LDT_DATA].lo = 0xc0f200;
-	
-	uiCodeLimit = _get_ldt_limit_code();
-	uiDataLimit = _get_ldt_limit_data();
-	if (uiDataLimit < uiCodeLimit) {
-		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad data limit");
-	}
-	
-	addrLinerarCode = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_CODE]);
-	addrLinerarData = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_DATA]);
-	if (addrLinerarCode != addrLinerarData) {
-		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Separated I&D is NOT supported");
-	}
-	
-	_set_ldt_base( pstTask_out->ldt[X86_LDT_CODE], addrLnrStart_in);
-	//_set_ldt_limit(pstTask_out->ldt[X86_LDT_CODE], ((uiCodeLimit - 1)));
-	
-	_set_ldt_base( pstTask_out->ldt[X86_LDT_DATA], addrLnrStart_in);
-	//_set_ldt_limit(pstTask_out->ldt[X86_LDT_DATA], ((CPU_TASK_LINERAR_ADDR_RANGE - 1)));
-	
-	ret = cpu_page_CopyPageTable(addrLinerarData, addrLnrStart_in, uiDataLimit);
-	if (CPU_ERR_NONE != ret) {
-		cpu_page_ReleasePageTable(addrLnrStart_in, uiDataLimit);
-		return (ret);
-	}
-	
-	return (CPU_ERR_NONE);
+    if (0 == pstTask_out) {
+        CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad Parameter");
+    }
+
+    pstTask_out->ldt[X86_LDT_NULL].hi = 0;
+    pstTask_out->ldt[X86_LDT_NULL].lo = 0;
+    pstTask_out->ldt[X86_LDT_CODE].hi = 0x0fff;
+    pstTask_out->ldt[X86_LDT_CODE].lo = 0xc0fa00;
+    pstTask_out->ldt[X86_LDT_DATA].hi = 0x3fff;
+    pstTask_out->ldt[X86_LDT_DATA].lo = 0xc0f200;
+
+    uiCodeLimit = _get_ldt_limit_code();
+    uiDataLimit = _get_ldt_limit_data();
+
+    if (uiDataLimit < uiCodeLimit) {
+        CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad data limit");
+    }
+
+    addrLinerarCode = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_CODE]);
+    addrLinerarData = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_DATA]);
+
+    if (addrLinerarCode != addrLinerarData) {
+        CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Separated I&D is NOT supported");
+    }
+
+    _set_ldt_base( pstTask_out->ldt[X86_LDT_CODE], addrLnrStart_in);
+    //_set_ldt_limit(pstTask_out->ldt[X86_LDT_CODE], ((uiCodeLimit - 1)));
+
+    _set_ldt_base( pstTask_out->ldt[X86_LDT_DATA], addrLnrStart_in);
+    //_set_ldt_limit(pstTask_out->ldt[X86_LDT_DATA], ((CPU_TASK_LINERAR_ADDR_RANGE - 1)));
+
+    ret = cpu_page_CopyPageTable(addrLinerarData, addrLnrStart_in, uiDataLimit);
+
+    if (CPU_ERR_NONE != ret) {
+        cpu_page_ReleasePageTable(addrLnrStart_in, uiDataLimit);
+        return (ret);
+    }
+
+    return (CPU_ERR_NONE);
 }
 
 
 CPU_PRIVATE  CPU_ERR  cpu_task_InheritCurrentLDT(CPU_X86_TASK* pstTask_out)
 {
-	CPU_INT32U  uiDataLimit = 0;
-	CPU_INT32U  uiCodeLimit = 0;
-	CPU_ADDR    addrLinerarData = 0;
-	CPU_ADDR    addrLinerarCode = 0;
+    CPU_INT32U  uiDataLimit = 0;
+    CPU_INT32U  uiCodeLimit = 0;
+    CPU_ADDR    addrLinerarData = 0;
+    CPU_ADDR    addrLinerarCode = 0;
 
-	if (0 == pstTask_out) {
-		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad Parameter");
-	}
-	
-	pstTask_out->ldt[X86_LDT_NULL].hi = 0;
-	pstTask_out->ldt[X86_LDT_NULL].lo = 0;
-	pstTask_out->ldt[X86_LDT_CODE].hi = 0x0fff;
-	pstTask_out->ldt[X86_LDT_CODE].lo = 0xc0fa00;		
-	pstTask_out->ldt[X86_LDT_DATA].hi = 0x3fff;
-	pstTask_out->ldt[X86_LDT_DATA].lo = 0xc0f200;
-	
-	uiCodeLimit = _get_ldt_limit_code();
-	uiDataLimit = _get_ldt_limit_data();
-	if (uiDataLimit < uiCodeLimit) {
-		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad data limit");
-	}
-	
-	addrLinerarCode = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_CODE]);
-	addrLinerarData = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_DATA]);
-	if (addrLinerarCode != addrLinerarData) {
-		CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Separated I&D is NOT supported");
-	}
-	
-	_set_ldt_base( pstTask_out->ldt[X86_LDT_CODE], addrLinerarCode);
-	//_set_ldt_limit(pstTask_out->ldt[X86_LDT_CODE], ((uiCodeLimit - 1)));
-	
-	_set_ldt_base( pstTask_out->ldt[X86_LDT_DATA], addrLinerarData);
-	//_set_ldt_limit(pstTask_out->ldt[X86_LDT_DATA], ((CPU_TASK_LINERAR_ADDR_RANGE - 1)));
+    if (0 == pstTask_out) {
+        CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad Parameter");
+    }
 
-	return (CPU_ERR_NONE);
+    pstTask_out->ldt[X86_LDT_NULL].hi = 0;
+    pstTask_out->ldt[X86_LDT_NULL].lo = 0;
+    pstTask_out->ldt[X86_LDT_CODE].hi = 0x0fff;
+    pstTask_out->ldt[X86_LDT_CODE].lo = 0xc0fa00;
+    pstTask_out->ldt[X86_LDT_DATA].hi = 0x3fff;
+    pstTask_out->ldt[X86_LDT_DATA].lo = 0xc0f200;
+
+    uiCodeLimit = _get_ldt_limit_code();
+    uiDataLimit = _get_ldt_limit_data();
+
+    if (uiDataLimit < uiCodeLimit) {
+        CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Bad data limit");
+    }
+
+    addrLinerarCode = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_CODE]);
+    addrLinerarData = _get_ldt_base(cpu_task_pstCurrentTask->ldt[X86_LDT_DATA]);
+
+    if (addrLinerarCode != addrLinerarData) {
+        CPUExt_CorePanic("[PANIC][cpu_task_CopyMemoryPage]Separated I&D is NOT supported");
+    }
+
+    _set_ldt_base( pstTask_out->ldt[X86_LDT_CODE], addrLinerarCode);
+    //_set_ldt_limit(pstTask_out->ldt[X86_LDT_CODE], ((uiCodeLimit - 1)));
+
+    _set_ldt_base( pstTask_out->ldt[X86_LDT_DATA], addrLinerarData);
+    //_set_ldt_limit(pstTask_out->ldt[X86_LDT_DATA], ((CPU_TASK_LINERAR_ADDR_RANGE - 1)));
+
+    return (CPU_ERR_NONE);
 }
 
 
-CPU_PRIVATE  CPU_ERR  cpu_task_BuildStack( 
-	const CPU_ADDR  addrLnrStart_in, 
-	const CPU_DATA  isKernel_in, 
-	void *          pParam_in, 
-	CPU_FNCT_PTR    pfnReturnPoint_in, 
-	CPU_X86_TASK*   pstTask_inout
+CPU_PRIVATE  CPU_ERR  cpu_task_BuildStack(
+    const CPU_ADDR  addrLnrStart_in,
+    const CPU_DATA  isKernel_in,
+    void *          pParam_in,
+    CPU_FNCT_PTR    pfnReturnPoint_in,
+    CPU_X86_TASK*   pstTask_inout
 )
 {
-	CPU_ADDR     addrPhyMemPage = 0;
-	CPU_ADDR     addrLnrTaskEnd = 0;
-	CPU_INT32U*  puiStackTop = 0;
-	CPU_ERR      ret = CPU_ERR_NONE;
-	
-	if (0 == pstTask_inout) {
-		CPUExt_CorePanic("[PANIC][cpu_task_BuildUserStack]NULL Pointer");
-	}
-	
-	/* get the memroy page for the stack */
-	if (DEF_ENABLED == isKernel_in) {
-		puiStackTop = (CPU_INT32U *)(pstTask_inout->tss.esp0);
-	}
-	else {
-	    CPUExt_PageGetFree(&addrPhyMemPage);
-	    if (0 == addrPhyMemPage) {
-		    return (CPU_ERR_NO_MEMORY);
-	    }
-		puiStackTop = (CPU_INT32U *)((CPU_INT32U)addrPhyMemPage + X86_MEM_PAGE_SIZE - 4);
-	}
-	
-	/* build the stack */
-	(*puiStackTop) = 0;
-	--puiStackTop;
-	(*puiStackTop) = (CPU_STK)pParam_in;
-	--puiStackTop;
-	(*puiStackTop) = (CPU_STK)pfnReturnPoint_in;
-	
-	/* the stack for the kernel space task */
-	if (DEF_ENABLED == isKernel_in) {
-		pstTask_inout->tss.esp0 = (CPU_DATA)puiStackTop;
-		pstTask_inout->tss.esp  = pstTask_inout->tss.esp0;
-	}
-	
-	/* the stack for the user space task */
-	else {
-	    addrLnrTaskEnd = addrLnrStart_in + (CPU_TASK_LINERAR_ADDR_RANGE - 1);
-	    ret = cpu_page_PutPageToLinerarAddr(addrPhyMemPage, addrLnrTaskEnd);
-	    if (CPU_ERR_NONE != ret) {
-		    CPUExt_PageRelease(addrPhyMemPage);
-	    	return (ret);
-	    }
-		pstTask_inout->tss.esp = CPU_TASK_LINERAR_ADDR_RANGE - (3 * 4);
-	}
-	
-	return (ret);
+    CPU_ADDR     addrPhyMemPage = 0;
+    CPU_ADDR     addrLnrTaskEnd = 0;
+    CPU_INT32U*  puiStackTop = 0;
+    CPU_ERR      ret = CPU_ERR_NONE;
+
+    if (0 == pstTask_inout) {
+        CPUExt_CorePanic("[PANIC][cpu_task_BuildUserStack]NULL Pointer");
+    }
+
+    /* get the memroy page for the stack */
+    if (DEF_ENABLED == isKernel_in) {
+        puiStackTop = (CPU_INT32U *)(pstTask_inout->tss.esp0);
+    } else {
+        CPUExt_PageGetFree(&addrPhyMemPage);
+
+        if (0 == addrPhyMemPage) {
+            return (CPU_ERR_NO_MEMORY);
+        }
+
+        puiStackTop = (CPU_INT32U *)((CPU_INT32U)addrPhyMemPage + X86_MEM_PAGE_SIZE - 4);
+    }
+
+    /* build the stack */
+    (*puiStackTop) = 0;
+    --puiStackTop;
+    (*puiStackTop) = (CPU_STK)pParam_in;
+    --puiStackTop;
+    (*puiStackTop) = (CPU_STK)pfnReturnPoint_in;
+
+    /* the stack for the kernel space task */
+    if (DEF_ENABLED == isKernel_in) {
+        pstTask_inout->tss.esp0 = (CPU_DATA)puiStackTop;
+        pstTask_inout->tss.esp  = pstTask_inout->tss.esp0;
+    }
+
+    /* the stack for the user space task */
+    else {
+        addrLnrTaskEnd = addrLnrStart_in + (CPU_TASK_LINERAR_ADDR_RANGE - 1);
+        ret = cpu_page_PutPageToLinerarAddr(addrPhyMemPage, addrLnrTaskEnd);
+
+        if (CPU_ERR_NONE != ret) {
+            CPUExt_PageRelease(addrPhyMemPage);
+            return (ret);
+        }
+
+        pstTask_inout->tss.esp = CPU_TASK_LINERAR_ADDR_RANGE - (3 * 4);
+    }
+
+    return (ret);
 }
 
 CPU_PRIVATE  CPU_ERR  cpu_task_MakeStack(
-	const CPU_ADDR    addrLnrStart_in,
-	const CPU_INT32U  uiThreadIdx_in, 
-	void *            pParam_in, 
-	CPU_FNCT_PTR      pfnReturnPoint_in, 
-	CPU_X86_TASK *    pstTask_inout
+    const CPU_ADDR    addrLnrStart_in,
+    const CPU_INT32U  uiThreadIdx_in,
+    void *            pParam_in,
+    CPU_FNCT_PTR      pfnReturnPoint_in,
+    CPU_X86_TASK *    pstTask_inout
 )
 {
-	CPU_ADDR     addrPhyMemPage = 0;
-	CPU_ADDR     addrLnrStack = 0;
-	CPU_INT32U*  puiStackTop = 0;
-	CPU_ERR      ret = CPU_ERR_NONE;
-	
-	if (0 == pstTask_inout) {
-		CPUExt_CorePanic("[PANIC][cpu_task_BuildUserStack]NULL Pointer");
-	}
-	
-	/* get the memroy page for the stack */
-    CPUExt_PageGetFree(&addrPhyMemPage);
-    if (0 == addrPhyMemPage) {
-	    return (CPU_ERR_NO_MEMORY);
+    CPU_ADDR     addrPhyMemPage = 0;
+    CPU_ADDR     addrLnrStack = 0;
+    CPU_INT32U*  puiStackTop = 0;
+    CPU_ERR      ret = CPU_ERR_NONE;
+
+    if (0 == pstTask_inout) {
+        CPUExt_CorePanic("[PANIC][cpu_task_BuildUserStack]NULL Pointer");
     }
-	puiStackTop = (CPU_INT32U *)((CPU_INT32U)addrPhyMemPage + X86_MEM_PAGE_SIZE - sizeof(CPU_DATA));
-	
-	/* build the stack */
-	(*puiStackTop) = 0;
-	--puiStackTop;
-	(*puiStackTop) = (CPU_STK)pParam_in;
-	--puiStackTop;
-	(*puiStackTop) = (CPU_STK)pfnReturnPoint_in;
-	
-	/* the stack for the user space task */
+
+    /* get the memroy page for the stack */
+    CPUExt_PageGetFree(&addrPhyMemPage);
+
+    if (0 == addrPhyMemPage) {
+        return (CPU_ERR_NO_MEMORY);
+    }
+
+    puiStackTop = (CPU_INT32U *)((CPU_INT32U)addrPhyMemPage + X86_MEM_PAGE_SIZE - sizeof(CPU_DATA));
+
+    /* build the stack */
+    (*puiStackTop) = 0;
+    --puiStackTop;
+    (*puiStackTop) = (CPU_STK)pParam_in;
+    --puiStackTop;
+    (*puiStackTop) = (CPU_STK)pfnReturnPoint_in;
+
+    /* the stack for the user space task */
     addrLnrStack = addrLnrStart_in + (CPU_TASK_LINERAR_ADDR_RANGE - 1) - uiThreadIdx_in * CPU_TASK_USER_STACK_SIZE;
     ret = cpu_page_PutPageToLinerarAddr(addrPhyMemPage, addrLnrStack);
+
     if (CPU_ERR_NONE != ret) {
-	    CPUExt_PageRelease(addrPhyMemPage);
-    	return (ret);
+        CPUExt_PageRelease(addrPhyMemPage);
+        return (ret);
     }
-	pstTask_inout->tss.esp = CPU_TASK_LINERAR_ADDR_RANGE - uiThreadIdx_in * CPU_TASK_USER_STACK_SIZE - (3 * 4);
-	
-	return (ret);
+
+    pstTask_inout->tss.esp = CPU_TASK_LINERAR_ADDR_RANGE - uiThreadIdx_in * CPU_TASK_USER_STACK_SIZE - (3 * 4);
+
+    return (ret);
 }
 
 
 void CPUExt_TaskGetLinearSpace(const CPU_INT32U  uiTaskID_in, CPU_ADDR * pLnrAdrStart_out, CPU_ADDR * pLnrAdrEnd_out)
 {
-	if (0 != pLnrAdrStart_out) {
-		(*pLnrAdrStart_out) = 16 * 1024 * 1024;
-	}
-	if (0 != pLnrAdrEnd_out) {
-		(*pLnrAdrEnd_out) = CPU_TASK_LINERAR_ADDR_RANGE - CPU_EXT_PAGE_SIZE;
-	}
+    if (0 != pLnrAdrStart_out) {
+        (*pLnrAdrStart_out) = 16 * 1024 * 1024;
+    }
+
+    if (0 != pLnrAdrEnd_out) {
+        (*pLnrAdrEnd_out) = CPU_TASK_LINERAR_ADDR_RANGE - CPU_EXT_PAGE_SIZE;
+    }
 }
 
 

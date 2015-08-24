@@ -37,47 +37,46 @@
 
 void CPU_Init(void)
 {
-	cpu_disp_Init();
-	cpu_hd_Init();
-	cpu_ps2_Init();
-	cpu_page_Init(CPU_EXT_RAM_DISK_SIZE, CPU_DISP_VRAM);
-	cpu_gate_Init();
-	cpu_task_Init();
-	cpu_time_Init();
-	
-	return;
+    cpu_disp_Init();
+    cpu_hd_Init();
+    cpu_ps2_Init();
+    cpu_page_Init(CPU_EXT_RAM_DISK_SIZE, CPU_DISP_VRAM);
+    cpu_gate_Init();
+    cpu_task_Init();
+    cpu_time_Init();
+
+    return;
 }
 
 void  CPU_SW_Exception(void)
 {
-	for (;;);
+    for (;;);
 }
 
 CPU_DATA  CPU_CntLeadZeros(CPU_DATA  val_in)
 {
-	CPU_DATA   iCntZeros = 0;
-	CPU_INT08U iBitInVal = (sizeof(val_in) * 8);
-	CPU_INT08U i = 0;
-	
-	for (i = iBitInVal; i > 0; --i) {
-		if (0 == (val_in & (1 << (i - 1)))) {
-			++iCntZeros;
-		}
-		else {
-			break;
-		}
-	}
-	
-	return (iCntZeros);
+    CPU_DATA   iCntZeros = 0;
+    CPU_INT08U iBitInVal = (sizeof(val_in) * 8);
+    CPU_INT08U i = 0;
+
+    for (i = iBitInVal; i > 0; --i) {
+        if (0 == (val_in & (1 << (i - 1)))) {
+            ++iCntZeros;
+        } else {
+            break;
+        }
+    }
+
+    return (iCntZeros);
 }
 
 
 void CPUExt_CorePanic(const CPU_CHAR* pszMsg_in)
 {
-	CPUExt_DispPrint(pszMsg_in);
-	
-	for (;;);
-	
-	return;
+    CPUExt_DispPrint(pszMsg_in);
+
+    for (;;);
+
+    return;
 }
 

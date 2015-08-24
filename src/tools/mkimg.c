@@ -27,194 +27,228 @@
 
 void die(char * str)
 {
-	fprintf(stderr,"%s\n",str);
-	exit(1);
+    fprintf(stderr, "%s\n", str);
+    exit(1);
 }
 
 void usage(void)
 {
-	die("\
+    die("\
 Usage: mkimg cfg boot setup [system] [> image] \r\n\
  cfg    : FLOPPY or HDISK \r\n\
  system : can be ommited \r\n\
 "
-	);
+       );
 }
 
 void makeMBR(unsigned char* pbyBuf_inout)
 {
     static const unsigned char m_abyPRT[] = {
-	    0x80, 3, 1, 0, 0x83, 3, 16, 150
+        0x80, 3, 1, 0, 0x83, 3, 16, 150
     };
 
-	unsigned char * pbyPRT = pbyBuf_inout + 0x1BE;
-	int i = 0;
-	
-	if ((0 == pbyBuf_inout) 
-	|| ((*(unsigned short *)(pbyBuf_inout+510)) != 0xAA55)) {
-		die("[makeMBR][Boot block hasn't got boot flag (0xAA55)]");
-	}
-	
-	for (i = 0; i < (sizeof (m_abyPRT) / sizeof (unsigned char)); ++i) {
-		pbyPRT[i] = m_abyPRT[i];
-	}
-	(*((int *)(pbyPRT+i)))   = 1;
-	(*((int *)(pbyPRT+i+4))) = 19200;
+    unsigned char * pbyPRT = pbyBuf_inout + 0x1BE;
+    int i = 0;
+
+    if ((0 == pbyBuf_inout)
+            || ((*(unsigned short *)(pbyBuf_inout + 510)) != 0xAA55)) {
+        die("[makeMBR][Boot block hasn't got boot flag (0xAA55)]");
+    }
+
+    for (i = 0; i < (sizeof (m_abyPRT) / sizeof (unsigned char)); ++i) {
+        pbyPRT[i] = m_abyPRT[i];
+    }
+
+    (*((int *)(pbyPRT + i)))   = 1;
+    (*((int *)(pbyPRT + i + 4))) = 19200;
 }
 
 
 int main(int argc, char ** argv)
 {
-	int i,c,id;
-	char buf[1024];
-	char major_root, minor_root;
-	//struct stat sb;
-	int sectors = 0;
-	
-	if ((argc != 4) && (argc != 5) && (argc != 6))
-	    usage();
-	
-	// judge the boot device
-	major_root = DEFAULT_MAJOR_ROOT;
-	minor_root = DEFAULT_MINOR_ROOT;
-	if (0 == strcmp(argv[1], "FLOPPY")) {
-		major_root = 0;
-		minor_root = 0;
-	} else if (0 == strcmp(argv[1], "HDISK")) {
-		//if (stat(argv[1], &sb)) {
-		//	perror(argv[1]);
-		//	die("Couldn't stat root device.");
-		//}
-		//major_root = major(sb.st_rdev);
-		//minor_root = minor(sb.st_rdev);
-		
-		//i=write(1,buf,512);
-		//if (i!=512)
-		//    die("Write MBR failed");
-		//sectors++;
+    int i, c, id;
+    char buf[1024];
+    char major_root, minor_root;
+    //struct stat sb;
+    int sectors = 0;
 
-	}
-	fprintf(stderr, "Root device is (%d, %d)\n", major_root, minor_root);
-	if ((major_root != 2) && (major_root != 3) &&
-	    (major_root != 0)) {
-		fprintf(stderr, "Illegal root device (major = %d)\n",
-			major_root);
-		die("Bad root device --- major #");
-	}
-	
-	// copy the boot
-	for (i=0;i<sizeof buf; i++) buf[i]=0;
-	if ((id=open(argv[2],O_RDONLY,0))<0)
-		die("Unable to open 'boot'");
-	i=read(id,buf,512);
-	fprintf(stderr,"Boot sector %d bytes.\n",i);
-	if (i!=512)
-		die("Boot block may not exceed 512 bytes");
-	if ((*(unsigned short *)(buf+510)) != 0xAA55)
-		die("Boot block hasn't got boot flag (0xAA55)");
-	buf[508] = (char) minor_root;
-	buf[509] = (char) major_root;
-	makeMBR((unsigned char *)buf);
-	i=write(1,buf,512);
-	if (i!=512)
-		die("Write call failed");
-	close (id);
+    if ((argc != 4) && (argc != 5) && (argc != 6))
+        usage();
 
-	sectors++;
-	
-	// copy the setup
-	if ((id=open(argv[3],O_RDONLY,0))<0)
-		die("Unable to open 'setup'");
-	for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c ) {
-	    if (write(1,buf,c)!=c) {
-			die("Write call failed");
-	    }
-	}
-	close (id);
-	
-	if (i > SETUP_SECTS*512)
-		die("Setup exceeds " STRINGIFY(SETUP_SECTS)
-			" sectors - rewrite build/boot/setup");
-	
-	fprintf(stderr,"Setup is %d bytes.\n",i);
-	for (c=0 ; c<sizeof(buf) ; c++)
-		buf[c] = '\0';
-	while (i<SETUP_SECTS*512) {
-		c = SETUP_SECTS*512-i;
-		if (c > sizeof(buf))
-			c = sizeof(buf);
-		if (write(1,buf,c) != c)
-			die("Write call failed");
-		i += c;
-	}
-	
-	sectors+=SETUP_SECTS;
-	
-	// copy the system
-	if (argc >= 5) {
-		if ((id=open(argv[4],O_RDONLY,0))<0)
-			die("Unable to open 'system'");
-		for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c ) {
-			if (write(1,buf,c)!=c)
-				die("Write call failed");
-			if (c > 512) 
-			    sectors+=2;
-			else 
-			    sectors++;
-		}
-		close(id);
-		
-		fprintf(stderr,"System %d bytes.\n",i);
-		for (c=0 ; c<sizeof(buf) ; c++)
-			buf[c] = '\0';
-		if (i > 512) {
-			i = i%512;
-		}
-		while (i<512) {
-			c = 512-i;
-			if (c > sizeof(buf))
-				c = sizeof(buf);
-			if (write(1,buf,c) != c)
-				die("Write call failed");
-			i += c;
-		}
-	} 
-	
-	// fill the system image to 512K
-	for (c=0 ; c<sizeof(buf) ; c++)
-		buf[c] = '\0';
-	while (sectors < SYSTEM_IMAGE_SECTS) {
-		if (write(1,buf,512) != 512)
-			die("Write call failed");
-		sectors += 1;
-	}
-	
-	// copy the file system for ram disk
-	if (argc >= 6) {
-		if ((id=open(argv[5],O_RDONLY,0))<0)
-			die("Unable to open 'file system'");
-		for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c ) {
-			if (write(1,buf,c)!=c)
-				die("Write call failed");
-			if (c > 512) 
-			    sectors+=2;
-			else 
-			    sectors++;
-		}
-		close(id);
-	}
-	
-	// fill the disk image to 5MB
-	if (0 == strcmp(argv[1], "HDISK")) {
-		for (c=0 ; c<sizeof(buf) ; c++)
-			buf[c] = '\0';
-		while (sectors < HDISK_SECTS) {
-			if (write(1,buf,512) != 512)
-				die("Write call failed");
-			sectors++;
-		}
-	}
-	
-	return(0);
+    // judge the boot device
+    major_root = DEFAULT_MAJOR_ROOT;
+    minor_root = DEFAULT_MINOR_ROOT;
+
+    if (0 == strcmp(argv[1], "FLOPPY")) {
+        major_root = 0;
+        minor_root = 0;
+    } else if (0 == strcmp(argv[1], "HDISK")) {
+        //if (stat(argv[1], &sb)) {
+        //	perror(argv[1]);
+        //	die("Couldn't stat root device.");
+        //}
+        //major_root = major(sb.st_rdev);
+        //minor_root = minor(sb.st_rdev);
+
+        //i=write(1,buf,512);
+        //if (i!=512)
+        //    die("Write MBR failed");
+        //sectors++;
+
+    }
+
+    fprintf(stderr, "Root device is (%d, %d)\n", major_root, minor_root);
+
+    if ((major_root != 2) && (major_root != 3) &&
+            (major_root != 0)) {
+        fprintf(stderr, "Illegal root device (major = %d)\n",
+                major_root);
+        die("Bad root device --- major #");
+    }
+
+    // copy the boot
+    for (i = 0; i < sizeof buf; i++) buf[i] = 0;
+
+    if ((id = open(argv[2], O_RDONLY, 0)) < 0)
+        die("Unable to open 'boot'");
+
+    i = read(id, buf, 512);
+    fprintf(stderr, "Boot sector %d bytes.\n", i);
+
+    if (i != 512)
+        die("Boot block may not exceed 512 bytes");
+
+    if ((*(unsigned short *)(buf + 510)) != 0xAA55)
+        die("Boot block hasn't got boot flag (0xAA55)");
+
+    buf[508] = (char) minor_root;
+    buf[509] = (char) major_root;
+    makeMBR((unsigned char *)buf);
+    i = write(1, buf, 512);
+
+    if (i != 512)
+        die("Write call failed");
+
+    close (id);
+
+    sectors++;
+
+    // copy the setup
+    if ((id = open(argv[3], O_RDONLY, 0)) < 0)
+        die("Unable to open 'setup'");
+
+    for (i = 0 ; (c = read(id, buf, sizeof buf)) > 0 ; i += c ) {
+        if (write(1, buf, c) != c) {
+            die("Write call failed");
+        }
+    }
+
+    close (id);
+
+    if (i > SETUP_SECTS * 512)
+        die("Setup exceeds " STRINGIFY(SETUP_SECTS)
+            " sectors - rewrite build/boot/setup");
+
+    fprintf(stderr, "Setup is %d bytes.\n", i);
+
+    for (c = 0 ; c < sizeof(buf) ; c++)
+        buf[c] = '\0';
+
+    while (i < SETUP_SECTS * 512) {
+        c = SETUP_SECTS * 512 - i;
+
+        if (c > sizeof(buf))
+            c = sizeof(buf);
+
+        if (write(1, buf, c) != c)
+            die("Write call failed");
+
+        i += c;
+    }
+
+    sectors += SETUP_SECTS;
+
+    // copy the system
+    if (argc >= 5) {
+        if ((id = open(argv[4], O_RDONLY, 0)) < 0)
+            die("Unable to open 'system'");
+
+        for (i = 0 ; (c = read(id, buf, sizeof buf)) > 0 ; i += c ) {
+            if (write(1, buf, c) != c)
+                die("Write call failed");
+
+            if (c > 512)
+                sectors += 2;
+            else
+                sectors++;
+        }
+
+        close(id);
+
+        fprintf(stderr, "System %d bytes.\n", i);
+
+        for (c = 0 ; c < sizeof(buf) ; c++)
+            buf[c] = '\0';
+
+        if (i > 512) {
+            i = i % 512;
+        }
+
+        while (i < 512) {
+            c = 512 - i;
+
+            if (c > sizeof(buf))
+                c = sizeof(buf);
+
+            if (write(1, buf, c) != c)
+                die("Write call failed");
+
+            i += c;
+        }
+    }
+
+    // fill the system image to 512K
+    for (c = 0 ; c < sizeof(buf) ; c++)
+        buf[c] = '\0';
+
+    while (sectors < SYSTEM_IMAGE_SECTS) {
+        if (write(1, buf, 512) != 512)
+            die("Write call failed");
+
+        sectors += 1;
+    }
+
+    // copy the file system for ram disk
+    if (argc >= 6) {
+        if ((id = open(argv[5], O_RDONLY, 0)) < 0)
+            die("Unable to open 'file system'");
+
+        for (i = 0 ; (c = read(id, buf, sizeof buf)) > 0 ; i += c ) {
+            if (write(1, buf, c) != c)
+                die("Write call failed");
+
+            if (c > 512)
+                sectors += 2;
+            else
+                sectors++;
+        }
+
+        close(id);
+    }
+
+    // fill the disk image to 5MB
+    if (0 == strcmp(argv[1], "HDISK")) {
+        for (c = 0 ; c < sizeof(buf) ; c++)
+            buf[c] = '\0';
+
+        while (sectors < HDISK_SECTS) {
+            if (write(1, buf, 512) != 512)
+                die("Write call failed");
+
+            sectors++;
+        }
+    }
+
+    return(0);
 }
 

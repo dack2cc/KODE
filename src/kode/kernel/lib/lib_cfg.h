@@ -69,10 +69,10 @@
 *********************************************************************************************************
 */
 
-                                                        /* Configure external argument check feature (see Note #1) :    */
+/* Configure external argument check feature (see Note #1) :    */
 #define  LIB_MEM_CFG_ARG_CHK_EXT_EN     DEF_ENABLED
-                                                        /*   DEF_DISABLED     Argument check DISABLED                   */
-                                                        /*   DEF_ENABLED      Argument check ENABLED                    */
+/*   DEF_DISABLED     Argument check DISABLED                   */
+/*   DEF_ENABLED      Argument check ENABLED                    */
 
 
 /*
@@ -83,10 +83,10 @@
 *********************************************************************************************************
 */
 
-                                                        /* Configure assembly-optimized function(s) [see Note #1] :     */
+/* Configure assembly-optimized function(s) [see Note #1] :     */
 #define  LIB_MEM_CFG_OPTIMIZE_ASM_EN    DEF_DISABLED
-                                                        /*   DEF_DISABLED     Assembly-optimized function(s) DISABLED   */
-                                                        /*   DEF_ENABLED      Assembly-optimized function(s) ENABLED    */
+/*   DEF_DISABLED     Assembly-optimized function(s) DISABLED   */
+/*   DEF_ENABLED      Assembly-optimized function(s) ENABLED    */
 
 
 /*
@@ -108,10 +108,10 @@
 *********************************************************************************************************
 */
 
-                                                        /* Configure memory allocation feature (see Note #1) :          */
+/* Configure memory allocation feature (see Note #1) :          */
 #define  LIB_MEM_CFG_ALLOC_EN           DEF_DISABLED
-                                                        /*   DEF_DISABLED     Memory allocation DISABLED                */
-                                                        /*   DEF_ENABLED      Memory allocation ENABLED                 */
+/*   DEF_DISABLED     Memory allocation DISABLED                */
+/*   DEF_ENABLED      Memory allocation ENABLED                 */
 
 
 #define  LIB_MEM_CFG_HEAP_SIZE            (0)           /* Configure heap memory size         [see Note #2a].           */
@@ -142,13 +142,13 @@
 *********************************************************************************************************
 */
 
-                                                                /* Configure floating point feature(s) [see Note #1] :  */
+/* Configure floating point feature(s) [see Note #1] :  */
 #define  LIB_STR_CFG_FP_EN                      DEF_DISABLED
-                                                                /*   DEF_DISABLED     Floating point functions DISABLED */
-                                                                /*   DEF_ENABLED      Floating point functions ENABLED  */
+/*   DEF_DISABLED     Floating point functions DISABLED */
+/*   DEF_ENABLED      Floating point functions ENABLED  */
 
-                                                                /* Configure floating point feature(s)' number of ...   */
-                                                                /* ... significant digits (see Note #2).                */
+/* Configure floating point feature(s)' number of ...   */
+/* ... significant digits (see Note #2).                */
 #define  LIB_STR_CFG_FP_MAX_NBR_DIG_SIG         LIB_STR_FP_MAX_NBR_DIG_SIG_DFLT
 
 

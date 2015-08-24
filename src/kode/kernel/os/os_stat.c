@@ -14,11 +14,11 @@
 *
 * LICENSING TERMS:
 * ---------------
-*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or 
+*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or
 *           for peaceful research.  If you plan or intend to use uC/OS-III in a commercial application/
-*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your 
-*           application/product.   We provide ALL the source code for your convenience and to help you 
-*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use 
+*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your
+*           application/product.   We provide ALL the source code for your convenience and to help you
+*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use
 *           it commercially without paying a licensing fee.
 *
 *           Knowledge of the source code may NOT be used to develop a similar product.
@@ -69,10 +69,12 @@ void  OSStatReset (OS_ERR  *p_err)
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return;
     }
+
 #endif
 
 #if OS_CFG_ISR_POST_DEFERRED_EN > 0u
@@ -100,6 +102,7 @@ void  OSStatReset (OS_ERR  *p_err)
 
 #if OS_CFG_DBG_EN > 0u
     p_tcb = OSTaskDbgListPtr;
+
     while (p_tcb != (OS_TCB *)0) {                          /* Reset per-Task statistics                              */
         CPU_CRITICAL_ENTER();
 
@@ -130,6 +133,7 @@ void  OSStatReset (OS_ERR  *p_err)
         p_tcb                   = p_tcb->DbgNextPtr;
         CPU_CRITICAL_EXIT();
     }
+
 #endif
 
     OS_TickListResetPeak();                                 /* Reset tick wheel statistics                            */
@@ -140,6 +144,7 @@ void  OSStatReset (OS_ERR  *p_err)
 
 #if (OS_CFG_Q_EN > 0u) && (OS_CFG_DBG_EN > 0u)
     p_q = OSQDbgListPtr;
+
     while (p_q != (OS_Q *)0) {                              /* Reset message queues statistics                        */
         CPU_CRITICAL_ENTER();
         p_msg_q                = &p_q->MsgQ;
@@ -147,6 +152,7 @@ void  OSStatReset (OS_ERR  *p_err)
         p_q                    = p_q->DbgNextPtr;
         CPU_CRITICAL_EXIT();
     }
+
 #endif
 
     *p_err = OS_ERR_NONE;
@@ -183,27 +189,33 @@ void  OSStatTaskCPUUsageInit (OS_ERR  *p_err)
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return;
     }
+
 #endif
 
     OSTimeDly((OS_TICK )2,                                  /* Synchronize with clock tick                            */
               (OS_OPT  )OS_OPT_TIME_DLY,
               (OS_ERR *)&err);
+
     if (err != OS_ERR_NONE) {
         *p_err = err;
         return;
     }
+
     CPU_CRITICAL_ENTER();
     OSStatTaskCtr = (OS_TICK)0;                             /* Clear idle counter                                     */
     CPU_CRITICAL_EXIT();
 
     dly = (OS_TICK)0;
+
     if (OSCfg_TickRate_Hz > OSCfg_StatTaskRate_Hz) {
         dly = (OS_TICK)(OSCfg_TickRate_Hz / OSCfg_StatTaskRate_Hz);
     }
+
     if (dly == (OS_TICK)0) {
         dly =  (OS_TICK)(OSCfg_TickRate_Hz / (OS_RATE_HZ)10);
     }
@@ -265,17 +277,21 @@ void  OS_StatTask (void *p_arg)
 
 
     p_arg = p_arg;                                          /* Prevent compiler warning for not using 'p_arg'         */
+
     while (OSStatTaskRdy != DEF_TRUE) {
         OSTimeDly(2u * OSCfg_StatTaskRate_Hz,               /* Wait until statistic task is ready                     */
                   OS_OPT_TIME_DLY,
                   &err);
     }
+
     OSStatReset(&err);                                      /* Reset statistics                                       */
 
     dly = (OS_TICK)0;                                       /* Compute statistic task sleep delay                     */
+
     if (OSCfg_TickRate_Hz > OSCfg_StatTaskRate_Hz) {
         dly = (OS_TICK)(OSCfg_TickRate_Hz / OSCfg_StatTaskRate_Hz);
     }
+
     if (dly == (OS_TICK)0) {
         dly =  (OS_TICK)(OSCfg_TickRate_Hz / (OS_RATE_HZ)10);
     }
@@ -309,6 +325,7 @@ void  OS_StatTask (void *p_arg)
         cycles_total = (OS_CYCLES)0;
 
         p_tcb = OSTaskDbgListPtr;
+
         while (p_tcb != (OS_TCB *)0) {                      /* ----------------- TOTAL CYCLES COUNT ----------------- */
             OS_CRITICAL_ENTER();
             p_tcb->CyclesTotalPrev =  p_tcb->CyclesTotal;   /* Save accumulated # cycles into a temp variable         */
@@ -319,6 +336,7 @@ void  OS_StatTask (void *p_arg)
 
             p_tcb                  = p_tcb->DbgNextPtr;
         }
+
 #endif
 
 
@@ -326,10 +344,13 @@ void  OS_StatTask (void *p_arg)
         cycles_total /= 100u;                               /* ------------- INDIVIDUAL TASK CPU USAGE -------------- */
 #endif
         p_tcb = OSTaskDbgListPtr;
+
         while (p_tcb != (OS_TCB *)0) {
 #if OS_CFG_TASK_PROFILE_EN > 0u                             /* Compute execution time of each task                    */
+
             if (cycles_total > (OS_CYCLES)0) {
                 usage = (OS_CPU_USAGE)(p_tcb->CyclesTotalPrev / cycles_total);
+
                 if (usage > 100u) {
                     usage = 100u;
                 }
@@ -342,13 +363,14 @@ void  OS_StatTask (void *p_arg)
 
 #if OS_CFG_STAT_TASK_STK_CHK_EN > 0u
             OSTaskStkChk( p_tcb,                            /* Compute stack usage of active tasks only               */
-                         &p_tcb->StkFree,
-                         &p_tcb->StkUsed,
-                         &err);
+                          &p_tcb->StkFree,
+                          &p_tcb->StkUsed,
+                          &err);
 #endif
 
             p_tcb = p_tcb->DbgNextPtr;
         }
+
 #endif
 
         if (OSStatResetFlag == DEF_TRUE) {                  /* Check if need to reset statistics                      */
@@ -357,6 +379,7 @@ void  OS_StatTask (void *p_arg)
         }
 
         ts_end = OS_TS_GET() - ts_start;                    /* Measure execution time of statistic task               */
+
         if (ts_end > OSStatTaskTimeMax) {
             OSStatTaskTimeMax = ts_end;
         }
@@ -391,10 +414,12 @@ void  OS_StatTask (void *p_arg)
 void  OS_StatTaskInit (OS_ERR  *p_err)
 {
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return;
     }
+
 #endif
 
     OSStatTaskCtr    = (OS_TICK)0;
@@ -403,7 +428,7 @@ void  OS_StatTaskInit (OS_ERR  *p_err)
     OSStatTaskRdy    = OS_STATE_NOT_RDY;                    /* Statistic task is not ready                            */
     OSStatResetFlag  = DEF_FALSE;
 
-                                                            /* ---------------- CREATE THE STAT TASK ---------------- */
+    /* ---------------- CREATE THE STAT TASK ---------------- */
     if (OSCfg_StatTaskStkBasePtr == (CPU_STK*)0) {
         *p_err = OS_ERR_STK_INVALID;
         return;

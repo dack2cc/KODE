@@ -14,11 +14,11 @@
 *
 * LICENSING TERMS:
 * ---------------
-*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or 
+*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or
 *           for peaceful research.  If you plan or intend to use uC/OS-III in a commercial application/
-*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your 
-*           application/product.   We provide ALL the source code for your convenience and to help you 
-*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use 
+*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your
+*           application/product.   We provide ALL the source code for your convenience and to help you
+*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use
 *           it commercially without paying a licensing fee.
 *
 *           Knowledge of the source code may NOT be used to develop a similar product.
@@ -209,99 +209,99 @@ CPU_INT16U  const  OSDbg_VersionNbr            = OS_VERSION;
 CPU_INT32U  const  OSDbg_DataSize = sizeof(OSIntNestingCtr)
 
 #if OS_CFG_APP_HOOKS_EN > 0u
-                                  + sizeof(OS_AppTaskCreateHookPtr)
-                                  + sizeof(OS_AppTaskDelHookPtr)
-                                  + sizeof(OS_AppTaskReturnHookPtr)
+                                    + sizeof(OS_AppTaskCreateHookPtr)
+                                    + sizeof(OS_AppTaskDelHookPtr)
+                                    + sizeof(OS_AppTaskReturnHookPtr)
 
-                                  + sizeof(OS_AppIdleTaskHookPtr)
-                                  + sizeof(OS_AppStatTaskHookPtr)
-                                  + sizeof(OS_AppTaskSwHookPtr)
-                                  + sizeof(OS_AppTimeTickHookPtr)
+                                    + sizeof(OS_AppIdleTaskHookPtr)
+                                    + sizeof(OS_AppStatTaskHookPtr)
+                                    + sizeof(OS_AppTaskSwHookPtr)
+                                    + sizeof(OS_AppTimeTickHookPtr)
 #endif
 
-                                  + sizeof(OSIdleTaskCtr)
-                                  + sizeof(OSIdleTaskTCB)
+                                    + sizeof(OSIdleTaskCtr)
+                                    + sizeof(OSIdleTaskTCB)
 
 #if OS_CFG_ISR_POST_DEFERRED_EN > 0u
-                                  + sizeof(OSIntQInPtr)
-                                  + sizeof(OSIntQOutPtr)
-                                  + sizeof(OSIntQNbrEntries)
-                                  + sizeof(OSIntQMaxNbrEntries)
-                                  + sizeof(OSIntQOvfCtr)
-                                  + sizeof(OSIntQTaskTCB)
+                                    + sizeof(OSIntQInPtr)
+                                    + sizeof(OSIntQOutPtr)
+                                    + sizeof(OSIntQNbrEntries)
+                                    + sizeof(OSIntQMaxNbrEntries)
+                                    + sizeof(OSIntQOvfCtr)
+                                    + sizeof(OSIntQTaskTCB)
 #endif
 
-                                  + sizeof(OSRunning)
+                                    + sizeof(OSRunning)
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
-                                  + sizeof(OSSafetyCriticalStartFlag);
+                                    + sizeof(OSSafetyCriticalStartFlag);
 #endif
 
 #if OS_CFG_FLAG_EN > 0u
-                                  + sizeof(OSFlagQty)
++ sizeof(OSFlagQty)
 #endif
 
 #if OS_CFG_MEM_EN > 0u
-                                  + sizeof(OSMemQty)
++ sizeof(OSMemQty)
 #endif
 
-                                  + sizeof(OSMsgPool)
++ sizeof(OSMsgPool)
 
 #if OS_CFG_MUTEX_EN > 0u
-                                  + sizeof(OSMutexQty)
++ sizeof(OSMutexQty)
 #endif
 
-                                  + sizeof(OSPrioCur)
-                                  + sizeof(OSPrioHighRdy)
-                                  + sizeof(OSPrioTbl)
++ sizeof(OSPrioCur)
++ sizeof(OSPrioHighRdy)
++ sizeof(OSPrioTbl)
 
 #if OS_CFG_Q_EN > 0u
-                                  + sizeof(OSQQty)
++ sizeof(OSQQty)
 #endif
 
-                                  + sizeof(OSRdyList)
++ sizeof(OSRdyList)
 
-                                  + sizeof(OSSchedLockNestingCtr)
++ sizeof(OSSchedLockNestingCtr)
 
 #if OS_CFG_SCHED_LOCK_TIME_MEAS_EN > 0u
-                                  + sizeof(OSSchedLockTimeBegin)
-                                  + sizeof(OSSchedLockTimeMax)
-                                  + sizeof(OSSchedLockTimeMaxCur)
++ sizeof(OSSchedLockTimeBegin)
++ sizeof(OSSchedLockTimeMax)
++ sizeof(OSSchedLockTimeMaxCur)
 #endif
 
 #if OS_CFG_SCHED_ROUND_ROBIN_EN
-                                  + sizeof(OSSchedRoundRobinDfltTimeQuanta)
-                                  + sizeof(OSSchedRoundRobinEn)
++ sizeof(OSSchedRoundRobinDfltTimeQuanta)
++ sizeof(OSSchedRoundRobinEn)
 #endif
 
 #if OS_CFG_SEM_EN > 0u
-                                  + sizeof(OSSemQty)
++ sizeof(OSSemQty)
 #endif
-                                  + sizeof(OSTaskCtxSwCtr)
-                                  + sizeof(OSTaskQty)
++ sizeof(OSTaskCtxSwCtr)
++ sizeof(OSTaskQty)
 
 #if OS_CFG_STAT_TASK_EN > 0u
-                                  + sizeof(OSStatTaskCtr)
-                                  + sizeof(OSStatTaskCtrMax)
-                                  + sizeof(OSStatTaskCtrRun)
-                                  + sizeof(OSStatTaskRdy)
-                                  + sizeof(OSStatTaskTCB)
-                                  + sizeof(OSStatTaskCPUUsage)
++ sizeof(OSStatTaskCtr)
++ sizeof(OSStatTaskCtrMax)
++ sizeof(OSStatTaskCtrRun)
++ sizeof(OSStatTaskRdy)
++ sizeof(OSStatTaskTCB)
++ sizeof(OSStatTaskCPUUsage)
 #endif
 
-                                  + sizeof(OSTickCtr)
-                                  + sizeof(OSTickTaskTCB)
++ sizeof(OSTickCtr)
++ sizeof(OSTickTaskTCB)
 
 #if OS_CFG_TMR_EN > 0u
-                                  + sizeof(OSTmrTaskTCB)
-                                  + sizeof(OSTmrTickCtr)
-                                  + sizeof(OSTmrQty)
-                                  + sizeof(OSTmrUpdateCnt)
-                                  + sizeof(OSTmrUpdateCtr)
++ sizeof(OSTmrTaskTCB)
++ sizeof(OSTmrTickCtr)
++ sizeof(OSTmrQty)
++ sizeof(OSTmrUpdateCnt)
++ sizeof(OSTmrUpdateCtr)
 #endif
 
-                                  + sizeof(OSTCBCurPtr)
-                                  + sizeof(OSTCBHighRdyPtr);
++ sizeof(OSTCBCurPtr)
++ sizeof(OSTCBHighRdyPtr);
 
 /*$PAGE*/
 /*

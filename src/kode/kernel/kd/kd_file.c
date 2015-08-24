@@ -15,7 +15,7 @@
 ******************************************************************************/
 
 //#define KD_PRIVATE  static
-#define KD_PRIVATE 
+#define KD_PRIVATE
 
 /******************************************************************************
     Private Interface
@@ -95,65 +95,72 @@ a read or tell before the first seek or write on an "a+", or any use of tell on 
 ******************************************************************************/
 KDFile *  kd_file_Open(const KDchar * pszName_in, const KDchar * pszFlag_in)
 {
-	CPU_INT32U i = 0;
-	OS_ERR  err = OS_ERR_NONE;
-	OS_REG  hFile = 0;
-	OS_REG  uiOpenMask = 0;
-	FS_FILE * pFile = 0;
-	
-	if (0 == OSTCBCurPtr) {
-		kd_core_SetError(KD_EBADF);
-		CPUExt_CorePanic("[kd_file_Open][no task]");
-		return ((KDFile *)0);
-	}
-	if ((0 == pszName_in) 
-	||  (0 == pszFlag_in)) {
-		kd_core_SetError(KD_EINVAL);
-		drv_disp_Printf("[kd_file_Open][no file]\r\n");
-		return ((KDFile *)0);
-	}
-	
-	for (i = 0; i < OS_FILE_OPEN_PER_TASK; ++i) {
-		hFile = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_F_HEAD + i, &err);
-		if (OS_ERR_NONE != err) {
-			kd_core_SetError(KD_EIO);
-		    CPUExt_CorePanic("[kd_file_Open][file handle]");
-			return ((KDFile *)0);
-		}
-		if (0 == hFile) {
-			break;
-		}
-	}
-	if (i >= OS_FILE_OPEN_PER_TASK) {
-		kd_core_SetError(KD_EMFILE);
-		drv_disp_Printf("[kd_file_Open][files full]\r\n");
-		return ((KDFile *)0);
-	}
-	
-	uiOpenMask = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_F_MASK, &err);
-	if (OS_ERR_NONE != err) {
-		kd_core_SetError(KD_EIO);
-		CPUExt_CorePanic("[kd_file_Open][file mask]");
-		return ((KDFile *)0);
-	}
-	uiOpenMask &= ~(1<<i);
+    CPU_INT32U i = 0;
+    OS_ERR  err = OS_ERR_NONE;
+    OS_REG  hFile = 0;
+    OS_REG  uiOpenMask = 0;
+    FS_FILE * pFile = 0;
 
-	pFile = FS_GetFreeFileHandler();
-	if (0 == pFile) {
-		kd_core_SetError(KD_EMFILE);
-		drv_disp_Printf("[kd_file_Open][files full] \r\n");
-		return ((KDFile *)0);
-	}
-	
-	hFile = (OS_REG)pFile;
-	pFile->f_count++;
-	
-	kd_core_StrReadUserSpace(pszName_in, kd_file_aszName, sizeof(kd_file_aszName));
-	kd_core_StrReadUserSpace(pszFlag_in, kd_file_aszFlag, sizeof(kd_file_aszFlag));
-	
-	
-	
-	return ((KDFile *)0);
+    if (0 == OSTCBCurPtr) {
+        kd_core_SetError(KD_EBADF);
+        CPUExt_CorePanic("[kd_file_Open][no task]");
+        return ((KDFile *)0);
+    }
+
+    if ((0 == pszName_in)
+            ||  (0 == pszFlag_in)) {
+        kd_core_SetError(KD_EINVAL);
+        drv_disp_Printf("[kd_file_Open][no file]\r\n");
+        return ((KDFile *)0);
+    }
+
+    for (i = 0; i < OS_FILE_OPEN_PER_TASK; ++i) {
+        hFile = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_F_HEAD + i, &err);
+
+        if (OS_ERR_NONE != err) {
+            kd_core_SetError(KD_EIO);
+            CPUExt_CorePanic("[kd_file_Open][file handle]");
+            return ((KDFile *)0);
+        }
+
+        if (0 == hFile) {
+            break;
+        }
+    }
+
+    if (i >= OS_FILE_OPEN_PER_TASK) {
+        kd_core_SetError(KD_EMFILE);
+        drv_disp_Printf("[kd_file_Open][files full]\r\n");
+        return ((KDFile *)0);
+    }
+
+    uiOpenMask = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_F_MASK, &err);
+
+    if (OS_ERR_NONE != err) {
+        kd_core_SetError(KD_EIO);
+        CPUExt_CorePanic("[kd_file_Open][file mask]");
+        return ((KDFile *)0);
+    }
+
+    uiOpenMask &= ~(1 << i);
+
+    pFile = FS_GetFreeFileHandler();
+
+    if (0 == pFile) {
+        kd_core_SetError(KD_EMFILE);
+        drv_disp_Printf("[kd_file_Open][files full] \r\n");
+        return ((KDFile *)0);
+    }
+
+    hFile = (OS_REG)pFile;
+    pFile->f_count++;
+
+    kd_core_StrReadUserSpace(pszName_in, kd_file_aszName, sizeof(kd_file_aszName));
+    kd_core_StrReadUserSpace(pszFlag_in, kd_file_aszFlag, sizeof(kd_file_aszFlag));
+
+
+
+    return ((KDFile *)0);
 }
 
 

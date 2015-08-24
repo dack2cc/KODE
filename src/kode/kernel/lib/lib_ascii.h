@@ -147,7 +147,7 @@
 *********************************************************************************************************
 */
 
-                                                                /* -------------------- C0 CONTROLS ------------------- */
+/* -------------------- C0 CONTROLS ------------------- */
 #define  ASCII_CHAR_NULL                                0x00    /* '\0'                                                 */
 #define  ASCII_CHAR_START_OF_HEADING                    0x01
 #define  ASCII_CHAR_START_OF_TEXT                       0x02
@@ -228,7 +228,7 @@
 #define  ASCII_CHAR_IS4                                 ASCII_CHAR_INFO_SEPARATOR_FOUR
 
 
-                                                                /* ------------ ASCII PUNCTUATION & SYMBOLS ----------- */
+/* ------------ ASCII PUNCTUATION & SYMBOLS ----------- */
 #define  ASCII_CHAR_SPACE                               0x20    /* ' '                                                  */
 #define  ASCII_CHAR_EXCLAMATION_MARK                    0x21    /* '!'                                                  */
 #define  ASCII_CHAR_QUOTATION_MARK                      0x22    /* '\"'                                                 */
@@ -250,7 +250,7 @@
 #define  ASCII_CHAR_PAREN_RIGHT                         ASCII_CHAR_RIGHT_PARENTHESIS
 
 
-                                                                /* ------------------- ASCII DIGITS ------------------- */
+/* ------------------- ASCII DIGITS ------------------- */
 #define  ASCII_CHAR_DIGIT_ZERO                          0x30    /* '0'                                                  */
 #define  ASCII_CHAR_DIGIT_ONE                           0x31    /* '1'                                                  */
 #define  ASCII_CHAR_DIGIT_TWO                           0x32    /* '2'                                                  */
@@ -274,7 +274,7 @@
 #define  ASCII_CHAR_DIG_NINE                            ASCII_CHAR_DIGIT_NINE
 
 
-                                                                /* ------------ ASCII PUNCTUATION & SYMBOLS ----------- */
+/* ------------ ASCII PUNCTUATION & SYMBOLS ----------- */
 #define  ASCII_CHAR_COLON                               0x3A    /* ':'                                                  */
 #define  ASCII_CHAR_SEMICOLON                           0x3B    /* ';'                                                  */
 #define  ASCII_CHAR_LESS_THAN_SIGN                      0x3C    /* '<'                                                  */
@@ -286,7 +286,7 @@
 #define  ASCII_CHAR_AT_SIGN                             ASCII_CHAR_COMMERCIAL_AT
 
 
-                                                                /* ------------- UPPERCASE LATIN ALPHABET ------------- */
+/* ------------- UPPERCASE LATIN ALPHABET ------------- */
 #define  ASCII_CHAR_LATIN_UPPER_A                       0x41    /* 'A'                                                  */
 #define  ASCII_CHAR_LATIN_UPPER_B                       0x42    /* 'B'                                                  */
 #define  ASCII_CHAR_LATIN_UPPER_C                       0x43    /* 'C'                                                  */
@@ -315,7 +315,7 @@
 #define  ASCII_CHAR_LATIN_UPPER_Z                       0x5A    /* 'Z'                                                  */
 
 
-                                                                /* ------------ ASCII PUNCTUATION & SYMBOLS ----------- */
+/* ------------ ASCII PUNCTUATION & SYMBOLS ----------- */
 #define  ASCII_CHAR_LEFT_SQUARE_BRACKET                 0x5B    /* '['                                                  */
 #define  ASCII_CHAR_REVERSE_SOLIDUS                     0x5C    /* '\\'                                                 */
 #define  ASCII_CHAR_RIGHT_SQUARE_BRACKET                0x5D    /* ']'                                                  */
@@ -327,7 +327,7 @@
 #define  ASCII_CHAR_BRACKET_SQUARE_RIGHT                ASCII_CHAR_RIGHT_SQUARE_BRACKET
 
 
-                                                                /* ------------- LOWERCASE LATIN ALPHABET ------------- */
+/* ------------- LOWERCASE LATIN ALPHABET ------------- */
 #define  ASCII_CHAR_LATIN_LOWER_A                       0x61    /* 'a'                                                  */
 #define  ASCII_CHAR_LATIN_LOWER_B                       0x62    /* 'b'                                                  */
 #define  ASCII_CHAR_LATIN_LOWER_C                       0x63    /* 'c'                                                  */
@@ -356,7 +356,7 @@
 #define  ASCII_CHAR_LATIN_LOWER_Z                       0x7A    /* 'z'                                                  */
 
 
-                                                                /* ------------ ASCII PUNCTUATION & SYMBOLS ----------- */
+/* ------------ ASCII PUNCTUATION & SYMBOLS ----------- */
 #define  ASCII_CHAR_LEFT_CURLY_BRACKET                  0x7B    /* '{'                                                  */
 #define  ASCII_CHAR_VERTICAL_LINE                       0x7C    /* '|'                                                  */
 #define  ASCII_CHAR_RIGHT_CURLY_BRACKET                 0x7D    /* '}'                                                  */
@@ -366,7 +366,7 @@
 #define  ASCII_CHAR_BRACKET_CURLY_RIGHT                 ASCII_CHAR_RIGHT_CURLY_BRACKET
 
 
-                                                                /* ---------------- CONTROL CHARACTERS ---------------- */
+/* ---------------- CONTROL CHARACTERS ---------------- */
 #define  ASCII_CHAR_DELETE                              0x7F
 
 #define  ASCII_CHAR_DEL                                 ASCII_CHAR_DELETE

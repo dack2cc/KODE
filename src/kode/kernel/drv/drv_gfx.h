@@ -56,48 +56,48 @@ typedef CPU_INT32U  DRV_GFX_COLOR;
 typedef CPU_INT32U  DRV_GFX_HANDLE;
 
 typedef struct _DRV_GFX_LAYER {
-	CPU_INT32U   w;
-	CPU_INT32U   h;
-	CPU_INT32U   bpp;  /* bits per pixel */
+    CPU_INT32U   w;
+    CPU_INT32U   h;
+    CPU_INT32U   bpp;  /* bits per pixel */
 } DRV_GFX_LAYER;
 
 typedef struct _DRV_GFX_POINT {
-	CPU_INT32S   x;
-	CPU_INT32S   y;
+    CPU_INT32S   x;
+    CPU_INT32S   y;
 } DRV_GFX_POINT;
 
 typedef struct _DRV_GFX_RECT {
-	CPU_INT32S   x;
-	CPU_INT32S   y;
-	CPU_INT32U   w;
-	CPU_INT32U   h;
+    CPU_INT32S   x;
+    CPU_INT32S   y;
+    CPU_INT32U   w;
+    CPU_INT32U   h;
 } DRV_GFX_RECT;
 
 typedef struct {
-	CPU_INT32S   x;
-	CPU_INT32S   y;
-	CPU_INT32U   w;
-	CPU_INT32U   h;
-	CPU_INT08U   z;    /* z order */
-	CPU_INT08U   v;    /* visible */
-	CPU_INT08U   bpp;  /* bits per pixel */
+    CPU_INT32S   x;
+    CPU_INT32S   y;
+    CPU_INT32U   w;
+    CPU_INT32U   h;
+    CPU_INT08U   z;    /* z order */
+    CPU_INT08U   v;    /* visible */
+    CPU_INT08U   bpp;  /* bits per pixel */
 } DRV_GFX_SHEET;
 
 typedef struct _DRV_GFX_DATA {
-	CPU_INT32S   x;
-	CPU_INT32S   y;
-	CPU_INT32U   w;
-	CPU_INT32U   h;
-	CPU_INT08U * data;
-	CPU_INT08U   bpp;  /* bits per pixel */
+    CPU_INT32S   x;
+    CPU_INT32S   y;
+    CPU_INT32U   w;
+    CPU_INT32U   h;
+    CPU_INT08U * data;
+    CPU_INT08U   bpp;  /* bits per pixel */
 } DRV_GFX_DATA;
 
 typedef struct _DRV_GFX_FONT {
-	CPU_INT32U    w;
-	CPU_INT32U    h;
-	CPU_INT08U *  data;
-	CPU_INT08U    bpc;  /* byte per character  */
-	DRV_GFX_COLOR bg;   /* color of background */
+    CPU_INT32U    w;
+    CPU_INT32U    h;
+    CPU_INT08U *  data;
+    CPU_INT08U    bpc;  /* byte per character  */
+    DRV_GFX_COLOR bg;   /* color of background */
 } DRV_GFX_FONT;
 
 /******************************************************************************

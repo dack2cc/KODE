@@ -8,8 +8,7 @@
 # **************************************
 
 BOOT_DIR := $(SRC_ROOT)/kode/boot/x86_osx
-BOOT_SRC := boot0md.nas
-#boot0.nas 
+BOOT_SRC := boot0.nas boot0md.nas
 
 BOOT_BIN := $(patsubst %.nas, $(BUILD_ROOT)/%.bin, $(BOOT_SRC))
 

@@ -16,11 +16,11 @@
 ******************************************************************************/
 
 #define KD_PRIVATE   static
-//#define KD_PRIVATE 
+//#define KD_PRIVATE
 
 struct KDThreadAttr {
-	KDint  iDetachState;
-	KDsize iStackSize;
+    KDint  iDetachState;
+    KDsize iStackSize;
 };
 
 #define _KD_THREAD_KERNEL_STACK_SIZE    (3 * 1024)
@@ -28,10 +28,10 @@ struct KDThreadAttr {
 #define _KD_THREAD_USER_STACK_MAX       (1 * 1024 * 1024)
 
 struct KDThread {
-	OS_TCB    stTCB;
-	OS_MUTEX  stMutex;
-	KDint     iDetachState;
-	void *    pStackAddr;
+    OS_TCB    stTCB;
+    OS_MUTEX  stMutex;
+    KDint     iDetachState;
+    void *    pStackAddr;
 };
 
 /******************************************************************************
@@ -79,18 +79,18 @@ to deal with them.
 ******************************************************************************/
 KDThreadAttr * kd_thread_AttrCreate(void)
 {
-	KDThreadAttr *  pstAttr = KD_NULL;
-	
-	pstAttr = (KDThreadAttr *)lib_pool_Malloc(sizeof(KDThreadAttr));
-	if (KD_NULL != pstAttr) {
-		pstAttr->iDetachState = KD_THREAD_CREATE_JOINABLE;
-		pstAttr->iStackSize   = _KD_THREAD_USER_STACK_MAX;
-	}
-	else {
-		kd_core_SetError(KD_ENOMEM);
-	}
-	
-	return (pstAttr);
+    KDThreadAttr *  pstAttr = KD_NULL;
+
+    pstAttr = (KDThreadAttr *)lib_pool_Malloc(sizeof(KDThreadAttr));
+
+    if (KD_NULL != pstAttr) {
+        pstAttr->iDetachState = KD_THREAD_CREATE_JOINABLE;
+        pstAttr->iStackSize   = _KD_THREAD_USER_STACK_MAX;
+    } else {
+        kd_core_SetError(KD_ENOMEM);
+    }
+
+    return (pstAttr);
 }
 
 /******************************************************************************
@@ -114,14 +114,14 @@ in user data which is deinitialized with pthread_attr_destroy.
 ******************************************************************************/
 KDint kd_thread_AttrFree(KDThreadAttr * pstAttr_in)
 {
-	if (KD_NULL == pstAttr_in) {
-		kd_core_SetError(KD_EACCES);
-		return (KD_EACCES);
-	}
-	
-	lib_pool_Free((void *)pstAttr_in, sizeof(KDThreadAttr));
-	
-	return (0);
+    if (KD_NULL == pstAttr_in) {
+        kd_core_SetError(KD_EACCES);
+        return (KD_EACCES);
+    }
+
+    lib_pool_Free((void *)pstAttr_in, sizeof(KDThreadAttr));
+
+    return (0);
 }
 
 /******************************************************************************
@@ -158,23 +158,24 @@ made detached using kdThreadDetach.
 ******************************************************************************/
 KDint  kd_thread_AttrSetDetachState(KDThreadAttr * pstAttr_inout, KDint iDetachState_in)
 {
-	if (KD_NULL == pstAttr_inout) {
-		kd_core_SetError(KD_EACCES);
-		return (-1);
-	}
-	
-	switch (iDetachState_in) {
-	case KD_THREAD_CREATE_JOINABLE:
-	case KD_THREAD_CREATE_DETACHED:
-	    pstAttr_inout->iDetachState = iDetachState_in;
-		break;
-	default:
-		kd_core_SetError(KD_EINVAL);
-		return (-1);
-		break;
-	}
-	
-	return (0);
+    if (KD_NULL == pstAttr_inout) {
+        kd_core_SetError(KD_EACCES);
+        return (-1);
+    }
+
+    switch (iDetachState_in) {
+    case KD_THREAD_CREATE_JOINABLE:
+    case KD_THREAD_CREATE_DETACHED:
+        pstAttr_inout->iDetachState = iDetachState_in;
+        break;
+
+    default:
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+        break;
+    }
+
+    return (0);
 }
 
 /******************************************************************************
@@ -204,20 +205,20 @@ returns any error code, rather than returning -1 and setting the error indicator
 ******************************************************************************/
 KDint  kd_thread_AttrSetStackSize(KDThreadAttr * pstAttr_inout, KDsize iStackSize_in)
 {
-	if (KD_NULL == pstAttr_inout) {
-		kd_core_SetError(KD_EACCES);
-		return (-1);
-	}
-	
-	if ((iStackSize_in < _KD_THREAD_USER_STACK_MIN) 
-	||  (iStackSize_in > _KD_THREAD_USER_STACK_MAX)) {
-		kd_core_SetError(KD_EINVAL);
-		return (-1);
-	}
-	
-	pstAttr_inout->iStackSize = iStackSize_in;
-	
-	return (0);	
+    if (KD_NULL == pstAttr_inout) {
+        kd_core_SetError(KD_EACCES);
+        return (-1);
+    }
+
+    if ((iStackSize_in < _KD_THREAD_USER_STACK_MIN)
+            ||  (iStackSize_in > _KD_THREAD_USER_STACK_MAX)) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    pstAttr_inout->iStackSize = iStackSize_in;
+
+    return (0);
 }
 
 /******************************************************************************
@@ -255,89 +256,94 @@ pointed to by an extra parameter and returns any error code, rather than returni
 and setting the error indicator.
 ******************************************************************************/
 KDThread * kd_thread_Create(
-	const KDThreadAttr * pstAttr_in, void *(* pfnStartRoutine_in)(void *), void * arg_in, 
-	KDuint32 reversed_0, KDuint32 reversed_1, KDuint32 reversed_2, KDuint32 reversed_3, KDuint32 reversed_4, 
-	KDuint32 eflag_in
+    const KDThreadAttr * pstAttr_in, void * (* pfnStartRoutine_in)(void *), void * arg_in,
+    KDuint32 reversed_0, KDuint32 reversed_1, KDuint32 reversed_2, KDuint32 reversed_3, KDuint32 reversed_4,
+    KDuint32 eflag_in
 )
 {
-	CPU_ADDR   addrPhyPage = 0;
-	CPU_INT32U uiStackSize = 0;
-	KDThread*  pstThread   = KD_NULL;
-	void*      pExtData    = KD_NULL;
-	CPU_DATA*  pExtArg     = KD_NULL;
-	CPU_DATA   mem_ctl     = 0;
-	OS_ERR     os_err      = OS_ERR_NONE;
-	OS_ERR     os_reg_err  = OS_ERR_NONE;
-	OS_ERR     os_int_err  = OS_ERR_NONE;
-	
-	CPUExt_PageGetFree((&addrPhyPage));
-	if (0 == addrPhyPage) {
-		kd_core_SetError(KD_EAGAIN);
-		return (KD_NULL);
-	}
-	
-	uiStackSize = _KD_THREAD_USER_STACK_MAX;
-	if (0 != pstAttr_in) {
-		uiStackSize = pstAttr_in->iStackSize;
-	}
-	
-	mem_ctl   = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_MEM_CTL, &os_err);
-	pstThread = (KDThread *)addrPhyPage;
-	pExtData  = (void *)((CPU_INT32U)addrPhyPage + sizeof(KDThread));
-	pExtArg   = (CPU_DATA *)pExtData;
-	
-	pExtArg[OS_TCB_EXT_EFLAG]      = eflag_in;
-	pExtArg[OS_TCB_EXT_RET_POINT]  = (CPU_DATA)(&kdThreadExit);
-	pExtArg[OS_TCB_EXT_IS_PROCESS] = 0;
-	pExtArg[OS_TCB_EXT_USER_STACK] = 0; //(CPU_DATA)((CPU_INT08U *)(lib_pool_Get((LIB_POOL_CONTROL *)mem_ctl, uiStackSize)) +  uiStackSize - 4);
-	
-	OSTaskCreate(
-		/* p_tcb       */   &(pstThread->stTCB),
-		/* p_name      */   0,
-		/* p_task      */   (OS_TASK_PTR)pfnStartRoutine_in,
-		/* p_arg       */   arg_in,
-		/* prio        */   50,
-		/* p_stk_base  */   (CPU_STK *)((CPU_INT32U)addrPhyPage + (X86_MEM_PAGE_SIZE - _KD_THREAD_KERNEL_STACK_SIZE)), 
-		/* stk_limit   */   ((_KD_THREAD_KERNEL_STACK_SIZE * OS_CFG_TASK_STK_LIMIT_PCT_EMPTY) / 100),
-		/* stk_size    */   _KD_THREAD_KERNEL_STACK_SIZE,
-		/* q_size      */   0,
-		/* time_quanta */   0,
-		/* p_ext       */   pExtData,
-		/* opt         */   0, 
-		/* p_err       */   &os_err
-	);
-    os_reg_err = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_ERR_CODE, &os_int_err);
-	if ((OS_ERR_NONE != os_err) 
-	||  (OS_ERR_NONE != os_reg_err) 
-	||  (OS_ERR_NONE != os_int_err)) {
-		kd_core_SetError(KD_EFBIG);
-		CPUExt_PageRelease(addrPhyPage);
-		addrPhyPage = 0;
-		return (KD_NULL);
-	}
-	
-	/* lock the thread joinable */
-	pstThread->iDetachState = pstAttr_in->iDetachState;
-	if ((KD_NULL != pstAttr_in) 
-	&&  (KD_THREAD_CREATE_JOINABLE == pstAttr_in->iDetachState)) {
-		/* create the mutex */
-		OSMutexCreate
-		(
-			/* p_mutex */ &(pstThread->stMutex), 
-			/* p_name  */ 0,
-			/* p_err   */ &os_err
-		);
-		if (OS_ERR_NONE != os_err) {
-			kd_core_SetError(KD_EBADF);
-		}
+    CPU_ADDR   addrPhyPage = 0;
+    CPU_INT32U uiStackSize = 0;
+    KDThread*  pstThread   = KD_NULL;
+    void*      pExtData    = KD_NULL;
+    CPU_DATA*  pExtArg     = KD_NULL;
+    CPU_DATA   mem_ctl     = 0;
+    OS_ERR     os_err      = OS_ERR_NONE;
+    OS_ERR     os_reg_err  = OS_ERR_NONE;
+    OS_ERR     os_int_err  = OS_ERR_NONE;
 
-		/* lock the mutex by hand */
-		pstThread->stMutex.OwnerTCBPtr = &(pstThread->stTCB);
-		pstThread->stMutex.OwnerOriginalPrio = pstThread->stTCB.Prio;
-		pstThread->stMutex.OwnerNestingCtr = (OS_NESTING_CTR)1;
-	}
-	
-	return (pstThread);
+    CPUExt_PageGetFree((&addrPhyPage));
+
+    if (0 == addrPhyPage) {
+        kd_core_SetError(KD_EAGAIN);
+        return (KD_NULL);
+    }
+
+    uiStackSize = _KD_THREAD_USER_STACK_MAX;
+
+    if (0 != pstAttr_in) {
+        uiStackSize = pstAttr_in->iStackSize;
+    }
+
+    mem_ctl   = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_MEM_CTL, &os_err);
+    pstThread = (KDThread *)addrPhyPage;
+    pExtData  = (void *)((CPU_INT32U)addrPhyPage + sizeof(KDThread));
+    pExtArg   = (CPU_DATA *)pExtData;
+
+    pExtArg[OS_TCB_EXT_EFLAG]      = eflag_in;
+    pExtArg[OS_TCB_EXT_RET_POINT]  = (CPU_DATA)(&kdThreadExit);
+    pExtArg[OS_TCB_EXT_IS_PROCESS] = 0;
+    pExtArg[OS_TCB_EXT_USER_STACK] = 0; //(CPU_DATA)((CPU_INT08U *)(lib_pool_Get((LIB_POOL_CONTROL *)mem_ctl, uiStackSize)) +  uiStackSize - 4);
+
+    OSTaskCreate(
+        /* p_tcb       */   & (pstThread->stTCB),
+        /* p_name      */   0,
+        /* p_task      */   (OS_TASK_PTR)pfnStartRoutine_in,
+        /* p_arg       */   arg_in,
+        /* prio        */   50,
+        /* p_stk_base  */   (CPU_STK *)((CPU_INT32U)addrPhyPage + (X86_MEM_PAGE_SIZE - _KD_THREAD_KERNEL_STACK_SIZE)),
+        /* stk_limit   */   ((_KD_THREAD_KERNEL_STACK_SIZE * OS_CFG_TASK_STK_LIMIT_PCT_EMPTY) / 100),
+        /* stk_size    */   _KD_THREAD_KERNEL_STACK_SIZE,
+        /* q_size      */   0,
+        /* time_quanta */   0,
+        /* p_ext       */   pExtData,
+        /* opt         */   0,
+        /* p_err       */   &os_err
+    );
+    os_reg_err = OSTaskRegGet(OSTCBCurPtr, OS_TCB_REG_ERR_CODE, &os_int_err);
+
+    if ((OS_ERR_NONE != os_err)
+            ||  (OS_ERR_NONE != os_reg_err)
+            ||  (OS_ERR_NONE != os_int_err)) {
+        kd_core_SetError(KD_EFBIG);
+        CPUExt_PageRelease(addrPhyPage);
+        addrPhyPage = 0;
+        return (KD_NULL);
+    }
+
+    /* lock the thread joinable */
+    pstThread->iDetachState = pstAttr_in->iDetachState;
+
+    if ((KD_NULL != pstAttr_in)
+            &&  (KD_THREAD_CREATE_JOINABLE == pstAttr_in->iDetachState)) {
+        /* create the mutex */
+        OSMutexCreate
+        (
+            /* p_mutex */ & (pstThread->stMutex),
+            /* p_name  */ 0,
+            /* p_err   */ &os_err
+        );
+
+        if (OS_ERR_NONE != os_err) {
+            kd_core_SetError(KD_EBADF);
+        }
+
+        /* lock the mutex by hand */
+        pstThread->stMutex.OwnerTCBPtr = &(pstThread->stTCB);
+        pstThread->stMutex.OwnerOriginalPrio = pstThread->stTCB.Prio;
+        pstThread->stMutex.OwnerNestingCtr = (OS_NESTING_CTR)1;
+    }
+
+    return (pstThread);
 }
 
 /******************************************************************************
@@ -360,15 +366,16 @@ specially.
 ******************************************************************************/
 void   kd_thread_Exit(void * pRetval_in)
 {
-	KDThread * pstThread = kd_thread_Self();
-	OS_ERR  os_err = OS_ERR_NONE;
-	
-	OSMutexDel(&(pstThread->stMutex), OS_OPT_DEL_ALWAYS, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EBADF);
-	}
-	
-	OS_TaskReturn();
+    KDThread * pstThread = kd_thread_Self();
+    OS_ERR  os_err = OS_ERR_NONE;
+
+    OSMutexDel(&(pstThread->stMutex), OS_OPT_DEL_ALWAYS, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EBADF);
+    }
+
+    OS_TaskReturn();
 }
 
 /******************************************************************************
@@ -403,32 +410,33 @@ However, kdThreadJoin has undefined behavior rather than an error when given an 
 ******************************************************************************/
 KDint kd_thread_Join(KDThread * pstThread_in, void ** ppRetval_out)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstThread_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	if ((OS_STATE)OS_TASK_STATE_DEL == (pstThread_in->stTCB.TaskState)) {
-		return (0);
-	}
-	
-	if (KD_THREAD_CREATE_JOINABLE == (pstThread_in->iDetachState)) {
-		OSMutexPend
-		(
-			/* p_mutex */ &(pstThread_in->stMutex),
-			/* timeout */ 0,
-			/* opt     */ 0,
-			/* p_ts    */ 0,
-			/* p_err   */ &os_err
-		);
-		if (OS_ERR_NONE != os_err) {
-			kd_core_SetError(KD_EINVAL);
-		}
-	}
-	
-	return (0);
+    OS_ERR os_err = OS_ERR_NONE;
+
+    if (KD_NULL == pstThread_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    if ((OS_STATE)OS_TASK_STATE_DEL == (pstThread_in->stTCB.TaskState)) {
+        return (0);
+    }
+
+    if (KD_THREAD_CREATE_JOINABLE == (pstThread_in->iDetachState)) {
+        OSMutexPend
+        (
+            /* p_mutex */ & (pstThread_in->stMutex),
+            /* timeout */ 0,
+            /* opt     */ 0,
+            /* p_ts    */ 0,
+            /* p_err   */ &os_err
+        );
+
+        if (OS_ERR_NONE != os_err) {
+            kd_core_SetError(KD_EINVAL);
+        }
+    }
+
+    return (0);
 }
 
 /******************************************************************************
@@ -461,31 +469,32 @@ However, kdThreadDetach has undefined behavior rather than an error when given a
 ******************************************************************************/
 KDint  kd_thread_Detach(KDThread * pstThread_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstThread_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	if ((OS_STATE)OS_TASK_STATE_DEL == (pstThread_in->stTCB.TaskState)) {
-		kd_core_SetError(KD_EINVAL);
-		return (-1);
-	}
-	
-	if (KD_THREAD_CREATE_DETACHED == (pstThread_in->iDetachState)) {
-		kd_core_SetError(KD_EINVAL);
-		return (-1);
-	}
-	
-	pstThread_in->iDetachState = KD_THREAD_CREATE_DETACHED;
-	OSMutexDel(&(pstThread_in->stMutex), OS_OPT_DEL_ALWAYS, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EBADF);
-		return (-1);
-	}
-	
-	return (0);
+    OS_ERR os_err = OS_ERR_NONE;
+
+    if (KD_NULL == pstThread_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    if ((OS_STATE)OS_TASK_STATE_DEL == (pstThread_in->stTCB.TaskState)) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    if (KD_THREAD_CREATE_DETACHED == (pstThread_in->iDetachState)) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    pstThread_in->iDetachState = KD_THREAD_CREATE_DETACHED;
+    OSMutexDel(&(pstThread_in->stMutex), OS_OPT_DEL_ALWAYS, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EBADF);
+        return (-1);
+    }
+
+    return (0);
 }
 
 /******************************************************************************
@@ -510,7 +519,7 @@ kdThreadSelf is based on [POSIX] pthread_self.
 ******************************************************************************/
 KDThread * kd_thread_Self(void)
 {
-	return ((KDThread *)OSTCBCurPtr);
+    return ((KDThread *)OSTCBCurPtr);
 }
 
 /*******************************************************************************
@@ -542,27 +551,29 @@ mutex attributes compatibly.
 *******************************************************************************/
 KDThreadMutex* kd_thread_MutexCreate(const void * pMutexAttr_in)
 {
-	OS_MUTEX* pstMutex = KD_NULL;
-	OS_ERR    os_err   = OS_ERR_NONE;
-	
-	pstMutex = (OS_MUTEX *)lib_pool_Malloc(sizeof(OS_MUTEX));
-	if (KD_NULL == pstMutex) {
-		kd_core_SetError(KD_ENOMEM);
-		return (KD_NULL);
-	}
-	
-	/* create the mutex */
-	OSMutexCreate
-	(
-		/* p_mutex */ pstMutex, 
-		/* p_name  */ 0,
-		/* p_err   */ &os_err
-	);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EAGAIN);
-	}	
-	
-	return ((KDThreadMutex *)(pstMutex));
+    OS_MUTEX* pstMutex = KD_NULL;
+    OS_ERR    os_err   = OS_ERR_NONE;
+
+    pstMutex = (OS_MUTEX *)lib_pool_Malloc(sizeof(OS_MUTEX));
+
+    if (KD_NULL == pstMutex) {
+        kd_core_SetError(KD_ENOMEM);
+        return (KD_NULL);
+    }
+
+    /* create the mutex */
+    OSMutexCreate
+    (
+        /* p_mutex */ pstMutex,
+        /* p_name  */ 0,
+        /* p_err   */ &os_err
+    );
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EAGAIN);
+    }
+
+    return ((KDThreadMutex *)(pstMutex));
 }
 
 /*******************************************************************************
@@ -585,21 +596,22 @@ Rationale
 *******************************************************************************/
 KDint kd_thread_MutexFree(KDThreadMutex * pstMutex_in)
 {
-	OS_ERR  os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstMutex_in) {
-	    kd_core_SetError(KD_EINVAL);
-		return (-1);
-	}
-	
-	OSMutexDel((OS_MUTEX *)(pstMutex_in), OS_OPT_DEL_ALWAYS, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EBADF);
-	}
-	
-	lib_pool_Free((void *)(pstMutex_in), sizeof(OS_MUTEX));
-	
-	return (0);
+    OS_ERR  os_err = OS_ERR_NONE;
+
+    if (KD_NULL == pstMutex_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    OSMutexDel((OS_MUTEX *)(pstMutex_in), OS_OPT_DEL_ALWAYS, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EBADF);
+    }
+
+    lib_pool_Free((void *)(pstMutex_in), sizeof(OS_MUTEX));
+
+    return (0);
 }
 
 /*******************************************************************************
@@ -639,26 +651,27 @@ them but not in conjunction with condition variables to implement the functional
 *******************************************************************************/
 KDint  kd_thread_MutexLock(KDThreadMutex * pstMutex_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
+    OS_ERR os_err = OS_ERR_NONE;
 
-	if (KD_NULL == pstMutex_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
+    if (KD_NULL == pstMutex_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
 
-	OSMutexPend
-	(
-		/* p_mutex */ (OS_MUTEX *)pstMutex_in,
-		/* timeout */ 0,
-		/* opt     */ 0,
-		/* p_ts    */ 0,
-		/* p_err   */ &os_err
-	);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
+    OSMutexPend
+    (
+        /* p_mutex */ (OS_MUTEX *)pstMutex_in,
+        /* timeout */ 0,
+        /* opt     */ 0,
+        /* p_ts    */ 0,
+        /* p_err   */ &os_err
+    );
 
-	return (0);
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    return (0);
 }
 
 /*******************************************************************************
@@ -686,19 +699,20 @@ and unlocking a mutex locked by another thread, perhaps causing the application 
 *******************************************************************************/
 KDint  kd_thread_MutexUnlock(KDThreadMutex * pstMutex_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstMutex_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	OSMutexPost((OS_MUTEX *)pstMutex_in, 0, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
-	
-	return (0);
+    OS_ERR os_err = OS_ERR_NONE;
+
+    if (KD_NULL == pstMutex_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    OSMutexPost((OS_MUTEX *)pstMutex_in, 0, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    return (0);
 }
 
 /*******************************************************************************
@@ -729,27 +743,29 @@ to allow a future extension to add such attributes.
 *******************************************************************************/
 KDThreadCond * kd_thread_CondCreate(const void * pAttr_in)
 {
-	OS_FLAG_GRP*  pstFlagGrp = KD_NULL;
-	OS_ERR  os_err = OS_ERR_NONE;
-	
-	pstFlagGrp = (OS_FLAG_GRP *)lib_pool_Malloc(sizeof(OS_FLAG_GRP));
-	if (KD_NULL == pstFlagGrp) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (KD_NULL);
-	}
-	
-	OSFlagCreate
-	(
-		pstFlagGrp,
-		0,
-		0,
-		&os_err
-	);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_ENOSYS);
-	}
-	
-	return ((KDThreadCond *)pstFlagGrp);
+    OS_FLAG_GRP*  pstFlagGrp = KD_NULL;
+    OS_ERR  os_err = OS_ERR_NONE;
+
+    pstFlagGrp = (OS_FLAG_GRP *)lib_pool_Malloc(sizeof(OS_FLAG_GRP));
+
+    if (KD_NULL == pstFlagGrp) {
+        kd_core_SetError(KD_EINVAL);
+        return (KD_NULL);
+    }
+
+    OSFlagCreate
+    (
+        pstFlagGrp,
+        0,
+        0,
+        &os_err
+    );
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_ENOSYS);
+    }
+
+    return ((KDThreadCond *)pstFlagGrp);
 }
 
 /*******************************************************************************
@@ -774,21 +790,22 @@ pthread_cond_destroy.
 *******************************************************************************/
 KDint  kd_thread_CondFree(KDThreadCond * pstCond_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstCond_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	OSFlagDel((OS_FLAG_GRP *)pstCond_in, OS_OPT_DEL_ALWAYS, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
-	
-	lib_pool_Free((void *)pstCond_in, sizeof(OS_FLAG_GRP));
-	
-	return (0);
+    OS_ERR os_err = OS_ERR_NONE;
+
+    if (KD_NULL == pstCond_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    OSFlagDel((OS_FLAG_GRP *)pstCond_in, OS_OPT_DEL_ALWAYS, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    lib_pool_Free((void *)pstCond_in, sizeof(OS_FLAG_GRP));
+
+    return (0);
 }
 
 /*******************************************************************************
@@ -826,36 +843,38 @@ OpenKODE Core has no equivalent of POSIXÅfs PTHREAD_COND_INITIALIZER.
 *******************************************************************************/
 KDint  kd_thread_CondSignal(KDThreadCond * pstCond_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstCond_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	OSFlagPendAbort((OS_FLAG_GRP *)pstCond_in, OS_OPT_PEND_ABORT_1, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
+    OS_ERR os_err = OS_ERR_NONE;
 
-	return (0);
+    if (KD_NULL == pstCond_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    OSFlagPendAbort((OS_FLAG_GRP *)pstCond_in, OS_OPT_PEND_ABORT_1, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    return (0);
 }
 
 KDint  kd_thread_CondBroadcast(KDThreadCond * pstCond_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstCond_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	OSFlagPendAbort((OS_FLAG_GRP *)pstCond_in, OS_OPT_PEND_ABORT_ALL, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
+    OS_ERR os_err = OS_ERR_NONE;
 
-	return (0);
+    if (KD_NULL == pstCond_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    OSFlagPendAbort((OS_FLAG_GRP *)pstCond_in, OS_OPT_PEND_ABORT_ALL, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    return (0);
 }
 
 /*******************************************************************************
@@ -889,31 +908,32 @@ OpenKODE Core has no equivalent of POSIXÅfs PTHREAD_COND_INITIALIZER.
 *******************************************************************************/
 KDint  kd_thread_CondWait(KDThreadCond * pstCond_in, KDThreadMutex * pstMutex_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
+    OS_ERR os_err = OS_ERR_NONE;
 
-	if ((KD_NULL == pstCond_in) || (KD_NULL == pstMutex_in)) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	kd_thread_MutexLock(pstMutex_in);
-	
-	OSFlagPend
-	(
-		/* p_grp   */ (OS_FLAG_GRP *)pstCond_in,
-		/* flags   */ 1,
-		/* timeout */ 0,
-		/* opt     */ OS_OPT_PEND_BLOCKING,
-		/* p_ts    */ 0,
-		/* p_err   */ &os_err
-	);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
-	
-	kd_thread_MutexUnlock(pstMutex_in);
-	
-	return (0);
+    if ((KD_NULL == pstCond_in) || (KD_NULL == pstMutex_in)) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    kd_thread_MutexLock(pstMutex_in);
+
+    OSFlagPend
+    (
+        /* p_grp   */ (OS_FLAG_GRP *)pstCond_in,
+        /* flags   */ 1,
+        /* timeout */ 0,
+        /* opt     */ OS_OPT_PEND_BLOCKING,
+        /* p_ts    */ 0,
+        /* p_err   */ &os_err
+    );
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    kd_thread_MutexUnlock(pstMutex_in);
+
+    return (0);
 }
 
 /*******************************************************************************
@@ -944,27 +964,29 @@ Core has no support for inter-process semaphores.
 *******************************************************************************/
 KDThreadSem *  kd_thread_SemCreate(KDuint uiValue_in)
 {
-	OS_SEM * pstSem = KD_NULL;
-	OS_ERR   os_err = OS_ERR_NONE;
-	
-	pstSem = (OS_SEM *)lib_pool_Malloc(sizeof(OS_SEM));
-	if (KD_NULL == pstSem) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (KD_NULL);
-	}
-	
-	OSSemCreate
-	(
-		pstSem,
-		0,
-		uiValue_in,
-		&os_err
-	);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_ENOSPC);
-	}
-	
-	return ((KDThreadSem *)(pstSem));
+    OS_SEM * pstSem = KD_NULL;
+    OS_ERR   os_err = OS_ERR_NONE;
+
+    pstSem = (OS_SEM *)lib_pool_Malloc(sizeof(OS_SEM));
+
+    if (KD_NULL == pstSem) {
+        kd_core_SetError(KD_EINVAL);
+        return (KD_NULL);
+    }
+
+    OSSemCreate
+    (
+        pstSem,
+        0,
+        uiValue_in,
+        &os_err
+    );
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_ENOSPC);
+    }
+
+    return ((KDThreadSem *)(pstSem));
 }
 
 /*******************************************************************************
@@ -987,21 +1009,22 @@ Rationale
 *******************************************************************************/
 KDint  kd_thread_SemFree(KDThreadSem * pstSem_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstSem_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	OSSemDel((OS_SEM *)pstSem_in, OS_OPT_DEL_ALWAYS, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
-	
-	lib_pool_Free((void *)pstSem_in, sizeof(OS_SEM));
-	
-	return (0);
+    OS_ERR os_err = OS_ERR_NONE;
+
+    if (KD_NULL == pstSem_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    OSSemDel((OS_SEM *)pstSem_in, OS_OPT_DEL_ALWAYS, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    lib_pool_Free((void *)pstSem_in, sizeof(OS_SEM));
+
+    return (0);
 }
 
 /*******************************************************************************
@@ -1026,26 +1049,27 @@ kdThreadSemWait is based on [POSIX] sem_wait.
 *******************************************************************************/
 KDint  kd_thread_SemWait(KDThreadSem * pstSem_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstSem_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	OSSemPend
-	(
-		(OS_SEM *)pstSem_in,
-		0,
-		0,
-		0,
-		&os_err
-	);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
-	
-	return (0);
+    OS_ERR os_err = OS_ERR_NONE;
+
+    if (KD_NULL == pstSem_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    OSSemPend
+    (
+        (OS_SEM *)pstSem_in,
+        0,
+        0,
+        0,
+        &os_err
+    );
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    return (0);
 }
 
 /*******************************************************************************
@@ -1071,19 +1095,20 @@ kdThreadSemPost is based on [POSIX] sem_post.
 *******************************************************************************/
 KDint  kd_thread_SemPost(KDThreadSem * pstSem_in)
 {
-	OS_ERR os_err = OS_ERR_NONE;
-	
-	if (KD_NULL == pstSem_in) {
-	    kd_core_SetError(KD_EINVAL);
-	    return (-1);
-	}
-	
-	OSSemPost((OS_SEM *)pstSem_in, OS_OPT_POST_1, &os_err);
-	if (OS_ERR_NONE != os_err) {
-		kd_core_SetError(KD_EINVAL);
-	}
-	
-	return (0);
+    OS_ERR os_err = OS_ERR_NONE;
+
+    if (KD_NULL == pstSem_in) {
+        kd_core_SetError(KD_EINVAL);
+        return (-1);
+    }
+
+    OSSemPost((OS_SEM *)pstSem_in, OS_OPT_POST_1, &os_err);
+
+    if (OS_ERR_NONE != os_err) {
+        kd_core_SetError(KD_EINVAL);
+    }
+
+    return (0);
 }
 
 #if 0  /* NOTE */

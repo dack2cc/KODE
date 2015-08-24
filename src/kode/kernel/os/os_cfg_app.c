@@ -14,11 +14,11 @@
 *
 * LICENSING TERMS:
 * ---------------
-*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or 
+*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or
 *           for peaceful research.  If you plan or intend to use uC/OS-III in a commercial application/
-*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your 
-*           application/product.   We provide ALL the source code for your convenience and to help you 
-*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use 
+*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your
+*           application/product.   We provide ALL the source code for your convenience and to help you
+*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use
 *           it commercially without paying a licensing fee.
 *
 *           Knowledge of the source code may NOT be used to develop a similar product.
@@ -193,28 +193,28 @@ CPU_INT32U     const  OSCfg_TmrWheelSizeRAM      = (CPU_INT32U  )0;
 CPU_INT32U     const  OSCfg_DataSizeRAM          = sizeof(OSCfg_IdleTaskStk)
 
 #if (OS_CFG_ISR_POST_DEFERRED_EN > 0u)
-                                                 + sizeof(OSCfg_IntQ)
-                                                 + sizeof(OSCfg_IntQTaskStk)
+        + sizeof(OSCfg_IntQ)
+        + sizeof(OSCfg_IntQTaskStk)
 #endif
 
 #if (OS_MSG_EN > 0u)
-                                                 + sizeof(OSCfg_MsgPool)
+        + sizeof(OSCfg_MsgPool)
 #endif
 
 #if (OS_CFG_STAT_TASK_EN > 0u)
-                                                 + sizeof(OSCfg_StatTaskStk)
+        + sizeof(OSCfg_StatTaskStk)
 #endif
 
 #if (OS_CFG_TMR_EN > 0u)
-                                                 + sizeof(OSCfg_TmrTaskStk)
-                                                 + sizeof(OSCfg_TmrWheel)
+        + sizeof(OSCfg_TmrTaskStk)
+        + sizeof(OSCfg_TmrWheel)
 #endif
 
 #if (OS_CFG_ISR_STK_SIZE > 0u)
-                                                 + sizeof(OSCfg_ISRStk)
+        + sizeof(OSCfg_ISRStk)
 #endif
-                                                 + sizeof(OSCfg_TickTaskStk)
-                                                 + sizeof(OSCfg_TickWheel);
+        + sizeof(OSCfg_TickTaskStk)
+        + sizeof(OSCfg_TickWheel);
 
 /*$PAGE*/
 /*

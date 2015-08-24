@@ -10,7 +10,7 @@
 ******************************************************************************/
 
 #define KD_PRIVATE  static
-//#define KD_PRIVATE 
+//#define KD_PRIVATE
 
 /******************************************************************************
     Private Interface
@@ -37,11 +37,11 @@ The function returns the current UST.
 ******************************************************************************/
 KDust  kd_time_GetUST(void)
 {
-	CPU_INT32U uiTick = 0;
-	
-	CPUExt_TimeTick(&uiTick);
-	
-	return ((KDust)uiTick);
+    CPU_INT32U uiTick = 0;
+
+    CPUExt_TimeTick(&uiTick);
+
+    return ((KDust)uiTick);
 }
 
 /******************************************************************************
@@ -65,14 +65,15 @@ an arithmetic type; [POSIX] does.
 ******************************************************************************/
 KDtime kd_time_GetWallClock(KDtime * timep)
 {
-	CPU_INT32U uiTime = 0;
-	
-	CPUExt_TimeCurrent(&uiTime);
-	if (timep) {
-		CPU_EXT_PUT_FS_LONG(uiTime, timep);
-	}
-	
-	return ((KDtime)uiTime);
+    CPU_INT32U uiTime = 0;
+
+    CPUExt_TimeCurrent(&uiTime);
+
+    if (timep) {
+        CPU_EXT_PUT_FS_LONG(uiTime, timep);
+    }
+
+    return ((KDtime)uiTime);
 }
 
 #if 0 /* NOTE */

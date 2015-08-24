@@ -16,7 +16,7 @@ KDThreadAttr * kd_thread_AttrCreate(void);
 KDint          kd_thread_AttrFree(KDThreadAttr * pstAttr_in);
 KDint          kd_thread_AttrSetDetachState(KDThreadAttr * pstAttr_inout, KDint iDetachState_in);
 KDint          kd_thread_AttrSetStackSize(KDThreadAttr * pstAttr_inout, KDsize iStackSize_in);
-KDThread *     kd_thread_Create(const KDThreadAttr * pstAttr_in, void *(* pfnStartRoutine_in)(void *), void * arg_in, KDuint32 reversed_0, KDuint32 reversed_1, KDuint32 reversed_2, KDuint32 reversed_3, KDuint32 reversed_4, KDuint32 eflag_in);
+KDThread *     kd_thread_Create(const KDThreadAttr * pstAttr_in, void * (* pfnStartRoutine_in)(void *), void * arg_in, KDuint32 reversed_0, KDuint32 reversed_1, KDuint32 reversed_2, KDuint32 reversed_3, KDuint32 reversed_4, KDuint32 eflag_in);
 void           kd_thread_Exit(void * pRetval_in);
 KDint          kd_thread_Join(KDThread * pstThread_in, void **retval);
 KDint          kd_thread_Detach(KDThread * pstThread_in);

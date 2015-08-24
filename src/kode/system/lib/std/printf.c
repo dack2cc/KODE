@@ -24,15 +24,15 @@ static char printf_aszBuf[1024];
 
 int printf(const char * fmt_in, ...)
 {
-	va_list    args;
-	int i = 0;
+    va_list    args;
+    int i = 0;
 
-	va_start(args, fmt_in);
-	i = vsprintf(printf_aszBuf, fmt_in, args);
-	kdLogMessage(printf_aszBuf);
-	va_end(args);
-	
-	return (i);
+    va_start(args, fmt_in);
+    i = vsprintf(printf_aszBuf, fmt_in, args);
+    kdLogMessage(printf_aszBuf);
+    va_end(args);
+
+    return (i);
 }
 
 

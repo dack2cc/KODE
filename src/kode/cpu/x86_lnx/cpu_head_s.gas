@@ -33,13 +33,13 @@ boot_hdr:
        .long  0x1BADB002
        .long  0x00000002
        .long  - (0x1BADB002+0x00000002)
-#ifndef __ELF__
-       .long  boot_hdr
-       .long  _start
-       .long  _edata
-       .long  _end
-       .long  boot_entry
-##endif 
+//#ifndef __ELF__
+//       .long  boot_hdr
+//       .long  _start
+//       .long  _edata
+//       .long  _end
+//       .long  boot_entry
+//##endif 
 
 _g_s_head_p32BitPageDir:
 boot_entry:

@@ -159,11 +159,11 @@
 *********************************************************************************************************
 */
 
-                                                                /* Cfg external argument check feature (see Note #1) :  */
+/* Cfg external argument check feature (see Note #1) :  */
 #ifndef  LIB_MEM_CFG_ARG_CHK_EXT_EN
 #define  LIB_MEM_CFG_ARG_CHK_EXT_EN     DEF_DISABLED
-                                                                /* DEF_DISABLED     Argument check DISABLED             */
-                                                                /* DEF_ENABLED      Argument check ENABLED              */
+/* DEF_DISABLED     Argument check DISABLED             */
+/* DEF_ENABLED      Argument check ENABLED              */
 #endif
 
 
@@ -176,11 +176,11 @@
 *********************************************************************************************************
 */
 
-                                                                /* Cfg assembly-optimized function(s) [see Note #1] :   */
+/* Cfg assembly-optimized function(s) [see Note #1] :   */
 #ifndef  LIB_MEM_CFG_OPTIMIZE_ASM_EN
 #define  LIB_MEM_CFG_OPTIMIZE_ASM_EN    DEF_DISABLED
-                                                                /* DEF_DISABLED     Assembly-optimized fnct(s) DISABLED */
-                                                                /* DEF_ENABLED      Assembly-optimized fnct(s) ENABLED  */
+/* DEF_DISABLED     Assembly-optimized fnct(s) DISABLED */
+/* DEF_ENABLED      Assembly-optimized fnct(s) ENABLED  */
 #endif
 
 
@@ -259,8 +259,8 @@ typedef  struct  mem_alloc_info  MEM_ALLOC_INFO;
 
 struct  mem_alloc_info  {                                       /* ------------------ MEM ALLOC INFO ------------------ */
     const  CPU_CHAR        *NamePtr;                            /* Ptr to name.                                         */
-           CPU_SIZE_T       Size;                               /* Total alloc'd size, in bytes.                        */
-           MEM_ALLOC_INFO  *NextPtr;                            /* Ptr to next alloc info in list.                      */
+    CPU_SIZE_T       Size;                               /* Total alloc'd size, in bytes.                        */
+    MEM_ALLOC_INFO  *NextPtr;                            /* Ptr to next alloc info in list.                      */
 };
 #endif
 
@@ -274,17 +274,17 @@ struct  mem_alloc_info  {                                       /* -------------
 typedef  struct  mem_seg  MEM_SEG;                              /* --------------------- SEG DATA --------------------- */
 
 struct mem_seg {
-           CPU_ADDR         AddrBase;                           /* Seg start addr.                                      */
-           CPU_ADDR         AddrEnd;                            /* Seg end addr (last addr).                            */
-           CPU_ADDR         AddrNext;                           /* Next free addr.                                      */
+    CPU_ADDR         AddrBase;                           /* Seg start addr.                                      */
+    CPU_ADDR         AddrEnd;                            /* Seg end addr (last addr).                            */
+    CPU_ADDR         AddrNext;                           /* Next free addr.                                      */
 
-           MEM_SEG         *NextPtr;                            /* Ptr to next seg.                                     */
+    MEM_SEG         *NextPtr;                            /* Ptr to next seg.                                     */
 
-           CPU_SIZE_T       PaddingAlign;                       /* Padding alignment in byte.                           */
+    CPU_SIZE_T       PaddingAlign;                       /* Padding alignment in byte.                           */
 
 #if (LIB_MEM_CFG_DBG_INFO_EN == DEF_ENABLED)
     const  CPU_CHAR        *NamePtr;                            /* Ptr to seg name.                                     */
-           MEM_ALLOC_INFO  *AllocInfoHeadPtr;                   /* Ptr to head of alloc info struct list.               */
+    MEM_ALLOC_INFO  *AllocInfoHeadPtr;                   /* Ptr to head of alloc info struct list.               */
 #endif
 };
 
@@ -321,7 +321,7 @@ typedef  struct  mem_seg_info {                                 /* -------------
 *********************************************************************************************************
 */
 
-                                                                /* --------------------- MEM POOL --------------------- */
+/* --------------------- MEM POOL --------------------- */
 typedef  struct  mem_pool {
     void               *PoolAddrStart;                          /* Ptr   to start of mem seg for mem pool blks.         */
     void               *PoolAddrEnd;                            /* Ptr   to end   of mem seg for mem pool blks.         */
@@ -356,14 +356,14 @@ typedef  struct  mem_pool {
 */
 
 typedef  struct  mem_dyn_pool {                                 /* ---------------- DYN MEM POOL DATA ----------------- */
-           MEM_SEG     *PoolSegPtr;                             /* Mem pool from which blks are alloc'd.                */
-           CPU_SIZE_T   BlkSize;                                /* Size of pool blks, in octets.                        */
-           CPU_SIZE_T   BlkAlign;                               /* Align req'd for blks, in octets.                     */
-           CPU_SIZE_T   BlkPaddingAlign;                        /* Padding alignment in bytes for this mem seg.         */
-           void        *BlkFreePtr;                             /* Ptr to first free blk.                               */
+    MEM_SEG     *PoolSegPtr;                             /* Mem pool from which blks are alloc'd.                */
+    CPU_SIZE_T   BlkSize;                                /* Size of pool blks, in octets.                        */
+    CPU_SIZE_T   BlkAlign;                               /* Align req'd for blks, in octets.                     */
+    CPU_SIZE_T   BlkPaddingAlign;                        /* Padding alignment in bytes for this mem seg.         */
+    void        *BlkFreePtr;                             /* Ptr to first free blk.                               */
 
-           CPU_SIZE_T   BlkQtyMax;                              /* Max qty of blk in dyn mem pool. 0 = unlimited.       */
-           CPU_SIZE_T   BlkAllocCnt;                            /* Cnt of alloc blk.                                    */
+    CPU_SIZE_T   BlkQtyMax;                              /* Max qty of blk in dyn mem pool. 0 = unlimited.       */
+    CPU_SIZE_T   BlkAllocCnt;                            /* Cnt of alloc blk.                                    */
 
 #if (LIB_MEM_CFG_DBG_INFO_EN == DEF_ENABLED)
     const  CPU_CHAR    *NamePtr;                                /* Ptr to mem pool name.                                */
@@ -1046,7 +1046,7 @@ typedef  struct  mem_dyn_pool {                                 /* -------------
 *********************************************************************************************************
 */
 
-                                                                /* See Note #5.                                         */
+/* See Note #5.                                         */
 #define  MEM_VAL_COPY_SET_INT08U_BIG(addr_dest, addr_src)               MEM_VAL_COPY_GET_INT08U_BIG(addr_dest, addr_src)
 #define  MEM_VAL_COPY_SET_INT16U_BIG(addr_dest, addr_src)               MEM_VAL_COPY_GET_INT16U_BIG(addr_dest, addr_src)
 #define  MEM_VAL_COPY_SET_INT32U_BIG(addr_dest, addr_src)               MEM_VAL_COPY_GET_INT32U_BIG(addr_dest, addr_src)
@@ -1120,7 +1120,7 @@ typedef  struct  mem_dyn_pool {                                 /* -------------
 *********************************************************************************************************
 */
 
-                                                                /* See Note #5.                                         */
+/* See Note #5.                                         */
 #define  MEM_VAL_COPY_SET_INTU_BIG(addr_dest, addr_src, val_size)       MEM_VAL_COPY_GET_INTU_BIG(addr_dest, addr_src, val_size)
 #define  MEM_VAL_COPY_SET_INTU_LITTLE(addr_dest, addr_src, val_size)    MEM_VAL_COPY_GET_INTU_LITTLE(addr_dest, addr_src, val_size)
 #define  MEM_VAL_COPY_SET_INTU(addr_dest, addr_src, val_size)           MEM_VAL_COPY_GET_INTU(addr_dest, addr_src, val_size)
@@ -1202,130 +1202,130 @@ typedef  struct  mem_dyn_pool {                                 /* -------------
 
 void               Mem_Init                 (       void);
 
-                                                                /* ------------------ MEM API  FNCTS ------------------ */
+/* ------------------ MEM API  FNCTS ------------------ */
 void               Mem_Clr                  (       void              *pmem,
-                                                    CPU_SIZE_T         size);
+        CPU_SIZE_T         size);
 
 void               Mem_Set                  (       void              *pmem,
-                                                    CPU_INT08U         data_val,
-                                                    CPU_SIZE_T         size);
+        CPU_INT08U         data_val,
+        CPU_SIZE_T         size);
 
 void               Mem_Copy                 (       void              *pdest,
-                                             const  void              *psrc,
-                                                    CPU_SIZE_T         size);
+        const  void              *psrc,
+        CPU_SIZE_T         size);
 
 void               Mem_Move                 (       void              *pdest,
-                                             const  void              *psrc,
-                                                    CPU_SIZE_T         size);
+        const  void              *psrc,
+        CPU_SIZE_T         size);
 
 CPU_BOOLEAN        Mem_Cmp                  (const  void              *p1_mem,
-                                             const  void              *p2_mem,
-                                                    CPU_SIZE_T         size);
+        const  void              *p2_mem,
+        CPU_SIZE_T         size);
 
 
-                                                                /* ----------- MEM HEAP FNCTS (DEPRECATED) ------------ */
+/* ----------- MEM HEAP FNCTS (DEPRECATED) ------------ */
 #if (LIB_MEM_CFG_HEAP_SIZE > 0u)
 void              *Mem_HeapAlloc            (       CPU_SIZE_T         size,
-                                                    CPU_SIZE_T         align,
-                                                    CPU_SIZE_T        *p_bytes_reqd,
-                                                    LIB_ERR           *p_err);
+        CPU_SIZE_T         align,
+        CPU_SIZE_T        *p_bytes_reqd,
+        LIB_ERR           *p_err);
 
 CPU_SIZE_T         Mem_HeapGetSizeRem       (       CPU_SIZE_T         align,
-                                                    LIB_ERR           *p_err);
+        LIB_ERR           *p_err);
 #endif
 
-                                                                /* ------------------ MEM SEG FNCTS ------------------- */
+/* ------------------ MEM SEG FNCTS ------------------- */
 void               Mem_SegCreate            (const  CPU_CHAR          *p_name,
-                                                    MEM_SEG           *p_seg,
-                                                    CPU_ADDR           seg_base_addr,
-                                                    CPU_SIZE_T         size,
-                                                    CPU_SIZE_T         padding_align,
-                                                    LIB_ERR           *p_err);
+        MEM_SEG           *p_seg,
+        CPU_ADDR           seg_base_addr,
+        CPU_SIZE_T         size,
+        CPU_SIZE_T         padding_align,
+        LIB_ERR           *p_err);
 
 void               Mem_SegClr               (       MEM_SEG           *p_seg,
-                                                    LIB_ERR           *p_err);
+        LIB_ERR           *p_err);
 
 void              *Mem_SegAlloc             (const  CPU_CHAR          *p_name,
-                                                    MEM_SEG           *p_seg,
-                                                    CPU_SIZE_T         size,
-                                                    LIB_ERR           *p_err);
+        MEM_SEG           *p_seg,
+        CPU_SIZE_T         size,
+        LIB_ERR           *p_err);
 
 void              *Mem_SegAllocExt          (const  CPU_CHAR          *p_name,
-                                                    MEM_SEG           *p_seg,
-                                                    CPU_SIZE_T         size,
-                                                    CPU_SIZE_T         align,
-                                                    CPU_SIZE_T        *p_bytes_reqd,
-                                                    LIB_ERR           *p_err);
+        MEM_SEG           *p_seg,
+        CPU_SIZE_T         size,
+        CPU_SIZE_T         align,
+        CPU_SIZE_T        *p_bytes_reqd,
+        LIB_ERR           *p_err);
 
 void              *Mem_SegAllocHW           (const  CPU_CHAR          *p_name,
-                                                    MEM_SEG           *p_seg,
-                                                    CPU_SIZE_T         size,
-                                                    CPU_SIZE_T         align,
-                                                    CPU_SIZE_T        *p_bytes_reqd,
-                                                    LIB_ERR           *p_err);
+        MEM_SEG           *p_seg,
+        CPU_SIZE_T         size,
+        CPU_SIZE_T         align,
+        CPU_SIZE_T        *p_bytes_reqd,
+        LIB_ERR           *p_err);
 
 CPU_SIZE_T         Mem_SegRemSizeGet        (       MEM_SEG           *p_seg,
-                                                    CPU_SIZE_T         align,
-                                                    MEM_SEG_INFO      *p_seg_info,
-                                                    LIB_ERR           *p_err);
+        CPU_SIZE_T         align,
+        MEM_SEG_INFO      *p_seg_info,
+        LIB_ERR           *p_err);
 
 #if (LIB_MEM_CFG_DBG_INFO_EN == DEF_ENABLED)
 void               Mem_OutputUsage          (       void             (*out_fnct) (CPU_CHAR *),
-                                                    LIB_ERR           *p_err);
+        LIB_ERR           *p_err);
 #endif
 
-                                                                /* -------- STATIC MEM POOL FNCTS (DEPRECATED) -------- */
+/* -------- STATIC MEM POOL FNCTS (DEPRECATED) -------- */
 void               Mem_PoolCreate           (       MEM_POOL          *p_pool,
-                                                    void              *p_mem_base,
-                                                    CPU_SIZE_T         mem_size,
-                                                    MEM_POOL_BLK_QTY   blk_nbr,
-                                                    CPU_SIZE_T         blk_size,
-                                                    CPU_SIZE_T         blk_align,
-                                                    CPU_SIZE_T        *p_bytes_reqd,
-                                                    LIB_ERR           *p_err);
+        void              *p_mem_base,
+        CPU_SIZE_T         mem_size,
+        MEM_POOL_BLK_QTY   blk_nbr,
+        CPU_SIZE_T         blk_size,
+        CPU_SIZE_T         blk_align,
+        CPU_SIZE_T        *p_bytes_reqd,
+        LIB_ERR           *p_err);
 
 void               Mem_PoolClr              (       MEM_POOL          *p_pool,
-                                                    LIB_ERR           *p_err);
+        LIB_ERR           *p_err);
 
 void              *Mem_PoolBlkGet           (       MEM_POOL          *p_pool,
-                                                    CPU_SIZE_T         size,
-                                                    LIB_ERR           *p_err);
+        CPU_SIZE_T         size,
+        LIB_ERR           *p_err);
 
 void               Mem_PoolBlkFree          (       MEM_POOL          *p_pool,
-                                                    void              *p_blk,
-                                                    LIB_ERR           *p_err);
+        void              *p_blk,
+        LIB_ERR           *p_err);
 
 MEM_POOL_BLK_QTY   Mem_PoolBlkGetNbrAvail   (       MEM_POOL          *p_pool,
-                                                    LIB_ERR           *p_err);
+        LIB_ERR           *p_err);
 
-                                                                /* -------------- DYNAMIC MEM POOL FNCTS -------------- */
+/* -------------- DYNAMIC MEM POOL FNCTS -------------- */
 void               Mem_DynPoolCreate        (const  CPU_CHAR          *p_name,
-                                                    MEM_DYN_POOL      *p_pool,
-                                                    MEM_SEG           *p_seg,
-                                                    CPU_SIZE_T         blk_size,
-                                                    CPU_SIZE_T         blk_align,
-                                                    CPU_SIZE_T         blk_qty_init,
-                                                    CPU_SIZE_T         blk_qty_max,
-                                                    LIB_ERR           *p_err);
+        MEM_DYN_POOL      *p_pool,
+        MEM_SEG           *p_seg,
+        CPU_SIZE_T         blk_size,
+        CPU_SIZE_T         blk_align,
+        CPU_SIZE_T         blk_qty_init,
+        CPU_SIZE_T         blk_qty_max,
+        LIB_ERR           *p_err);
 
 void               Mem_DynPoolCreateHW      (const  CPU_CHAR          *p_name,
-                                                    MEM_DYN_POOL      *p_pool,
-                                                    MEM_SEG           *p_seg,
-                                                    CPU_SIZE_T         blk_size,
-                                                    CPU_SIZE_T         blk_align,
-                                                    CPU_SIZE_T         blk_qty_init,
-                                                    CPU_SIZE_T         blk_qty_max,
-                                                    LIB_ERR           *p_err);
+        MEM_DYN_POOL      *p_pool,
+        MEM_SEG           *p_seg,
+        CPU_SIZE_T         blk_size,
+        CPU_SIZE_T         blk_align,
+        CPU_SIZE_T         blk_qty_init,
+        CPU_SIZE_T         blk_qty_max,
+        LIB_ERR           *p_err);
 
 void              *Mem_DynPoolBlkGet        (       MEM_DYN_POOL      *p_pool,
-                                                    LIB_ERR           *p_err);
+        LIB_ERR           *p_err);
 
 void               Mem_DynPoolBlkFree       (       MEM_DYN_POOL      *p_pool,
-                                                    void              *p_blk,
-                                                    LIB_ERR           *p_err);
+        void              *p_blk,
+        LIB_ERR           *p_err);
 
 CPU_SIZE_T         Mem_DynPoolBlkNbrAvailGet(       MEM_DYN_POOL      *p_pool,
-                                                    LIB_ERR           *p_err);
+        LIB_ERR           *p_err);
 
 
 /*
@@ -1394,7 +1394,7 @@ CPU_SIZE_T         Mem_DynPoolBlkNbrAvailGet(       MEM_DYN_POOL      *p_pool,
 *********************************************************************************************************
 */
 
-                                                                /* See 'lib_mem.h  Note #2a'.                           */
+/* See 'lib_mem.h  Note #2a'.                           */
 #if     (CPU_CORE_VERSION < 127u)
 #error  "CPU_CORE_VERSION  [SHOULD be >= V1.27]"
 #endif

@@ -7,11 +7,7 @@
 # Build Env.
 # **************************************
 
-KODE_NAME := kode
-KODE_BIN  := $(KODE_NAME).bin
-KODE_MAP  := $(KODE_NAME).map
-KODE_TMP  := $(KODE_NAME).tmp
-KODE_ROOT := $(KODE_NAME)
+KODE_ROOT := kode
 
 KODE_CPU_DIR := cpu
 KODE_CPU_LNX_DIR := x86_lnx
@@ -181,29 +177,6 @@ INC_DIR += -I$(SRC_ROOT)/$(KODE_ROOT) \
            -I$(SRC_ROOT)/$(KODE_ROOT)/$(KODE_KERNEL_DIR)/$(KODE_KERNEL_GUI_DIR)
 
 
-# **************************************
-# Make Rule
-# **************************************
-
-kode : _PREPARE _IMAGE_KODE
-
-_IMAGE_KODE : $(MKIMG) $(MKFS) $(BOOT_BIN) $(KODE_BIN)
-	@echo "[Build][$(TARGET_FS)]"
-	@$(BUILD_ROOT)/$(MKFS) > $(TARGET_ROOT)/$(TARGET_FS)
-	@echo "[Build][$(TARGET_BIN)]"
-	@$(BUILD_ROOT)/$(MKIMG) $(DEV_FLOPPY) $(BOOT_BIN) $(BUILD_ROOT)/$(KODE_BIN) $(TARGET_ROOT)/$(TARGET_FS) > $(TARGET_ROOT)/$(TARGET_BIN)
-	@echo "[Build][$(TARGET_HD)]"
-	@$(BUILD_ROOT)/$(MKIMG) $(DEV_HDISK) $(BOOT_BIN) $(BUILD_ROOT)/$(KODE_BIN) $(TARGET_ROOT)/$(TARGET_FS) > $(TARGET_ROOT)/$(TARGET_HD)
-
-$(KODE_BIN) : $(KODE_OBJ) $(KODE_DBG)
-	@echo "[Build][$(BUILD_ROOT)/$@]"
-	@$(LD) $(LDFLAGS) $(KODE_OBJ) -o $(BUILD_ROOT)/$(KODE_TMP) > $(DEBUG_ROOT)/$(KODE_MAP)
-	@$(OBJCP) $(OBJCPFLAGS) $(BUILD_ROOT)/$(KODE_TMP) $(BUILD_ROOT)/$(KODE_BIN)
-
-kodext : _PREPARE $(KODE_OBJ) $(KODE_DBG)
-	ar cru $(BUILD_ROOT)/libkernel.a $(KODE_OBJ)
-	ld -melf_i386 -u _start -r -o $(BUILD_ROOT)/kernel.o $(BUILD_ROOT)/libkernel.a
-	ld -melf_i386 --defsym _START=0xC0100000 --defsym _START_MAP=0x100000 -T '..'/cfg/ldscript -o $(BUILD_ROOT)/kodext $(BUILD_ROOT)/kernel.o
 
 
 

@@ -14,11 +14,11 @@
 *
 * LICENSING TERMS:
 * ---------------
-*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or 
+*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or
 *           for peaceful research.  If you plan or intend to use uC/OS-III in a commercial application/
-*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your 
-*           application/product.   We provide ALL the source code for your convenience and to help you 
-*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use 
+*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your
+*           application/product.   We provide ALL the source code for your convenience and to help you
+*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use
 *           it commercially without paying a licensing fee.
 *
 *           Knowledge of the source code may NOT be used to develop a similar product.
@@ -76,31 +76,39 @@ void  OSFlagCreate (OS_FLAG_GRP  *p_grp,
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return;
     }
+
 #endif
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
+
     if (OSSafetyCriticalStartFlag == DEF_TRUE) {
-       *p_err = OS_ERR_ILLEGAL_CREATE_RUN_TIME;
+        *p_err = OS_ERR_ILLEGAL_CREATE_RUN_TIME;
         return;
     }
+
 #endif
 
 #if OS_CFG_CALLED_FROM_ISR_CHK_EN > 0u
+
     if (OSIntNestingCtr > (OS_NESTING_CTR)0) {              /* See if called from ISR ...                             */
-       *p_err = OS_ERR_CREATE_ISR;                          /* ... can't CREATE from an ISR                           */
+        *p_err = OS_ERR_CREATE_ISR;                          /* ... can't CREATE from an ISR                           */
         return;
     }
+
 #endif
 
 #if OS_CFG_ARG_CHK_EN > 0u
+
     if (p_grp == (OS_FLAG_GRP *)0) {                        /* Validate 'p_grp'                                       */
-       *p_err = OS_ERR_OBJ_PTR_NULL;
+        *p_err = OS_ERR_OBJ_PTR_NULL;
         return;
     }
+
 #endif
 
     OS_CRITICAL_ENTER();
@@ -116,7 +124,7 @@ void  OSFlagCreate (OS_FLAG_GRP  *p_grp,
     OSFlagQty++;
 
     OS_CRITICAL_EXIT();
-   *p_err = OS_ERR_NONE;
+    *p_err = OS_ERR_NONE;
 }
 
 /*$PAGE*/
@@ -167,87 +175,101 @@ OS_OBJ_QTY  OSFlagDel (OS_FLAG_GRP  *p_grp,
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return ((OS_OBJ_QTY)0);
     }
+
 #endif
 
 #if OS_CFG_CALLED_FROM_ISR_CHK_EN > 0u
+
     if (OSIntNestingCtr > (OS_NESTING_CTR)0) {              /* See if called from ISR ...                             */
-       *p_err = OS_ERR_DEL_ISR;                             /* ... can't DELETE from an ISR                           */
+        *p_err = OS_ERR_DEL_ISR;                             /* ... can't DELETE from an ISR                           */
         return ((OS_OBJ_QTY)0);
     }
+
 #endif
 
 #if OS_CFG_ARG_CHK_EN > 0u
+
     if (p_grp == (OS_FLAG_GRP *)0) {                        /* Validate 'p_grp'                                       */
-       *p_err  = OS_ERR_OBJ_PTR_NULL;
+        *p_err  = OS_ERR_OBJ_PTR_NULL;
         return ((OS_OBJ_QTY)0);
     }
-    switch (opt) {
-        case OS_OPT_DEL_NO_PEND:
-        case OS_OPT_DEL_ALWAYS:
-             break;
 
-        default:
-            *p_err = OS_ERR_OPT_INVALID;
-             return ((OS_OBJ_QTY)0);
+    switch (opt) {
+    case OS_OPT_DEL_NO_PEND:
+    case OS_OPT_DEL_ALWAYS:
+        break;
+
+    default:
+        *p_err = OS_ERR_OPT_INVALID;
+        return ((OS_OBJ_QTY)0);
     }
+
 #endif
 
 #if OS_CFG_OBJ_TYPE_CHK_EN > 0u
+
     if (p_grp->Type != OS_OBJ_TYPE_FLAG) {                  /* Validate event group object                            */
-       *p_err = OS_ERR_OBJ_TYPE;
+        *p_err = OS_ERR_OBJ_TYPE;
         return ((OS_OBJ_QTY)0);
     }
+
 #endif
     OS_CRITICAL_ENTER();
     p_pend_list = &p_grp->PendList;
     cnt         = p_pend_list->NbrEntries;
     nbr_tasks   = cnt;
+
     switch (opt) {
-        case OS_OPT_DEL_NO_PEND:                            /* Delete group if no task waiting                        */
-             if (nbr_tasks == (OS_OBJ_QTY)0) {
+    case OS_OPT_DEL_NO_PEND:                            /* Delete group if no task waiting                        */
+        if (nbr_tasks == (OS_OBJ_QTY)0) {
 #if OS_CFG_DBG_EN > 0u
-                 OS_FlagDbgListRemove(p_grp);
+            OS_FlagDbgListRemove(p_grp);
 #endif
-                 OSFlagQty--;
-                 OS_FlagClr(p_grp);
+            OSFlagQty--;
+            OS_FlagClr(p_grp);
 
-                 OS_CRITICAL_EXIT();
-                *p_err = OS_ERR_NONE;
-             } else {
-                 OS_CRITICAL_EXIT();
-                *p_err = OS_ERR_TASK_WAITING;
-             }
-             break;
-
-        case OS_OPT_DEL_ALWAYS:                             /* Always delete the event flag group                     */
-             ts = OS_TS_GET();                              /* Get local time stamp so all tasks get the same time    */
-             while (cnt > 0u) {                             /* Remove all tasks from the pend list                    */
-                 p_pend_data = p_pend_list->HeadPtr;
-                 p_tcb       = p_pend_data->TCBPtr;
-                 OS_PendObjDel((OS_PEND_OBJ *)((void *)p_grp),
-                               p_tcb,
-                               ts);
-                 cnt--;
-             }
-#if OS_CFG_DBG_EN > 0u
-             OS_FlagDbgListRemove(p_grp);
-#endif
-             OSFlagQty--;
-             OS_FlagClr(p_grp);
-             OS_CRITICAL_EXIT_NO_SCHED();
-             OSSched();                                     /* Find highest priority task ready to run                */
+            OS_CRITICAL_EXIT();
             *p_err = OS_ERR_NONE;
-             break;
+        } else {
+            OS_CRITICAL_EXIT();
+            *p_err = OS_ERR_TASK_WAITING;
+        }
 
-        default:
-             OS_CRITICAL_EXIT();
-            *p_err = OS_ERR_OPT_INVALID;
-             break;
+        break;
+
+    case OS_OPT_DEL_ALWAYS:                             /* Always delete the event flag group                     */
+        ts = OS_TS_GET();                              /* Get local time stamp so all tasks get the same time    */
+
+        while (cnt > 0u) {                             /* Remove all tasks from the pend list                    */
+            p_pend_data = p_pend_list->HeadPtr;
+            p_tcb       = p_pend_data->TCBPtr;
+            OS_PendObjDel((OS_PEND_OBJ *)((void *)p_grp),
+                          p_tcb,
+                          ts);
+            cnt--;
+        }
+
+#if OS_CFG_DBG_EN > 0u
+        OS_FlagDbgListRemove(p_grp);
+#endif
+        OSFlagQty--;
+        OS_FlagClr(p_grp);
+        OS_CRITICAL_EXIT_NO_SCHED();
+        OSSched();                                     /* Find highest priority task ready to run                */
+        *p_err = OS_ERR_NONE;
+        break;
+
+    default:
+        OS_CRITICAL_EXIT();
+        *p_err = OS_ERR_OPT_INVALID;
+        break;
     }
+
     return (nbr_tasks);
 }
 #endif
@@ -326,31 +348,39 @@ OS_FLAGS  OSFlagPend (OS_FLAG_GRP *p_grp,
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return ((OS_FLAGS)0);
     }
+
 #endif
 
 #if OS_CFG_CALLED_FROM_ISR_CHK_EN > 0u
+
     if (OSIntNestingCtr > (OS_NESTING_CTR)0) {              /* See if called from ISR ...                             */
-       *p_err = OS_ERR_PEND_ISR;                            /* ... can't PEND from an ISR                             */
+        *p_err = OS_ERR_PEND_ISR;                            /* ... can't PEND from an ISR                             */
         return ((OS_FLAGS)0);
     }
+
 #endif
 
 #if OS_CFG_ARG_CHK_EN > 0u
+
     if (p_grp == (OS_FLAG_GRP *)0) {                        /* Validate arguments                                     */
         *p_err = OS_ERR_OBJ_PTR_NULL;
         return ((OS_FLAGS)0);
     }
+
 #endif
 
 #if OS_CFG_OBJ_TYPE_CHK_EN > 0u
+
     if (p_grp->Type != OS_OBJ_TYPE_FLAG) {                  /* Validate that we are pointing at an event flag         */
         *p_err = OS_ERR_OBJ_TYPE;
         return ((OS_FLAGS)0);
     }
+
 #endif
 
     if ((opt & OS_OPT_PEND_FLAG_CONSUME) != (OS_OPT)0) {    /* See if we need to consume the flags                    */
@@ -365,220 +395,251 @@ OS_FLAGS  OSFlagPend (OS_FLAG_GRP *p_grp,
 
     mode = opt & OS_OPT_PEND_FLAG_MASK;
     CPU_CRITICAL_ENTER();
+
     switch (mode) {
-        case OS_OPT_PEND_FLAG_SET_ALL:                      /* See if all required flags are set                      */
-             flags_rdy = (OS_FLAGS)(p_grp->Flags & flags);  /* Extract only the bits we want                          */
-             if (flags_rdy == flags) {                      /* Must match ALL the bits that we want                   */
-                 if (consume == DEF_TRUE) {                 /* See if we need to consume the flags                    */
-                     p_grp->Flags &= ~flags_rdy;            /* Clear ONLY the flags that we wanted                    */
-                 }
-                 OSTCBCurPtr->FlagsRdy = flags_rdy;         /* Save flags that were ready                             */
-                 if (p_ts != (CPU_TS *)0) {
-                    *p_ts  = p_grp->TS;
-                 }
-                 CPU_CRITICAL_EXIT();                       /* Yes, condition met, return to caller                   */
-                 *p_err = OS_ERR_NONE;
-                 return (flags_rdy);
-             } else {                                       /* Block task until events occur or timeout               */
-                 if ((opt & OS_OPT_PEND_NON_BLOCKING) != (OS_OPT)0) {
-                     CPU_CRITICAL_EXIT();
-                     *p_err = OS_ERR_PEND_WOULD_BLOCK;      /* Specified non-blocking so task would block             */
-                     return ((OS_FLAGS)0);
-                 } else {                                   /* Specified blocking so check is scheduler is locked     */
-                     if (OSSchedLockNestingCtr > (OS_NESTING_CTR)0) { /* See if called with scheduler locked ...      */
-                         CPU_CRITICAL_EXIT();
-                         *p_err = OS_ERR_SCHED_LOCKED;                /* ... can't PEND when locked                   */
-                         return ((OS_FLAGS)0);
-                     }
-                 }
+    case OS_OPT_PEND_FLAG_SET_ALL:                      /* See if all required flags are set                      */
+        flags_rdy = (OS_FLAGS)(p_grp->Flags & flags);  /* Extract only the bits we want                          */
 
-                 OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();     /* Lock the scheduler/re-enable interrupts                */
-                 OS_FlagBlock(&pend_data,
-                              p_grp,
-                              flags,
-                              opt,
-                              timeout);
-                 OS_CRITICAL_EXIT_NO_SCHED();
-             }
-             break;
+        if (flags_rdy == flags) {                      /* Must match ALL the bits that we want                   */
+            if (consume == DEF_TRUE) {                 /* See if we need to consume the flags                    */
+                p_grp->Flags &= ~flags_rdy;            /* Clear ONLY the flags that we wanted                    */
+            }
 
-        case OS_OPT_PEND_FLAG_SET_ANY:
-             flags_rdy = (OS_FLAGS)(p_grp->Flags & flags);  /* Extract only the bits we want                          */
-             if (flags_rdy != (OS_FLAGS)0) {                /* See if any flag set                                    */
-                 if (consume == DEF_TRUE) {                 /* See if we need to consume the flags                    */
-                     p_grp->Flags &= ~flags_rdy;            /* Clear ONLY the flags that we got                       */
-                 }
-                 OSTCBCurPtr->FlagsRdy = flags_rdy;         /* Save flags that were ready                             */
-                 if (p_ts != (CPU_TS *)0) {
-                    *p_ts  = p_grp->TS;
-                 }
-                 CPU_CRITICAL_EXIT();                       /* Yes, condition met, return to caller                   */
-                 *p_err = OS_ERR_NONE;
-                 return (flags_rdy);
-             } else {                                       /* Block task until events occur or timeout               */
-                 if ((opt & OS_OPT_PEND_NON_BLOCKING) != (OS_OPT)0) {
-                     CPU_CRITICAL_EXIT();
-                     *p_err = OS_ERR_PEND_WOULD_BLOCK;      /* Specified non-blocking so task would block             */
-                     return ((OS_FLAGS)0);
-                 } else {                                   /* Specified blocking so check is scheduler is locked     */
-                     if (OSSchedLockNestingCtr > (OS_NESTING_CTR)0) { /* See if called with scheduler locked ...      */
-                         CPU_CRITICAL_EXIT();
-                         *p_err = OS_ERR_SCHED_LOCKED;                /* ... can't PEND when locked                   */
-                         return ((OS_FLAGS)0);
-                     }
-                 }
+            OSTCBCurPtr->FlagsRdy = flags_rdy;         /* Save flags that were ready                             */
 
-                 OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();     /* Lock the scheduler/re-enable interrupts                */
-                 OS_FlagBlock(&pend_data,
-                              p_grp,
-                              flags,
-                              opt,
-                              timeout);
-                 OS_CRITICAL_EXIT_NO_SCHED();
-             }
-             break;
+            if (p_ts != (CPU_TS *)0) {
+                *p_ts  = p_grp->TS;
+            }
+
+            CPU_CRITICAL_EXIT();                       /* Yes, condition met, return to caller                   */
+            *p_err = OS_ERR_NONE;
+            return (flags_rdy);
+        } else {                                       /* Block task until events occur or timeout               */
+            if ((opt & OS_OPT_PEND_NON_BLOCKING) != (OS_OPT)0) {
+                CPU_CRITICAL_EXIT();
+                *p_err = OS_ERR_PEND_WOULD_BLOCK;      /* Specified non-blocking so task would block             */
+                return ((OS_FLAGS)0);
+            } else {                                   /* Specified blocking so check is scheduler is locked     */
+                if (OSSchedLockNestingCtr > (OS_NESTING_CTR)0) { /* See if called with scheduler locked ...      */
+                    CPU_CRITICAL_EXIT();
+                    *p_err = OS_ERR_SCHED_LOCKED;                /* ... can't PEND when locked                   */
+                    return ((OS_FLAGS)0);
+                }
+            }
+
+            OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();     /* Lock the scheduler/re-enable interrupts                */
+            OS_FlagBlock(&pend_data,
+                         p_grp,
+                         flags,
+                         opt,
+                         timeout);
+            OS_CRITICAL_EXIT_NO_SCHED();
+        }
+
+        break;
+
+    case OS_OPT_PEND_FLAG_SET_ANY:
+        flags_rdy = (OS_FLAGS)(p_grp->Flags & flags);  /* Extract only the bits we want                          */
+
+        if (flags_rdy != (OS_FLAGS)0) {                /* See if any flag set                                    */
+            if (consume == DEF_TRUE) {                 /* See if we need to consume the flags                    */
+                p_grp->Flags &= ~flags_rdy;            /* Clear ONLY the flags that we got                       */
+            }
+
+            OSTCBCurPtr->FlagsRdy = flags_rdy;         /* Save flags that were ready                             */
+
+            if (p_ts != (CPU_TS *)0) {
+                *p_ts  = p_grp->TS;
+            }
+
+            CPU_CRITICAL_EXIT();                       /* Yes, condition met, return to caller                   */
+            *p_err = OS_ERR_NONE;
+            return (flags_rdy);
+        } else {                                       /* Block task until events occur or timeout               */
+            if ((opt & OS_OPT_PEND_NON_BLOCKING) != (OS_OPT)0) {
+                CPU_CRITICAL_EXIT();
+                *p_err = OS_ERR_PEND_WOULD_BLOCK;      /* Specified non-blocking so task would block             */
+                return ((OS_FLAGS)0);
+            } else {                                   /* Specified blocking so check is scheduler is locked     */
+                if (OSSchedLockNestingCtr > (OS_NESTING_CTR)0) { /* See if called with scheduler locked ...      */
+                    CPU_CRITICAL_EXIT();
+                    *p_err = OS_ERR_SCHED_LOCKED;                /* ... can't PEND when locked                   */
+                    return ((OS_FLAGS)0);
+                }
+            }
+
+            OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();     /* Lock the scheduler/re-enable interrupts                */
+            OS_FlagBlock(&pend_data,
+                         p_grp,
+                         flags,
+                         opt,
+                         timeout);
+            OS_CRITICAL_EXIT_NO_SCHED();
+        }
+
+        break;
 
 #if OS_CFG_FLAG_MODE_CLR_EN > 0u
-        case OS_OPT_PEND_FLAG_CLR_ALL:                      /* See if all required flags are cleared                  */
-             flags_rdy = (OS_FLAGS)(~p_grp->Flags & flags); /* Extract only the bits we want                          */
-             if (flags_rdy == flags) {                      /* Must match ALL the bits that we want                   */
-                 if (consume == DEF_TRUE) {                 /* See if we need to consume the flags                    */
-                     p_grp->Flags |= flags_rdy;             /* Set ONLY the flags that we wanted                      */
-                 }
-                 OSTCBCurPtr->FlagsRdy = flags_rdy;         /* Save flags that were ready                             */
-                 if (p_ts != (CPU_TS *)0) {
-                    *p_ts  = p_grp->TS;
-                 }
-                 CPU_CRITICAL_EXIT();                       /* Yes, condition met, return to caller                   */
-                 *p_err = OS_ERR_NONE;
-                 return (flags_rdy);
-             } else {                                       /* Block task until events occur or timeout               */
-                 if ((opt & OS_OPT_PEND_NON_BLOCKING) != (OS_OPT)0) {
-                     CPU_CRITICAL_EXIT();
-                     *p_err = OS_ERR_PEND_WOULD_BLOCK;      /* Specified non-blocking so task would block             */
-                     return ((OS_FLAGS)0);
-                 } else {                                   /* Specified blocking so check is scheduler is locked     */
-                     if (OSSchedLockNestingCtr > (OS_NESTING_CTR)0) { /* See if called with scheduler locked ...      */
-                         CPU_CRITICAL_EXIT();
-                         *p_err = OS_ERR_SCHED_LOCKED;                /* ... can't PEND when locked                   */
-                         return ((OS_FLAGS)0);
-                     }
-                 }
 
-                 OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();     /* Lock the scheduler/re-enable interrupts                */
-                 OS_FlagBlock(&pend_data,
-                              p_grp,
-                              flags,
-                              opt,
-                              timeout);
-                 OS_CRITICAL_EXIT_NO_SCHED();
-             }
-             break;
+    case OS_OPT_PEND_FLAG_CLR_ALL:                      /* See if all required flags are cleared                  */
+        flags_rdy = (OS_FLAGS)(~p_grp->Flags & flags); /* Extract only the bits we want                          */
 
-        case OS_OPT_PEND_FLAG_CLR_ANY:
-             flags_rdy = (OS_FLAGS)(~p_grp->Flags & flags); /* Extract only the bits we want                          */
-             if (flags_rdy != (OS_FLAGS)0) {                /* See if any flag cleared                                */
-                 if (consume == DEF_TRUE) {                 /* See if we need to consume the flags                    */
-                     p_grp->Flags |= flags_rdy;             /* Set ONLY the flags that we got                         */
-                 }
-                 OSTCBCurPtr->FlagsRdy = flags_rdy;         /* Save flags that were ready                             */
-                 if (p_ts != (CPU_TS *)0) {
-                    *p_ts  = p_grp->TS;
-                 }
-                 CPU_CRITICAL_EXIT();                       /* Yes, condition met, return to caller                   */
-                 *p_err    = OS_ERR_NONE;
-                 return (flags_rdy);
-             } else {                                       /* Block task until events occur or timeout               */
-                 if ((opt & OS_OPT_PEND_NON_BLOCKING) != (OS_OPT)0) {
-                     CPU_CRITICAL_EXIT();
-                     *p_err = OS_ERR_PEND_WOULD_BLOCK;      /* Specified non-blocking so task would block             */
-                     return ((OS_FLAGS)0);
-                 } else {                                   /* Specified blocking so check is scheduler is locked     */
-                     if (OSSchedLockNestingCtr > (OS_NESTING_CTR)0) { /* See if called with scheduler locked ...      */
-                         CPU_CRITICAL_EXIT();
-                         *p_err = OS_ERR_SCHED_LOCKED;                /* ... can't PEND when locked                   */
-                         return ((OS_FLAGS)0);
-                     }
-                 }
+        if (flags_rdy == flags) {                      /* Must match ALL the bits that we want                   */
+            if (consume == DEF_TRUE) {                 /* See if we need to consume the flags                    */
+                p_grp->Flags |= flags_rdy;             /* Set ONLY the flags that we wanted                      */
+            }
 
-                 OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();     /* Lock the scheduler/re-enable interrupts                */
-                 OS_FlagBlock(&pend_data,
-                              p_grp,
-                              flags,
-                              opt,
-                              timeout);
-                 OS_CRITICAL_EXIT_NO_SCHED();
-             }
-             break;
+            OSTCBCurPtr->FlagsRdy = flags_rdy;         /* Save flags that were ready                             */
+
+            if (p_ts != (CPU_TS *)0) {
+                *p_ts  = p_grp->TS;
+            }
+
+            CPU_CRITICAL_EXIT();                       /* Yes, condition met, return to caller                   */
+            *p_err = OS_ERR_NONE;
+            return (flags_rdy);
+        } else {                                       /* Block task until events occur or timeout               */
+            if ((opt & OS_OPT_PEND_NON_BLOCKING) != (OS_OPT)0) {
+                CPU_CRITICAL_EXIT();
+                *p_err = OS_ERR_PEND_WOULD_BLOCK;      /* Specified non-blocking so task would block             */
+                return ((OS_FLAGS)0);
+            } else {                                   /* Specified blocking so check is scheduler is locked     */
+                if (OSSchedLockNestingCtr > (OS_NESTING_CTR)0) { /* See if called with scheduler locked ...      */
+                    CPU_CRITICAL_EXIT();
+                    *p_err = OS_ERR_SCHED_LOCKED;                /* ... can't PEND when locked                   */
+                    return ((OS_FLAGS)0);
+                }
+            }
+
+            OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();     /* Lock the scheduler/re-enable interrupts                */
+            OS_FlagBlock(&pend_data,
+                         p_grp,
+                         flags,
+                         opt,
+                         timeout);
+            OS_CRITICAL_EXIT_NO_SCHED();
+        }
+
+        break;
+
+    case OS_OPT_PEND_FLAG_CLR_ANY:
+        flags_rdy = (OS_FLAGS)(~p_grp->Flags & flags); /* Extract only the bits we want                          */
+
+        if (flags_rdy != (OS_FLAGS)0) {                /* See if any flag cleared                                */
+            if (consume == DEF_TRUE) {                 /* See if we need to consume the flags                    */
+                p_grp->Flags |= flags_rdy;             /* Set ONLY the flags that we got                         */
+            }
+
+            OSTCBCurPtr->FlagsRdy = flags_rdy;         /* Save flags that were ready                             */
+
+            if (p_ts != (CPU_TS *)0) {
+                *p_ts  = p_grp->TS;
+            }
+
+            CPU_CRITICAL_EXIT();                       /* Yes, condition met, return to caller                   */
+            *p_err    = OS_ERR_NONE;
+            return (flags_rdy);
+        } else {                                       /* Block task until events occur or timeout               */
+            if ((opt & OS_OPT_PEND_NON_BLOCKING) != (OS_OPT)0) {
+                CPU_CRITICAL_EXIT();
+                *p_err = OS_ERR_PEND_WOULD_BLOCK;      /* Specified non-blocking so task would block             */
+                return ((OS_FLAGS)0);
+            } else {                                   /* Specified blocking so check is scheduler is locked     */
+                if (OSSchedLockNestingCtr > (OS_NESTING_CTR)0) { /* See if called with scheduler locked ...      */
+                    CPU_CRITICAL_EXIT();
+                    *p_err = OS_ERR_SCHED_LOCKED;                /* ... can't PEND when locked                   */
+                    return ((OS_FLAGS)0);
+                }
+            }
+
+            OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();     /* Lock the scheduler/re-enable interrupts                */
+            OS_FlagBlock(&pend_data,
+                         p_grp,
+                         flags,
+                         opt,
+                         timeout);
+            OS_CRITICAL_EXIT_NO_SCHED();
+        }
+
+        break;
 #endif
 
-        default:
-             CPU_CRITICAL_EXIT();
-             *p_err = OS_ERR_OPT_INVALID;
-             return ((OS_FLAGS)0);
+    default:
+        CPU_CRITICAL_EXIT();
+        *p_err = OS_ERR_OPT_INVALID;
+        return ((OS_FLAGS)0);
     }
 
     OSSched();                                              /* Find next HPT ready to run                             */
 
     CPU_CRITICAL_ENTER();
+
     switch (OSTCBCurPtr->PendStatus) {
-        case OS_STATUS_PEND_OK:                             /* We got the vent flags                                  */
-             if (p_ts != (CPU_TS *)0) {
-                *p_ts  = OSTCBCurPtr->TS;
-             }
-             *p_err = OS_ERR_NONE;
-             break;
+    case OS_STATUS_PEND_OK:                             /* We got the vent flags                                  */
+        if (p_ts != (CPU_TS *)0) {
+            *p_ts  = OSTCBCurPtr->TS;
+        }
 
-        case OS_STATUS_PEND_ABORT:                          /* Indicate that we aborted                               */
-             if (p_ts != (CPU_TS *)0) {
-                *p_ts  = OSTCBCurPtr->TS;
-             }
-             CPU_CRITICAL_EXIT();
-             *p_err = OS_ERR_PEND_ABORT;
-             return ((OS_FLAGS)0);
+        *p_err = OS_ERR_NONE;
+        break;
 
-        case OS_STATUS_PEND_TIMEOUT:                        /* Indicate that we didn't get semaphore within timeout   */
-             if (p_ts != (CPU_TS *)0) {
-                *p_ts  = (CPU_TS  )0;
-             }
-             CPU_CRITICAL_EXIT();
-             *p_err = OS_ERR_TIMEOUT;
-             return ((OS_FLAGS)0);
+    case OS_STATUS_PEND_ABORT:                          /* Indicate that we aborted                               */
+        if (p_ts != (CPU_TS *)0) {
+            *p_ts  = OSTCBCurPtr->TS;
+        }
 
-        case OS_STATUS_PEND_DEL:                            /* Indicate that object pended on has been deleted        */
-             if (p_ts != (CPU_TS *)0) {
-                *p_ts  = OSTCBCurPtr->TS;
-             }
-             CPU_CRITICAL_EXIT();
-             *p_err = OS_ERR_OBJ_DEL;
-             return ((OS_FLAGS)0);
+        CPU_CRITICAL_EXIT();
+        *p_err = OS_ERR_PEND_ABORT;
+        return ((OS_FLAGS)0);
 
-        default:
-             CPU_CRITICAL_EXIT();
-             *p_err = OS_ERR_STATUS_INVALID;
-             return ((OS_FLAGS)0);
+    case OS_STATUS_PEND_TIMEOUT:                        /* Indicate that we didn't get semaphore within timeout   */
+        if (p_ts != (CPU_TS *)0) {
+            *p_ts  = (CPU_TS  )0;
+        }
+
+        CPU_CRITICAL_EXIT();
+        *p_err = OS_ERR_TIMEOUT;
+        return ((OS_FLAGS)0);
+
+    case OS_STATUS_PEND_DEL:                            /* Indicate that object pended on has been deleted        */
+        if (p_ts != (CPU_TS *)0) {
+            *p_ts  = OSTCBCurPtr->TS;
+        }
+
+        CPU_CRITICAL_EXIT();
+        *p_err = OS_ERR_OBJ_DEL;
+        return ((OS_FLAGS)0);
+
+    default:
+        CPU_CRITICAL_EXIT();
+        *p_err = OS_ERR_STATUS_INVALID;
+        return ((OS_FLAGS)0);
     }
 
     flags_rdy = OSTCBCurPtr->FlagsRdy;
+
     if (consume == DEF_TRUE) {                              /* See if we need to consume the flags                    */
         switch (mode) {
-            case OS_OPT_PEND_FLAG_SET_ALL:
-            case OS_OPT_PEND_FLAG_SET_ANY:                  /* Clear ONLY the flags we got                            */
-                 p_grp->Flags &= ~flags_rdy;
-                 break;
+        case OS_OPT_PEND_FLAG_SET_ALL:
+        case OS_OPT_PEND_FLAG_SET_ANY:                  /* Clear ONLY the flags we got                            */
+            p_grp->Flags &= ~flags_rdy;
+            break;
 
 #if OS_CFG_FLAG_MODE_CLR_EN > 0u
-            case OS_OPT_PEND_FLAG_CLR_ALL:
-            case OS_OPT_PEND_FLAG_CLR_ANY:                  /* Set   ONLY the flags we got                            */
-                 p_grp->Flags |=  flags_rdy;
-                 break;
+
+        case OS_OPT_PEND_FLAG_CLR_ALL:
+        case OS_OPT_PEND_FLAG_CLR_ANY:                  /* Set   ONLY the flags we got                            */
+            p_grp->Flags |=  flags_rdy;
+            break;
 #endif
-            default:
-                 CPU_CRITICAL_EXIT();
-                 *p_err = OS_ERR_OPT_INVALID;
-                 return ((OS_FLAGS)0);
+
+        default:
+            CPU_CRITICAL_EXIT();
+            *p_err = OS_ERR_OPT_INVALID;
+            return ((OS_FLAGS)0);
         }
     }
+
     CPU_CRITICAL_EXIT();
     *p_err = OS_ERR_NONE;                                   /* Event(s) must have occurred                            */
     return (flags_rdy);
@@ -631,72 +692,85 @@ OS_OBJ_QTY  OSFlagPendAbort (OS_FLAG_GRP  *p_grp,
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return ((OS_OBJ_QTY)0u);
     }
+
 #endif
 
 #if OS_CFG_CALLED_FROM_ISR_CHK_EN > 0u
+
     if (OSIntNestingCtr > (OS_NESTING_CTR)0u) {             /* Not allowed to Pend Abort from an ISR                  */
-       *p_err =  OS_ERR_PEND_ABORT_ISR;
+        *p_err =  OS_ERR_PEND_ABORT_ISR;
         return ((OS_OBJ_QTY)0u);
     }
+
 #endif
 
 #if OS_CFG_ARG_CHK_EN > 0u
+
     if (p_grp == (OS_FLAG_GRP *)0) {                        /* Validate 'p_grp'                                       */
-       *p_err =  OS_ERR_OBJ_PTR_NULL;
+        *p_err =  OS_ERR_OBJ_PTR_NULL;
         return ((OS_OBJ_QTY)0u);
     }
-    switch (opt) {                                          /* Validate 'opt'                                         */
-        case OS_OPT_PEND_ABORT_1:
-        case OS_OPT_PEND_ABORT_ALL:
-        case OS_OPT_PEND_ABORT_1   | OS_OPT_POST_NO_SCHED:
-        case OS_OPT_PEND_ABORT_ALL | OS_OPT_POST_NO_SCHED:
-             break;
 
-        default:
-            *p_err =  OS_ERR_OPT_INVALID;
-             return ((OS_OBJ_QTY)0u);
+    switch (opt) {                                          /* Validate 'opt'                                         */
+    case OS_OPT_PEND_ABORT_1:
+    case OS_OPT_PEND_ABORT_ALL:
+    case OS_OPT_PEND_ABORT_1   | OS_OPT_POST_NO_SCHED:
+    case OS_OPT_PEND_ABORT_ALL | OS_OPT_POST_NO_SCHED:
+        break;
+
+    default:
+        *p_err =  OS_ERR_OPT_INVALID;
+        return ((OS_OBJ_QTY)0u);
     }
+
 #endif
 
 #if OS_CFG_OBJ_TYPE_CHK_EN > 0u
+
     if (p_grp->Type != OS_OBJ_TYPE_FLAG) {                  /* Make sure event flag group was created                 */
-       *p_err =  OS_ERR_OBJ_TYPE;
+        *p_err =  OS_ERR_OBJ_TYPE;
         return ((OS_OBJ_QTY)0u);
     }
+
 #endif
 
     CPU_CRITICAL_ENTER();
     p_pend_list = &p_grp->PendList;
+
     if (p_pend_list->NbrEntries == (OS_OBJ_QTY)0u) {        /* Any task waiting on flag group?                        */
         CPU_CRITICAL_EXIT();                                /* No                                                     */
-       *p_err =  OS_ERR_PEND_ABORT_NONE;
+        *p_err =  OS_ERR_PEND_ABORT_NONE;
         return ((OS_OBJ_QTY)0u);
     }
 
     OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();
     nbr_tasks = 0u;
     ts        = OS_TS_GET();                                /* Get local time stamp so all tasks get the same time    */
+
     while (p_pend_list->NbrEntries > (OS_OBJ_QTY)0u) {
         p_tcb = p_pend_list->HeadPtr->TCBPtr;
         OS_PendAbort((OS_PEND_OBJ *)((void *)p_grp),
                      p_tcb,
                      ts);
         nbr_tasks++;
+
         if (opt != OS_OPT_PEND_ABORT_ALL) {                 /* Pend abort all tasks waiting?                          */
             break;                                          /* No                                                     */
         }
     }
+
     OS_CRITICAL_EXIT_NO_SCHED();
 
     if ((opt & OS_OPT_POST_NO_SCHED) == (OS_OPT)0u) {
         OSSched();                                          /* Run the scheduler                                      */
     }
 
-   *p_err = OS_ERR_NONE;
+    *p_err = OS_ERR_NONE;
     return (nbr_tasks);
 }
 #endif
@@ -726,17 +800,21 @@ OS_FLAGS  OSFlagPendGetFlagsRdy (OS_ERR  *p_err)
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return ((OS_FLAGS)0);
     }
+
 #endif
 
 #if OS_CFG_CALLED_FROM_ISR_CHK_EN > 0u
+
     if (OSIntNestingCtr > (OS_NESTING_CTR)0) {              /* See if called from ISR ...                             */
-       *p_err = OS_ERR_PEND_ISR;                            /* ... can't get from an ISR                              */
+        *p_err = OS_ERR_PEND_ISR;                            /* ... can't get from an ISR                              */
         return ((OS_FLAGS)0);
     }
+
 #endif
 
     CPU_CRITICAL_ENTER();
@@ -798,41 +876,47 @@ OS_FLAGS  OSFlagPost (OS_FLAG_GRP  *p_grp,
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return ((OS_FLAGS)0);
     }
+
 #endif
 
 #if OS_CFG_ARG_CHK_EN > 0u
+
     if (p_grp == (OS_FLAG_GRP *)0) {                        /* Validate 'p_grp'                                       */
-       *p_err  = OS_ERR_OBJ_PTR_NULL;
+        *p_err  = OS_ERR_OBJ_PTR_NULL;
         return ((OS_FLAGS)0);
     }
 
     switch (opt) {
-        case OS_OPT_POST_FLAG_SET:
-        case OS_OPT_POST_FLAG_CLR:
-        case OS_OPT_POST_FLAG_SET | OS_OPT_POST_NO_SCHED:
-        case OS_OPT_POST_FLAG_CLR | OS_OPT_POST_NO_SCHED:
-             break;
+    case OS_OPT_POST_FLAG_SET:
+    case OS_OPT_POST_FLAG_CLR:
+    case OS_OPT_POST_FLAG_SET | OS_OPT_POST_NO_SCHED:
+    case OS_OPT_POST_FLAG_CLR | OS_OPT_POST_NO_SCHED:
+        break;
 
-        default:
-             *p_err = OS_ERR_OPT_INVALID;
-             return ((OS_FLAGS)0);
+    default:
+        *p_err = OS_ERR_OPT_INVALID;
+        return ((OS_FLAGS)0);
     }
 
 #endif
 
 #if OS_CFG_OBJ_TYPE_CHK_EN > 0u
+
     if (p_grp->Type != OS_OBJ_TYPE_FLAG) {                  /* Make sure we are pointing to an event flag grp         */
         *p_err = OS_ERR_OBJ_TYPE;
         return ((OS_FLAGS)0);
     }
+
 #endif
 
     ts = OS_TS_GET();                                       /* Get timestamp                                          */
 #if OS_CFG_ISR_POST_DEFERRED_EN > 0u
+
     if (OSIntNestingCtr > (OS_NESTING_CTR)0) {              /* See if called from an ISR                              */
         OS_IntQPost((OS_OBJ_TYPE)OS_OBJ_TYPE_FLAG,          /* Post to ISR queue                                      */
                     (void      *)p_grp,
@@ -844,6 +928,7 @@ OS_FLAGS  OSFlagPost (OS_FLAG_GRP  *p_grp,
                     (OS_ERR    *)p_err);
         return ((OS_FLAGS)0);
     }
+
 #endif
 
     flags_cur = OS_FlagPost(p_grp,
@@ -904,8 +989,8 @@ void  OS_FlagBlock (OS_PEND_DATA  *p_pend_data,
 
     OS_Pend(p_pend_data,
             (OS_PEND_OBJ *)((void *)p_grp),
-             OS_TASK_PEND_ON_FLAG,
-             timeout);
+            OS_TASK_PEND_ON_FLAG,
+            timeout);
 }
 
 /*$PAGE*/
@@ -959,10 +1044,12 @@ void  OS_FlagClr (OS_FLAG_GRP  *p_grp)
 void  OS_FlagInit (OS_ERR  *p_err)
 {
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return;
     }
+
 #endif
 
 #if OS_CFG_DBG_EN > 0u
@@ -970,7 +1057,7 @@ void  OS_FlagInit (OS_ERR  *p_err)
 #endif
 
     OSFlagQty        = (OS_OBJ_QTY   )0;
-   *p_err            = OS_ERR_NONE;
+    *p_err            = OS_ERR_NONE;
 }
 
 /*$PAGE*/
@@ -994,12 +1081,14 @@ void  OS_FlagDbgListAdd (OS_FLAG_GRP  *p_grp)
 {
     p_grp->DbgNamePtr                = (CPU_CHAR    *)((void *)" ");
     p_grp->DbgPrevPtr                = (OS_FLAG_GRP *)0;
+
     if (OSFlagDbgListPtr == (OS_FLAG_GRP *)0) {
         p_grp->DbgNextPtr            = (OS_FLAG_GRP *)0;
     } else {
         p_grp->DbgNextPtr            =  OSFlagDbgListPtr;
         OSFlagDbgListPtr->DbgPrevPtr =  p_grp;
     }
+
     OSFlagDbgListPtr                 =  p_grp;
 }
 
@@ -1016,9 +1105,11 @@ void  OS_FlagDbgListRemove (OS_FLAG_GRP  *p_grp)
 
     if (p_grp_prev == (OS_FLAG_GRP *)0) {
         OSFlagDbgListPtr = p_grp_next;
+
         if (p_grp_next != (OS_FLAG_GRP *)0) {
             p_grp_next->DbgPrevPtr = (OS_FLAG_GRP *)0;
         }
+
         p_grp->DbgNextPtr = (OS_FLAG_GRP *)0;
 
     } else if (p_grp_next == (OS_FLAG_GRP *)0) {
@@ -1095,24 +1186,27 @@ OS_FLAGS  OS_FlagPost (OS_FLAG_GRP  *p_grp,
 
 
     CPU_CRITICAL_ENTER();
+
     switch (opt) {
-        case OS_OPT_POST_FLAG_SET:
-        case OS_OPT_POST_FLAG_SET | OS_OPT_POST_NO_SCHED:
-             p_grp->Flags |=  flags;                            /* Set   the flags specified in the group             */
-             break;
+    case OS_OPT_POST_FLAG_SET:
+    case OS_OPT_POST_FLAG_SET | OS_OPT_POST_NO_SCHED:
+        p_grp->Flags |=  flags;                            /* Set   the flags specified in the group             */
+        break;
 
-        case OS_OPT_POST_FLAG_CLR:
-        case OS_OPT_POST_FLAG_CLR | OS_OPT_POST_NO_SCHED:
-             p_grp->Flags &= ~flags;                            /* Clear the flags specified in the group             */
-             break;
+    case OS_OPT_POST_FLAG_CLR:
+    case OS_OPT_POST_FLAG_CLR | OS_OPT_POST_NO_SCHED:
+        p_grp->Flags &= ~flags;                            /* Clear the flags specified in the group             */
+        break;
 
-        default:
-             CPU_CRITICAL_EXIT();                               /* INVALID option                                     */
-             *p_err = OS_ERR_OPT_INVALID;
-             return ((OS_FLAGS)0);
+    default:
+        CPU_CRITICAL_EXIT();                               /* INVALID option                                     */
+        *p_err = OS_ERR_OPT_INVALID;
+        return ((OS_FLAGS)0);
     }
+
     p_grp->TS   = ts;
     p_pend_list = &p_grp->PendList;
+
     if (p_pend_list->NbrEntries == 0u) {                        /* Any task waiting on event flag group?              */
         CPU_CRITICAL_EXIT();                                    /* No                                                 */
         *p_err = OS_ERR_NONE;
@@ -1122,59 +1216,74 @@ OS_FLAGS  OS_FlagPost (OS_FLAG_GRP  *p_grp,
     OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();
     p_pend_data = p_pend_list->HeadPtr;
     p_tcb       = p_pend_data->TCBPtr;
+
     while (p_tcb != (OS_TCB *)0) {                              /* Go through all tasks waiting on event flag(s)      */
         p_pend_data_next = p_pend_data->NextPtr;
         mode             = p_tcb->FlagsOpt & OS_OPT_PEND_FLAG_MASK;
-        switch (mode) {
-            case OS_OPT_PEND_FLAG_SET_ALL:                      /* See if all req. flags are set for current node     */
-                 flags_rdy = (OS_FLAGS)(p_grp->Flags & p_tcb->FlagsPend);
-                 if (flags_rdy == p_tcb->FlagsPend) {
-                     OS_FlagTaskRdy(p_tcb,                      /* Make task RTR, event(s) Rx'd                       */
-                                    flags_rdy,
-                                    ts);
-                 }
-                 break;
 
-            case OS_OPT_PEND_FLAG_SET_ANY:                      /* See if any flag set                                */
-                 flags_rdy = (OS_FLAGS)(p_grp->Flags & p_tcb->FlagsPend);
-                 if (flags_rdy != (OS_FLAGS)0) {
-                     OS_FlagTaskRdy(p_tcb,                      /* Make task RTR, event(s) Rx'd                       */
-                                    flags_rdy,
-                                    ts);
-                 }
-                 break;
+        switch (mode) {
+        case OS_OPT_PEND_FLAG_SET_ALL:                      /* See if all req. flags are set for current node     */
+            flags_rdy = (OS_FLAGS)(p_grp->Flags & p_tcb->FlagsPend);
+
+            if (flags_rdy == p_tcb->FlagsPend) {
+                OS_FlagTaskRdy(p_tcb,                      /* Make task RTR, event(s) Rx'd                       */
+                               flags_rdy,
+                               ts);
+            }
+
+            break;
+
+        case OS_OPT_PEND_FLAG_SET_ANY:                      /* See if any flag set                                */
+            flags_rdy = (OS_FLAGS)(p_grp->Flags & p_tcb->FlagsPend);
+
+            if (flags_rdy != (OS_FLAGS)0) {
+                OS_FlagTaskRdy(p_tcb,                      /* Make task RTR, event(s) Rx'd                       */
+                               flags_rdy,
+                               ts);
+            }
+
+            break;
 
 #if OS_CFG_FLAG_MODE_CLR_EN > 0u
-            case OS_OPT_PEND_FLAG_CLR_ALL:                      /* See if all req. flags are set for current node     */
-                 flags_rdy = (OS_FLAGS)(~p_grp->Flags & p_tcb->FlagsPend);
-                 if (flags_rdy == p_tcb->FlagsPend) {
-                     OS_FlagTaskRdy(p_tcb,                      /* Make task RTR, event(s) Rx'd                       */
-                                    flags_rdy,
-                                    ts);
-                 }
-                 break;
 
-            case OS_OPT_PEND_FLAG_CLR_ANY:                      /* See if any flag set                                */
-                 flags_rdy = (OS_FLAGS)(~p_grp->Flags & p_tcb->FlagsPend);
-                 if (flags_rdy != (OS_FLAGS)0) {
-                     OS_FlagTaskRdy(p_tcb,                      /* Make task RTR, event(s) Rx'd                       */
-                                    flags_rdy,
-                                    ts);
-                 }
-                 break;
+        case OS_OPT_PEND_FLAG_CLR_ALL:                      /* See if all req. flags are set for current node     */
+            flags_rdy = (OS_FLAGS)(~p_grp->Flags & p_tcb->FlagsPend);
+
+            if (flags_rdy == p_tcb->FlagsPend) {
+                OS_FlagTaskRdy(p_tcb,                      /* Make task RTR, event(s) Rx'd                       */
+                               flags_rdy,
+                               ts);
+            }
+
+            break;
+
+        case OS_OPT_PEND_FLAG_CLR_ANY:                      /* See if any flag set                                */
+            flags_rdy = (OS_FLAGS)(~p_grp->Flags & p_tcb->FlagsPend);
+
+            if (flags_rdy != (OS_FLAGS)0) {
+                OS_FlagTaskRdy(p_tcb,                      /* Make task RTR, event(s) Rx'd                       */
+                               flags_rdy,
+                               ts);
+            }
+
+            break;
 #endif
-            default:
-                 OS_CRITICAL_EXIT();
-                 *p_err = OS_ERR_FLAG_PEND_OPT;
-                 return ((OS_FLAGS)0);
+
+        default:
+            OS_CRITICAL_EXIT();
+            *p_err = OS_ERR_FLAG_PEND_OPT;
+            return ((OS_FLAGS)0);
         }
+
         p_pend_data = p_pend_data_next;                         /* Point to next task waiting for event flag(s)       */
+
         if (p_pend_data != (OS_PEND_DATA *)0) {
             p_tcb = p_pend_data->TCBPtr;
         } else {
             p_tcb = (OS_TCB *)0;
         }
     }
+
     OS_CRITICAL_EXIT_NO_SCHED();
 
     if ((opt & OS_OPT_POST_NO_SCHED) == (OS_OPT)0) {
@@ -1217,27 +1326,29 @@ void   OS_FlagTaskRdy (OS_TCB    *p_tcb,
     p_tcb->PendStatus = OS_STATUS_PEND_OK;                  /* Clear pend status                                      */
     p_tcb->PendOn     = OS_TASK_PEND_ON_NOTHING;            /* Indicate no longer pending                             */
     p_tcb->TS         = ts;
+
     switch (p_tcb->TaskState) {
-        case OS_TASK_STATE_RDY:
-        case OS_TASK_STATE_DLY:
-        case OS_TASK_STATE_DLY_SUSPENDED:
-        case OS_TASK_STATE_SUSPENDED:
-             break;
+    case OS_TASK_STATE_RDY:
+    case OS_TASK_STATE_DLY:
+    case OS_TASK_STATE_DLY_SUSPENDED:
+    case OS_TASK_STATE_SUSPENDED:
+        break;
 
-        case OS_TASK_STATE_PEND:
-        case OS_TASK_STATE_PEND_TIMEOUT:
-             OS_TaskRdy(p_tcb);
-             p_tcb->TaskState = OS_TASK_STATE_RDY;
-             break;
+    case OS_TASK_STATE_PEND:
+    case OS_TASK_STATE_PEND_TIMEOUT:
+        OS_TaskRdy(p_tcb);
+        p_tcb->TaskState = OS_TASK_STATE_RDY;
+        break;
 
-        case OS_TASK_STATE_PEND_SUSPENDED:
-        case OS_TASK_STATE_PEND_TIMEOUT_SUSPENDED:
-             p_tcb->TaskState = OS_TASK_STATE_SUSPENDED;
-             break;
+    case OS_TASK_STATE_PEND_SUSPENDED:
+    case OS_TASK_STATE_PEND_TIMEOUT_SUSPENDED:
+        p_tcb->TaskState = OS_TASK_STATE_SUSPENDED;
+        break;
 
-        default:
-             break;
+    default:
+        break;
     }
+
     OS_PendListRemove(p_tcb);
 }
 #endif

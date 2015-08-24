@@ -14,11 +14,11 @@
 *
 * LICENSING TERMS:
 * ---------------
-*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or 
+*           uC/OS-III is provided in source form for FREE short-term evaluation, for educational use or
 *           for peaceful research.  If you plan or intend to use uC/OS-III in a commercial application/
-*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your 
-*           application/product.   We provide ALL the source code for your convenience and to help you 
-*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use 
+*           product then, you need to contact Micrium to properly license uC/OS-III for its use in your
+*           application/product.   We provide ALL the source code for your convenience and to help you
+*           experience uC/OS-III.  The fact that the source is provided does NOT mean that you can use
 *           it commercially without paying a licensing fee.
 *
 *           Knowledge of the source code may NOT be used to develop a similar product.
@@ -130,50 +130,60 @@ OS_OBJ_QTY  OSPendMulti (OS_PEND_DATA  *p_pend_data_tbl,
 
 
 #ifdef OS_SAFETY_CRITICAL
+
     if (p_err == (OS_ERR *)0) {
         OS_SAFETY_CRITICAL_EXCEPTION();
         return ((OS_OBJ_QTY)0);
     }
+
 #endif
 
 #if OS_CFG_CALLED_FROM_ISR_CHK_EN > 0u
+
     if (OSIntNestingCtr > (OS_NESTING_CTR)0) {              /* Can't pend from an ISR                                 */
-       *p_err = OS_ERR_PEND_ISR;
+        *p_err = OS_ERR_PEND_ISR;
         return ((OS_OBJ_QTY)0);
     }
+
 #endif
 
 #if OS_CFG_ARG_CHK_EN > 0u
+
     if (p_pend_data_tbl == (OS_PEND_DATA *)0) {             /* Validate 'p_pend_data_tbl'                             */
         *p_err = OS_ERR_PTR_INVALID;
         return ((OS_OBJ_QTY)0);
     }
+
     if (tbl_size == (OS_OBJ_QTY)0) {                        /* Array size must be > 0                                 */
         *p_err = OS_ERR_PTR_INVALID;
         return ((OS_OBJ_QTY)0);
     }
-    switch (opt) {
-        case OS_OPT_PEND_BLOCKING:
-        case OS_OPT_PEND_NON_BLOCKING:
-             break;
 
-        default:
-             *p_err = OS_ERR_OPT_INVALID;
-             return ((OS_OBJ_QTY)0);
+    switch (opt) {
+    case OS_OPT_PEND_BLOCKING:
+    case OS_OPT_PEND_NON_BLOCKING:
+        break;
+
+    default:
+        *p_err = OS_ERR_OPT_INVALID;
+        return ((OS_OBJ_QTY)0);
     }
+
 #endif
 
     valid = OS_PendMultiValidate(p_pend_data_tbl,           /* -------- Validate objects to be OS_SEM or OS_Q ------- */
                                  tbl_size);
+
     if (valid == DEF_FALSE) {
         *p_err = OS_ERR_OBJ_TYPE;                           /* Invalid, not OS_SEM or OS_Q                            */
         return ((OS_OBJ_QTY)0);
     }
 
-/*$PAGE*/
+    /*$PAGE*/
     CPU_CRITICAL_ENTER();
     nbr_obj_rdy = OS_PendMultiGetRdy(p_pend_data_tbl,       /* --------- SEE IF OBJECT(s) HAVE BEEN POSTED ---------- */
                                      tbl_size);
+
     if (nbr_obj_rdy > (OS_OBJ_QTY)0) {
         CPU_CRITICAL_EXIT();
         *p_err = OS_ERR_NONE;
@@ -191,8 +201,9 @@ OS_OBJ_QTY  OSPendMulti (OS_PEND_DATA  *p_pend_data_tbl,
             return ((OS_OBJ_QTY)0);
         }
     }
+
     OS_CRITICAL_ENTER_CPU_CRITICAL_EXIT();                  /* Lock the scheduler/re-enable interrupts                */
-                                                            /* ------ NO OBJECT READY, PEND ON MULTIPLE OBJECTS ----- */
+    /* ------ NO OBJECT READY, PEND ON MULTIPLE OBJECTS ----- */
     OS_PendMultiWait(p_pend_data_tbl,                       /* Suspend task until object posted or timeout occurs     */
                      tbl_size,
                      timeout);
@@ -202,26 +213,27 @@ OS_OBJ_QTY  OSPendMulti (OS_PEND_DATA  *p_pend_data_tbl,
     OSSched();                                              /* Find next highest priority task ready                  */
 
     CPU_CRITICAL_ENTER();
+
     switch (OSTCBCurPtr->PendStatus) {
-        case OS_STATUS_PEND_OK:                             /* We got one of the objects posted to                    */
-             *p_err = OS_ERR_NONE;
-             break;
+    case OS_STATUS_PEND_OK:                             /* We got one of the objects posted to                    */
+        *p_err = OS_ERR_NONE;
+        break;
 
-        case OS_STATUS_PEND_ABORT:                          /* Indicate that the multi-pend was aborted               */
-             *p_err = OS_ERR_PEND_ABORT;
-             break;
+    case OS_STATUS_PEND_ABORT:                          /* Indicate that the multi-pend was aborted               */
+        *p_err = OS_ERR_PEND_ABORT;
+        break;
 
-        case OS_STATUS_PEND_TIMEOUT:                        /* Indicate that we didn't get semaphore within timeout   */
-             *p_err = OS_ERR_TIMEOUT;
-             break;
+    case OS_STATUS_PEND_TIMEOUT:                        /* Indicate that we didn't get semaphore within timeout   */
+        *p_err = OS_ERR_TIMEOUT;
+        break;
 
-        case OS_STATUS_PEND_DEL:                            /* Indicate that an object pended on has been deleted     */
-             *p_err = OS_ERR_OBJ_DEL;
-            break;
+    case OS_STATUS_PEND_DEL:                            /* Indicate that an object pended on has been deleted     */
+        *p_err = OS_ERR_OBJ_DEL;
+        break;
 
-        default:
-             *p_err = OS_ERR_STATUS_INVALID;
-             break;
+    default:
+        *p_err = OS_ERR_STATUS_INVALID;
+        break;
     }
 
     OSTCBCurPtr->PendStatus = OS_STATUS_PEND_OK;
@@ -268,6 +280,7 @@ OS_OBJ_QTY  OS_PendMultiGetRdy (OS_PEND_DATA  *p_pend_data_tbl,
 
 
     nbr_obj_rdy = (OS_OBJ_QTY)0;
+
     for (i = 0u; i < tbl_size; i++) {
         p_pend_data_tbl->RdyObjPtr  = (void         *)0;         /* Clear all fields                                  */
         p_pend_data_tbl->RdyMsgPtr  = (void         *)0;
@@ -278,11 +291,13 @@ OS_OBJ_QTY  OS_PendMultiGetRdy (OS_PEND_DATA  *p_pend_data_tbl,
         p_pend_data_tbl->TCBPtr     = (OS_TCB       *)0;
 #if OS_CFG_Q_EN > 0u
         p_q = (OS_Q *)((void *)p_pend_data_tbl->PendObjPtr);     /* Assume we are pointing to a message queue object  */
+
         if (p_q->Type == OS_OBJ_TYPE_Q) {                        /* Is it a message queue?                            */
             p_void = OS_MsgQGet(&p_q->MsgQ,                      /* Yes, Any message waiting in the message queue?    */
                                 &msg_size,
                                 &ts,
                                 &err);
+
             if (err == OS_ERR_NONE) {
                 p_pend_data_tbl->RdyObjPtr  = p_pend_data_tbl->PendObjPtr;
                 p_pend_data_tbl->RdyMsgPtr  = p_void;            /*      Yes, save the message received               */
@@ -291,10 +306,12 @@ OS_OBJ_QTY  OS_PendMultiGetRdy (OS_PEND_DATA  *p_pend_data_tbl,
                 nbr_obj_rdy++;
             }
         }
+
 #endif
 
 #if OS_CFG_SEM_EN > 0u
         p_sem = (OS_SEM *)((void *)p_pend_data_tbl->PendObjPtr); /* Assume we are pointing to a semaphore object      */
+
         if (p_sem->Type == OS_OBJ_TYPE_SEM) {                    /* Is it a semaphore?                                */
             if (p_sem->Ctr > 0u) {                               /* Yes, Semaphore has been signaled?                 */
                 p_sem->Ctr--;                                    /*      Yes, caller may proceed                      */
@@ -303,10 +320,12 @@ OS_OBJ_QTY  OS_PendMultiGetRdy (OS_PEND_DATA  *p_pend_data_tbl,
                 nbr_obj_rdy++;
             }
         }
+
 #endif
 
         p_pend_data_tbl++;
     }
+
     return (nbr_obj_rdy);
 }
 
@@ -351,23 +370,29 @@ CPU_BOOLEAN  OS_PendMultiValidate (OS_PEND_DATA  *p_pend_data_tbl,
         ctr = 0u;
 #if OS_CFG_SEM_EN  > 0u
         p_sem = (OS_SEM *)((void *)p_pend_data_tbl->PendObjPtr); /* All objects to pend on must be of type OS_SEM ... */
+
         if (p_sem->Type == OS_OBJ_TYPE_SEM) {
             ctr++;
         }
+
 #endif
 
 #if OS_CFG_Q_EN > 0u
         p_q = (OS_Q *)((void *)p_pend_data_tbl->PendObjPtr);     /* ... or of type OS_Q                               */
+
         if (p_q->Type == OS_OBJ_TYPE_Q) {
             ctr++;
         }
+
 #endif
 
         if (ctr == (OS_OBJ_QTY)0) {
             return (DEF_FALSE);                                  /* Found at least one invalid object type            */
         }
+
         p_pend_data_tbl++;
     }
+
     return (DEF_TRUE);
 }
 
@@ -422,20 +447,24 @@ void  OS_PendMultiWait (OS_PEND_DATA  *p_pend_data_tbl,
 
 #if OS_CFG_SEM_EN > 0u
         p_sem = (OS_SEM *)((void *)p_pend_data_tbl->PendObjPtr);
+
         if (p_sem->Type == OS_OBJ_TYPE_SEM) {
             p_pend_list = &p_sem->PendList;
             OS_PendListInsertPrio(p_pend_list,
                                   p_pend_data_tbl);
         }
+
 #endif
 
 #if OS_CFG_Q_EN > 0u
         p_q = (OS_Q *)((void *)p_pend_data_tbl->PendObjPtr);
+
         if (p_q->Type == OS_OBJ_TYPE_Q) {
             p_pend_list = &p_q->PendList;
             OS_PendListInsertPrio(p_pend_list,
                                   p_pend_data_tbl);
         }
+
 #endif
 
         p_pend_data_tbl++;

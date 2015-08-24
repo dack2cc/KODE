@@ -36,8 +36,8 @@ extern  CPU_INT32U  g_s_head_p32BitPageDir[X86_MEM_PAGE_IN_TABLE];
 ******************************************************************************/
 
 typedef struct {
-	CPU_INT32U hi;  /* high 32bit */
-	CPU_INT32U lo;  /* low 32bit  */
+    CPU_INT32U hi;  /* high 32bit */
+    CPU_INT32U lo;  /* low 32bit  */
 } X86_DESC;
 
 #define X86_IDT             g_s_head_p64BitIDT
@@ -47,19 +47,19 @@ extern  X86_DESC   g_s_head_p64BitIDT[X86_DESC_TBL_MAX];
 extern  X86_DESC   g_s_head_p64BitGDT[X86_DESC_TBL_MAX];
 
 enum {
-	X86_GDT_NULL   = 0,
-	X86_GDT_CODE   = 1,
-	X86_GDT_DATA   = 2,
-	X86_GDT_SYSTEM = 3,
-	X86_GDT_TSS_0  = 4,
-	X86_GDT_LDT_0  = 5,
+    X86_GDT_NULL   = 0,
+    X86_GDT_CODE   = 1,
+    X86_GDT_DATA   = 2,
+    X86_GDT_SYSTEM = 3,
+    X86_GDT_TSS_0  = 4,
+    X86_GDT_LDT_0  = 5,
 };
 
 enum {
-	X86_LDT_NULL = 0,
-	X86_LDT_CODE = 1,
-	X86_LDT_DATA = 2,
-	X86_LDT_MAX
+    X86_LDT_NULL = 0,
+    X86_LDT_CODE = 1,
+    X86_LDT_DATA = 2,
+    X86_LDT_MAX
 };
 
 /******************************************************************************
@@ -70,7 +70,7 @@ enum {
 
 /* parameter from the bios */
 typedef struct {
-	CPU_INT08U  abyDummy[32];
+    CPU_INT08U  abyDummy[32];
 } X86_HD_INFO;
 #define  X86_HD_PARAM   (*(X86_HD_INFO *)(0x90080))
 

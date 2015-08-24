@@ -120,9 +120,9 @@ extern void        CPUExt_DispChar(const CPU_CHAR chAscii_in);
 extern void        CPUExt_DispSetPalette(const CPU_INT32U * puiColor_in, const CPU_INT32U uiColorCnt_in, const CPU_INT32U uiStartIdx_in);
 extern void        CPUExt_DispResolution(CPU_INT32U * puiWidthPixel_out, CPU_INT32U * puiHeightPixel_out);
 extern void        CPUExt_DispBitPerPixel(CPU_INT08U * puiBPP_out);
-extern void        CPUExt_DispBitBlt(const CPU_INT08U * pbySrcBuf_in, 
-	                                 const CPU_INT32U uiLX_in, const CPU_INT32U uiUY_in, 
-	                                 const CPU_INT32U uiRX_in, const CPU_INT32U uiDY_in);
+extern void        CPUExt_DispBitBlt(const CPU_INT08U * pbySrcBuf_in,
+                                     const CPU_INT32U uiLX_in, const CPU_INT32U uiUY_in,
+                                     const CPU_INT32U uiRX_in, const CPU_INT32U uiDY_in);
 extern void        CPUExt_DispLog(CPU_CHAR ** ppszBuf_out, CPU_INT32U * puiCnt_out);
 
 /*
@@ -130,12 +130,12 @@ extern void        CPUExt_DispLog(CPU_CHAR ** ppszBuf_out, CPU_INT32U * puiCnt_o
 */
 
 enum {
-	CPU_EXT_PS2_TYPE_KEY = 0,
-	CPU_EXT_PS2_TYPE_MOUSE,
+    CPU_EXT_PS2_TYPE_KEY = 0,
+    CPU_EXT_PS2_TYPE_MOUSE,
 };
 
 typedef struct _CPU_EXT_PS2_EVENT {
-	CPU_INT08U  uiScanCode;
+    CPU_INT08U  uiScanCode;
 } CPU_EXT_PS2_EVENT;
 
 extern void CPUExt_PS2RegisterHandler(const CPU_INT08S iType_in, CPU_FNCT_PTR pfnKeyHandler_in);
@@ -146,17 +146,17 @@ extern void CPUExt_PS2MouseReset(void);
     Task
 */
 enum {
-	CPU_TASK_ARG_EFLAG = 0,     /* CPU_SR                     */
-	CPU_TASK_ARG_ROUTINE,       /* CPU_FNCT_PTR               */
-	CPU_TASK_ARG_PARAMETER,     /* void *                     */
-	CPU_TASK_ARG_RET_POINT,     /* CPU_FNCT_PTR               */
-	CPU_TASK_ARG_KERNEL_EN,     /* DEF_ENABLED or DEF_DISABLE */
-	CPU_TASK_ARG_KERNEL_STACK,  /* physical address           */
-	CPU_TASK_ARG_EXT_DATA,      /* physical address           */
-	CPU_TASK_ARG_THREAD_EN,     /* DEF_ENABLED or DEF_DISABLE */
-	CPU_TASK_ARG_THREAD_INDEX,  /* thread index of process    */
-	CPU_TASK_ARG_PROCESS_ID,    /* process id which the thread belong to */
-	CPU_TASK_ARG_MAX
+    CPU_TASK_ARG_EFLAG = 0,     /* CPU_SR                     */
+    CPU_TASK_ARG_ROUTINE,       /* CPU_FNCT_PTR               */
+    CPU_TASK_ARG_PARAMETER,     /* void *                     */
+    CPU_TASK_ARG_RET_POINT,     /* CPU_FNCT_PTR               */
+    CPU_TASK_ARG_KERNEL_EN,     /* DEF_ENABLED or DEF_DISABLE */
+    CPU_TASK_ARG_KERNEL_STACK,  /* physical address           */
+    CPU_TASK_ARG_EXT_DATA,      /* physical address           */
+    CPU_TASK_ARG_THREAD_EN,     /* DEF_ENABLED or DEF_DISABLE */
+    CPU_TASK_ARG_THREAD_INDEX,  /* thread index of process    */
+    CPU_TASK_ARG_PROCESS_ID,    /* process id which the thread belong to */
+    CPU_TASK_ARG_MAX
 };
 extern CPU_ERR  CPUExt_TaskCreate(const CPU_DATA* pArgList_in, CPU_INT32U* puiTaskID_out);
 extern void     CPUExt_TaskDelete(const CPU_INT32U  uiTaskID_in);
@@ -200,10 +200,10 @@ extern void CPUExt_HDSetPartition(const CPU_INT32S iDiskIndex_in, const CPU_INT0
 #define  CPU_EXT_HD_CMD_WRITE   (1)
 
 typedef struct _CPU_EXT_HD_REQUEST_IN {
-	CPU_INT08U * pbyData;
-	CPU_INT32U   uiBlkIdx;
+    CPU_INT08U * pbyData;
+    CPU_INT32U   uiBlkIdx;
     CPU_INT32S   iDev;
-	CPU_INT32S   iCmd;
+    CPU_INT32S   iCmd;
 } CPU_EXT_HD_REQUEST_IN;
 
 #define  CPU_EXT_HD_RESULT_OK   (0)
@@ -211,12 +211,12 @@ typedef struct _CPU_EXT_HD_REQUEST_IN {
 #define  CPU_EXT_HD_RESULT_IO   (2)
 
 typedef struct _CPU_EXT_HD_REQUEST_OUT {
-	CPU_INT32S   iResult;
+    CPU_INT32S   iResult;
 } CPU_EXT_HD_REQUEST_OUT;
 
 typedef struct _CPU_EXT_HD_REQUEST {
-	CPU_EXT_HD_REQUEST_IN   in;
-	CPU_EXT_HD_REQUEST_OUT  out;
+    CPU_EXT_HD_REQUEST_IN   in;
+    CPU_EXT_HD_REQUEST_OUT  out;
 } CPU_EXT_HD_REQUEST;
 
 extern void CPUExt_HDRegisterNotifyRW(CPU_FNCT_PTR pfnNotify_in);
@@ -228,15 +228,15 @@ extern void CPUExt_HDRequest(CPU_EXT_HD_REQUEST* pstRequest_inout);
 */
 
 typedef struct _CPU_EXT_TIME {
-	CPU_INT32S  iSec;
-	CPU_INT32S  iMin;
-	CPU_INT32S  iHour;
-	CPU_INT32S  iMday;
-	CPU_INT32S  iMon;
-	CPU_INT32S  iYear;
-	CPU_INT32S  iWday;
-	CPU_INT32S  iYday;
-	CPU_INT32S  iIsdst;
+    CPU_INT32S  iSec;
+    CPU_INT32S  iMin;
+    CPU_INT32S  iHour;
+    CPU_INT32S  iMday;
+    CPU_INT32S  iMon;
+    CPU_INT32S  iYear;
+    CPU_INT32S  iWday;
+    CPU_INT32S  iYday;
+    CPU_INT32S  iIsdst;
 } CPU_EXT_TIME;
 
 extern void CPUExt_TimeCurrent(CPU_INT32U * puiTime_out);

@@ -11,7 +11,7 @@
 ******************************************************************************/
 
 //#define KD_PRIVATE   static
-#define KD_PRIVATE 
+#define KD_PRIVATE
 
 
 /******************************************************************************
@@ -25,19 +25,19 @@
 
 const KDEvent * kd_event_Wait(KDust timeout)
 {
-	OS_ERR              err = OS_ERR_NONE;
-	void*               pMsg = 0;
-	OS_MSG_SIZE         size = 0;
+    OS_ERR              err = OS_ERR_NONE;
+    void*               pMsg = 0;
+    OS_MSG_SIZE         size = 0;
 
-	pMsg = OSTaskQPend(
-		/* timeout    */ 0,
-		/* opt        */ OS_OPT_PEND_BLOCKING,
-		/* p_msg_size */ &size,
-		/* p_ts       */ 0,
-		/* p_err      */ &err
-	);
-	
-	return (0);
+    pMsg = OSTaskQPend(
+               /* timeout    */ 0,
+               /* opt        */ OS_OPT_PEND_BLOCKING,
+               /* p_msg_size */ &size,
+               /* p_ts       */ 0,
+               /* p_err      */ &err
+           );
+
+    return (0);
 }
 
 
