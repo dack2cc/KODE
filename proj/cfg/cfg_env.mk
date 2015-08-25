@@ -55,10 +55,10 @@ CXXFLAGS   := $(CFLAGS)
 LDFLAGS    := -s -x -M -Ttext 0x00000
 CLANGFLAGS := -O2 -pipe -DVOLUME_SERIAL -DPXE -DFLAGS=0x8f -DTICKS=0xb6 -DCOMSPEED="7 << 5 + 3" -march=i386 -ffreestanding  \
               -mno-mmx -mno-3dnow -mno-sse -mno-sse2 -mno-sse3 -msoft-float -m32 -std=gnu99
-OBJCPFLAGS := -O binary
-ASTYLE_DIR := $(SRC_ROOT)
-#$(patsubst $(BUILD_ROOT)%, $(SRC_ROOT)%, $(BUILD_DIR))
-ASTYLE_OPT += --mode=c -A3 -z2 -s4 -f -n -p --recursive
+OBJCPFLAGS  := -O binary
+ASTYLE_FILE := $(shell find $(SRC_ROOT) -name *.c) \
+               $(shell find $(SRC_ROOT) -name *.h)
+ASTYLE_OPT  += --mode=c -A3 -z2 -s4 -f -n -p 
 
 # **************************************
 # Make Rule
@@ -113,10 +113,9 @@ $(DEBUG_ROOT)/%.s : $(SRC_ROOT)/%.c
 	@$(CC) $(CFLAGS) $(INC_DIR) -m32 -nostdinc -w -S $< -o $@
 
 format:
-	@for DIR in $(ASTYLE_DIR) ; do \
-	$(ASTYLE) $(ASTYLE_OPT) $$DIR/*.c ;\
-	$(ASTYLE) $(ASTYLE_OPT) $$DIR/*.h ;\
-	$(DTOU) $$DIR/*.* ;\
+	@for FILE in $(ASTYLE_FILE) ; do \
+	$(ASTYLE) $(ASTYLE_OPT) $$FILE ;\
+	$(DTOU) $$FILE ;\
 	done
 	@$(DTOU) ../cfg/*.*
 	@$(DTOU) ./Makefile
