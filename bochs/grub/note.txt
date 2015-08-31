@@ -1,0 +1,24 @@
+###############################################
+	Make Image
+###############################################
+dd if=/dev/zero of=disk.img count=$((100*16*63))
+losetup /dev/loop0 disk.img
+cfdisk -s63 -h16 /dev/loop0
+fdisk -lu /dev/loop0
+losetup -o $((63*512)) /dev/loop1 disk.img
+mkfs.ext3 /dev/loop1
+mkdir /mnt/mini
+mount /dev/loop1 /mnt/mini
+mkdir -p /mnt/mini/boot/grub
+cat > /mnt/mini/boot/grub/device.map << EOF
+(hd0)	/dev/loop0
+(hd0,1)	/dev/loop1
+EOF
+grub-install --no-floppy --grub-mkdevicemap=/mnt/mini/boot/grub/device.map --root-directory=/mnt/mini /dev/loop0
+
+
+################################################
+	Start Address
+################################################
+0x100024
+
