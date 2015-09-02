@@ -81,7 +81,7 @@ $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.gas
 #.S.o:	
 $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.S
 	@echo "[Assemble][$<]"
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INC_DIR) -c $< -o $@
 #	@$(AS) $(ASFLAGS) $< -o $@
 
 $(BUILD_ROOT)/%.o : $(SRC_ROOT)/%.c

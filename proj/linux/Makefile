@@ -19,6 +19,8 @@ LDFLAGS    := -m elf_i386 --format=elf32-i386
 OBJCPFLAGS := -O binary
 CLANG      := $(CC)
 
+INC_DIR   += -I$(DEBUG_ROOT)
+
 # **************************************
 # Sub Target
 # **************************************

@@ -7,18 +7,22 @@
 # Source Path and Code
 # **************************************
 
-MACH_SSRC += kode/cpu/x86_mach/cpu_head_s.S
+MACH_SSRC += \
+    kode/cpu/x86_mach/cpu_head_s.S
 
-MACH_CSRC += 
+MACH_CSRC += \
+    
           
 # **************************************
 # Build Path
 # **************************************
           
-BUILD_DIR += $(BUILD_ROOT)/kode \
-             $(BUILD_ROOT)/kode/cpu \
-             $(BUILD_ROOT)/kode/cpu/x86_mach
+BUILD_DIR += \
+    $(BUILD_ROOT)/kode \
+    $(BUILD_ROOT)/kode/cpu \
+    $(BUILD_ROOT)/kode/cpu/x86_mach
 
-INC_DIR += 
+INC_DIR += \
+    -I$(SRC_ROOT)/kode/cpu/x86_mach
 
 

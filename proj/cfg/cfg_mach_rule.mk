@@ -21,10 +21,19 @@ MACH_OBJS := $(patsubst %.S, $(BUILD_ROOT)/%.o, $(MACH_SSRC)) \
 # **************************************t
 
 
-mach : _PREPARE $(MACH_OBJS)
+mach : _PREPARE _PREBUILD $(MACH_OBJS)
 	$(AR) cru $(BUILD_ROOT)/$(MACH_TARGET_A) $(MACH_OBJS)
 	$(LD) -melf_i386 -u _start -r -o $(BUILD_ROOT)/$(MACH_TARGET_O) $(BUILD_ROOT)/$(MACH_TARGET_A)
 	$(LD) -melf_i386 -M --defsym _START=0xC0100000 --defsym _START_MAP=0x100000 -T '..'/cfg/cfg_mach_ldscript -o $(TARGET_ROOT)/$(MACH_TARGET) $(BUILD_ROOT)/$(MACH_TARGET_O) > $(DEBUG_ROOT)/$(MACH_TARGET_M)
+
+_PREBUILD :
+	mawk -f $(SRC_ROOT)/tools/gensym.awk $(SRC_ROOT)/kode/cpu/x86_mach/cpu_asm.sym > $(BUILD_ROOT)/cpu_asm.symc
+	$(CC) -I../../src/kode/cpu/x86_mach -m32 -nostdinc -Wall -fgnu89-inline -fno-stack-protector -mno-3dnow -mno-mmx -mno-sse -mno-sse2 -g -O2 -S -x c -o $(BUILD_ROOT)/cpu_asm.symc.o $(BUILD_ROOT)/cpu_asm.symc
+	sed < $(BUILD_ROOT)/cpu_asm.symc.o > $(DEBUG_ROOT)/cpu_asm_symc.h \
+	-e 's/^[^*].*$$//'			\
+	-e 's/^[*]/#define/'			\
+	-e 's/mAgIc[^-0-9]*//'
+
 
 
 
