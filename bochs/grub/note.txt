@@ -17,8 +17,4 @@ EOF
 grub-install --no-floppy --grub-mkdevicemap=/mnt/mini/boot/grub/device.map --root-directory=/mnt/mini /dev/loop0
 
 
-################################################
-	Start Address
-################################################
-0x100024
 
