@@ -10,8 +10,10 @@
 -include ../cfg/cfg_env.mk
 
 ASFLAGS    := -march=i386+387 --32 --x32
-CFLAGS     := -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -fno-builtin \
-              -m32 -fleading-underscore -fno-stack-protector
+CFLAGS     := -Wall -O -fstrength-reduce -fomit-frame-pointer \
+              -finline-functions -fno-builtin \
+              -m32 -fleading-underscore -fno-stack-protector \
+              -D__ELF__=1 -D__STD__
 CXXFLAGS   := $(CFLAGS)
 LDFLAGS    := -s -x -M -Ttext 0x00000 -m32 
 LDFLAGS    := -m elf_i386 --format=elf32-i386 
@@ -31,8 +33,8 @@ INC_DIR   += -I$(DEBUG_ROOT)
 -include ../cfg/cfg_lnx_src.mk
 -include ../cfg/cfg_lnx_rule.mk
 
--include ../cfg/cfg_mach_src.mk
--include ../cfg/cfg_mach_rule.mk
+-include ../cfg/cfg_mch_src.mk
+-include ../cfg/cfg_mch_rule.mk
 
 DEBUG_DIR  += $(subst build,debug,$(BUILD_DIR))
 

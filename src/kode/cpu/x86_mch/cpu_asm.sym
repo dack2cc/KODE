@@ -1,0 +1,8 @@
+
+#include <cpu_vm_param.h>
+
+expr    VM_MIN_KERNEL_ADDRESS	KERNELBASE
+expr	INTSTACK_SIZE
+//expr	I386_PGBYTES	NBPG
+
+
