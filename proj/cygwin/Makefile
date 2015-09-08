@@ -15,6 +15,7 @@ CLANGFLAGS += -Qunused-arguments
 # Sub Target
 # **************************************
 
+-include ../cfg/cfg_kode_src.mk
 -include ../cfg/cfg_boot_lnx.mk
 #-include ../cfg/cfg_boot_bsd.mk
 -include ../cfg/cfg_lnx_src.mk

@@ -5,9 +5,7 @@
 
 #include <kd/kd.h>
 #include <kd/kdext.h>
-#include <cpu_boot.h>
 #include <std/stdio.h>
-
 
 /******************************************************************************
     External Reference
@@ -122,7 +120,7 @@ void* s_thread_alice(void* param_in)
 
 void* s_thread_jerry(void* param_in)
 {
-    CPU_DATA magic  = 0;
+    KDint32 magic  = 0;
 
     printf("[jerry][Magic 0x%X]\r\n", &magic);
     printf("[jerry][Wake  0x%X]\r\n", *((KDint32 *)param_in));

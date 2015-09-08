@@ -24,6 +24,15 @@ KODE_BIN  := $(KODE_NAME).bin
 KODE_MAP  := $(KODE_NAME).map
 KODE_TMP  := $(KODE_NAME).tmp
 
+
+# **************************************
+# Build Env.
+# **************************************
+
+KODE_OBJ += $(KODE_CPU_LNX_OBJ)
+KODE_DBG += $(KODE_CPU_LNX_DBG)
+
+
 # **************************************
 # Make Rule
 # **************************************

@@ -101,11 +101,11 @@ $(BUILD_ROOT)/%.o : $(SRC_DIR)/%.cpp
 #        rm -f $(BUILD_ROOT)/$*.d
 
 $(DEBUG_ROOT)/%.s : $(SRC_ROOT)/%.gas
-	@echo "[Generate][$@]"
+#	@echo "[Generate][$@]"
 	@cp -fr $< $@
 
 $(DEBUG_ROOT)/%.s : $(SRC_ROOT)/%.S
-	@echo "[Generate][$@]"
+#	@echo "[Generate][$@]"
 	@cp -fr $< $@
 
 $(DEBUG_ROOT)/%.s : $(SRC_ROOT)/%.c

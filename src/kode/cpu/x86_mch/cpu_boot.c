@@ -5,6 +5,11 @@
 */
 void cpu_boot_entry(void* pBootInfo_in)
 {
+    cpu_disp_cnputc('y');
+    cpu_disp_cnputc('u');
+    cpu_disp_cnputc('K');
+    cpu_disp_cnputc('i');
+
     while (1);
 }
 

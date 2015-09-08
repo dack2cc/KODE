@@ -27,6 +27,7 @@ INC_DIR   += -I$(DEBUG_ROOT)
 # Sub Target
 # **************************************
 
+-include ../cfg/cfg_kode_src.mk
 -include ../cfg/cfg_boot_lnx.mk
 #-include ../cfg/cfg_boot_bsd.mk
 #-include ../cfg/cfg_boot_osx.mk
