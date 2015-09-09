@@ -31,8 +31,8 @@ INC_DIR   += -I$(DEBUG_ROOT)
 -include ../cfg/cfg_boot_lnx.mk
 #-include ../cfg/cfg_boot_bsd.mk
 #-include ../cfg/cfg_boot_osx.mk
--include ../cfg/cfg_lnx_src.mk
--include ../cfg/cfg_lnx_rule.mk
+#-include ../cfg/cfg_lnx_src.mk
+#-include ../cfg/cfg_lnx_rule.mk
 
 -include ../cfg/cfg_mch_src.mk
 -include ../cfg/cfg_mch_rule.mk

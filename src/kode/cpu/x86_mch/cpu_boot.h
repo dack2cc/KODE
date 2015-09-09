@@ -1,11 +1,12 @@
-#ifndef __CPU_DISP_H__
-#define __CPU_DISP_H__
+#ifndef __CPU_BOOT_H__
+#define __CPU_BOOT_H__
 
 /******************************************************************************
     Include
 ******************************************************************************/
 
-#include <cpu_ext.h>
+#include <cpu.h>
 
-#endif // __CPU_DISP_H__
+
+#endif // __CPU_BOOT_H__
 

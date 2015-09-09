@@ -1,5 +1,5 @@
 #include <cpu_asm_symc.h>
-#incluce <cpu_asm.h>
+#include <cpu_asm.h>
 
 	/*
 	*  This section will be put first into .text. See also cfg_mach_ldscript
@@ -90,8 +90,7 @@ iplt_next:
 iplt_done:
 	
 	/* jump into C code. */
-	//call EXT(cpu_boot_entry)
-	call _cpu_boot_entry
+	call EXT(cpu_boot_Entry)
 
 	.comm _intstack, INTSTACK_SIZE
 
