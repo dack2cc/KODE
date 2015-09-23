@@ -30,7 +30,7 @@ MACH_DBG += $(KODE_KERNEL_LIB_DBG)
 mach : _PREPARE _PREBUILD $(MACH_OBJ) $(MACH_DBG)
 	@echo "[package -> $(MACH_TARGET_A)]"
 	@$(AR) cru $(BUILD_ROOT)/$(MACH_TARGET_A) $(MACH_OBJ)
-	@echo "[link  ---> $(MACH_TARGET_O)]"
+	@echo "[link   --> $(MACH_TARGET_O)]"
 	@$(LD) -melf_i386 -u _start -r -o $(BUILD_ROOT)/$(MACH_TARGET_O) $(BUILD_ROOT)/$(MACH_TARGET_A)
 	@echo "[build ---> $(MACH_TARGET)]"
 	@$(LD) -melf_i386 -M --defsym _START=0xC0100000 --defsym _START_MAP=0x100000 -T '..'/cfg/cfg_mch_ldscript -o $(TARGET_ROOT)/$(MACH_TARGET) $(BUILD_ROOT)/$(MACH_TARGET_O) > $(DEBUG_ROOT)/$(MACH_TARGET_M)
@@ -47,5 +47,5 @@ _PREBUILD :
 machdbg :
 #	@echo $(MACH_OBJ)
 #	@echo $(MACH_DBG)
-
+	@echo $(INC_DIR)
 

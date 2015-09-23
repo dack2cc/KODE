@@ -8,7 +8,8 @@
 # **************************************
 
 MACH_SSRC += \
-    kode/cpu/x86_mch/cpu_head_s.S
+    kode/cpu/x86_mch/cpu_head.S \
+    kode/cpu/x86_mch/cpu_util.S
 
 MACH_CSRC += \
     kode/cpu/x86_mch/cpu_boot.c \
