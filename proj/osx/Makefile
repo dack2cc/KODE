@@ -21,7 +21,7 @@ OBJCP := gobjcopy
 GAS:=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/as/i386/as
 
 ASFLAGS    := -arch i386
-CFLAGS     := -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -fno-builtin \
+CFLAGS     := -Wall -O -fomit-frame-pointer -fno-builtin \
               -arch i386 -march=i486 -nostdinc -fno-stack-protector -D_OSX_
 CXXFLAGS   := $(CFLAGS)
 LDFLAGS    := -x -M -image_base 0x0000 -arch i386 -Z -map $(DEBUG_ROOT)/kode.map \

@@ -62,7 +62,7 @@ $(MKSRC) :
 	@$(CC) $(SRC_ROOT)/$(TOOLS_DIR)/$(MKSRC).c -o $(BUILD_ROOT)/$(MKSRC)
 	@chmod o+x $(BUILD_ROOT)/$(MKSRC)
 
-$(KODE_BIN) : $(KODE_OBJ) $(KODE_DBG)
+$(KODE_BIN) : $(KODE_OBJ) #$(KODE_DBG)
 	@echo "[Build][$(BUILD_ROOT)/$@]"
 	@$(LD) $(LDFLAGS) $(KODE_OBJ) -o $(BUILD_ROOT)/$(KODE_TMP) > $(DEBUG_ROOT)/$(KODE_MAP)
 	@$(OBJCP) $(OBJCPFLAGS) $(BUILD_ROOT)/$(KODE_TMP) $(BUILD_ROOT)/$(KODE_BIN)
